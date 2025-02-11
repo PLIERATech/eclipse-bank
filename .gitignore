@@ -1,3 +1,4 @@
 .env
 __pycache__
 highlights.py
+.vscode/settings.json
