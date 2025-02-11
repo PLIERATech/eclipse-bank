@@ -2,11 +2,10 @@ import os
 from supabase import Client
 from dotenv import load_dotenv
 from supabase.lib.client_options import ClientOptions
-import nextcord as nxc
+import logging
 
 #-загрузка файла .env
 load_dotenv()
-
 
 #-Webhooks
 wh_bank_audit = "https://ptb.discord.com/api/webhooks/1338930883356393575/z82Vf9NYlMruWYBJnwHq63wMA12qOEFmoRmK-WCobs0fr61wksfGCF4eePoeNvjUjShI"
@@ -33,7 +32,7 @@ BOT_TOKEN = str(token)
 
 
 #@Роли  Дискорда
-staff = 1338898054325080145
+staff = [1338898054325080145]
 banker = 1338875585472106537
 player = 1338875732063162418
 
