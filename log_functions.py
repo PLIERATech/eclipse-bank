@@ -6,5 +6,11 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-def admit_Log(nickname, id, status):
-    logging.info(f"❗ {nickname} | {id} =|= Воспользовался командой /принять ({status}) ")
+def PermsLog(nickname, id, command, status):
+    logging.info(f"❗ {nickname} | {id} =|= Воспользовался командой {command} ({status}) ")
+
+def cardCreateLog(banker, number, user):
+    logging.info(f" • {banker} оформил карту {number} для {user}")
+
+def clientCreateLog(user):
+    logging.info(f"• {user} стал клиентов Eclipse Bank!")

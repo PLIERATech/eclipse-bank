@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from supabase.lib.client_options import ClientOptions
 import logging
 
+n = "0123456789"
+
 #-загрузка файла .env
 load_dotenv()
 
@@ -17,6 +19,12 @@ url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_timeout = 5, storage_client_timeout = 30))
 
+#? Работа c API prdx.so
+cookie = os.getenv("MY_COOKIE")
+COOKIES = {"token": cookie} if cookie else {}
+API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?nick={}"
+INVITE_URL = "https://prdx.so/t/eclipse/invite"
+COMMUNITY_ID = "110"
 
 #@Работа с когами
 COGS_FOLDER = "cogs"
@@ -32,9 +40,9 @@ BOT_TOKEN = str(token)
 
 
 #@Роли  Дискорда
-staff = [1338898054325080145]
-banker = 1338875585472106537
-player = 1338875732063162418
+staff_role = [1338898054325080145]
+banker_role = [1338875585472106537, 1338898054325080145]
+player_role = [1338875732063162418]
 
 
 #*Каналы Дискорда

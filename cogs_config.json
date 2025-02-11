@@ -1,3 +1,4 @@
 {
-    "admit": true
+    "admit": false,
+    "newCard": true
 }
