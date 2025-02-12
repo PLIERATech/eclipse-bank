@@ -22,6 +22,11 @@ class NewCard(commands.Cog):
         description="Choose 1",
         required=True,
         choices=["private", "team"]
+    ), color: str= nxc.SlashOption(
+        name="card_color",
+        description="Choose 1",
+        required=True,
+        choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"]
     )):
         banker_id = inter.user.id
         banker = inter.user.display_name
@@ -43,7 +48,7 @@ class NewCard(commands.Cog):
         PermsLog(nickname, banker_id, command, status)
 
         #=Создание карты
-        full_number = create_card(banker, card_name, type, owner_id)
+        full_number = create_card(banker, card_name, type, owner_id, color)
         card_type_rus = TYPE_TRANSLATION.get(type, type)
         await inter.response.send_message(f"Карта типа {card_type_rus} с номером {full_number} успешно создана!", ephemeral=True)
         #=Создание клиента

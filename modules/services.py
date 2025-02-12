@@ -5,14 +5,15 @@ from .api import *
 
 suffix = ""
 
-def create_card(banker, name, type, owner):
+def create_card(banker, name, type, owner, color):
 
-    if type == "private":
-        suffix = "EBP-"
-    elif type == "team":
-        suffix = "EBT-"
-    elif type == "banker":
-        suffix == "EBS-"
+    match type:
+        case "private":
+            suffix = "EBP-"
+        case "team":
+            suffix = "EBT-"
+        case "banker":
+            suffix == "EBS-"
 
     #Извлекаем номера уже существующих карт и добавляем в список
     response = supabase.table("cards").select("number").execute()
