@@ -5,49 +5,58 @@ from log_functions import *
 from modules import *
 import asyncio
 import os
+import math
 
-command = "/создать"
+command = "/admCreate"
 
 TYPE_TRANSLATION = {
     "private": "Личная",
     "team": "Общины",
-    "banker": "Банкира"
+    "banker": "Банкира",
+    "cio": "CIO"
 }
 
-class NewCard(commands.Cog):
+class AdmCreate(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="создать", description="Создать карту Eclipse Bank")
-    async def newCard(self, inter: nxc.Interaction, owner: nxc.Member, type: str = nxc.SlashOption(
-        name="card_type",
-        description="Choose 1",
-        required=True,
-        choices=["private", "team"]
-    ), color: str= nxc.SlashOption(
-        name="card_color",
-        description="Choose 1",
-        required=True,
-        choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"]
-    )):
-        banker_id = inter.user.id
-        banker = inter.user.display_name
-        nickname = inter.user.display_name
+    @nxc.slash_command(guild_ids=server_id, name="admcreate", description="Admin Unit Creation")
+    async def admcreate(self, inter: nxc.Interaction, owner: nxc.Member, number: int, name: str, type: str = nxc.SlashOption(name="card_type",description="Choose 1",required=True,choices=["private", "team", "banker", "cio"]), color: str= nxc.SlashOption(name="card_color",description="Choose 1",required=True,choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"])):
+        
+        admin = inter.user
+        admin_id = inter.user.id
+        admin_nickname = inter.user.display_name
+        
         card_name = owner.display_name
         owner_id = owner.id
+
         guild = inter.guild
 
-        #Проверка прав banker
-        if not any(role.id in (banker_role) for role in inter.user.roles):
+        #Проверка прав staff
+        if not any(role.id in (staff_role) for role in admin.roles):
             status="No Permissions"
             await inter.response.send_message("❗ У вас недостаточно прав для использования данной команды.", ephemeral=True)
-            PermsLog(nickname, banker_id, command, status) 
+            PermsLog(admin_nickname, admin_id, command, status) 
             return
         
+        number_str = str(number)
+        if number < 0 or number > 99999:
+            await inter.response.send_message("Параметр `number` должен быть числом из ровно 5 цифр.", ephemeral=True)
+            return
+        number_str = f"{number:05}"
+
+        #Проверка занят ли номер карты
+        response = supabase.table("cards").select("number").execute()
+        numbers_list = [item["number"] for item in response.data]
+        if number_str in numbers_list:
+            await inter.response.send_message("Данный номер карты уже занят.", ephemeral=True)
+            return
+
+
 #// Действие
 
         status="Success"
-        PermsLog(nickname, banker_id, command, status)
+        PermsLog(admin_nickname, admin_id, command, status)
 
         embed_color = None
 
@@ -68,11 +77,11 @@ class NewCard(commands.Cog):
         await createAccount(guild, owner)
 
         #=Создание карты
-        full_number = create_card(banker, card_name, type, owner_id, color, do_random=True, adm_number="0")
+        full_number = create_card(admin_nickname, card_name, type, owner_id, color, do_random=False, adm_number=number_str)
         card_type_rus = TYPE_TRANSLATION.get(type, type)
         card_image = f"{full_number}.png"
         embed_color = colors.get(color, color)
-
+        if type == "cio": embed_color = nxc.Colour.from_rgb(5, 170, 156)
         await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
         await asyncio.sleep(2)
 
@@ -81,7 +90,7 @@ class NewCard(commands.Cog):
         card_embed = nxc.Embed(color=embed_color)
         card_embed.add_field(name="💳 Карта:", value=full_number, inline=True)
         card_embed.add_field(name="🗂️ Тип:", value=card_type_rus, inline=True)
-        card_embed.add_field(name="💬 Название", value=card_name, inline=True)
+        card_embed.add_field(name="💬 Название", value=name, inline=True)
         card_embed.set_image(url=f"attachment://{card_image}")
         card_embed.set_footer(text="Eclipse Bank 2025")
 
@@ -96,4 +105,4 @@ class NewCard(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(NewCard(client))
+    client.add_cog(AdmCreate(client))

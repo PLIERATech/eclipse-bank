@@ -2,27 +2,30 @@ from const import *
 from log_functions import *
 import random
 from .api import *
+from card_gen import *
 
 suffix = ""
 
-def create_card(banker, name, type, owner, color):
+def create_card(banker, name, type, owner, color, do_random: bool, adm_number):
 
-    match type:
-        case "private":
-            suffix = "EBP-"
-        case "team":
-            suffix = "EBT-"
-        case "banker":
-            suffix == "EBS-"
+    suffixes = {
+        "private": "EBP-",
+        "team": "EBT-",
+        "banker": "EBS-",
+        "cio": "CIO-"
+    }
+    suffix = suffixes.get(type)
 
     #Извлекаем номера уже существующих карт и добавляем в список
     response = supabase.table("cards").select("number").execute()
     numbers_list = [item["number"] for item in response.data]
-    
-    while True:
-        number = int(''.join(random.choices(n, k=5)))
-        if number not in numbers_list:
-            break
+    if do_random == True:
+        while True:
+            number = int(''.join(random.choices(n, k=5)))
+            if number not in numbers_list:
+                break
+    else:
+        number = adm_number
     
     full_number = f"{suffix}{number}"
 
@@ -34,6 +37,8 @@ def create_card(banker, name, type, owner, color):
     }).execute()
 
     cardCreateLog(banker, full_number, owner)
+    card_generate(owner, number, name, color)
+    
     return full_number
 
 

@@ -14,3 +14,6 @@ def cardCreateLog(banker, number, user):
 
 def clientCreateLog(user):
     logging.info(f"• {user} стал клиентом Eclipse Bank!")
+
+def clientDeleteLog(user):
+    logging.info(f"• Банковский счёт {user} был удалён!")

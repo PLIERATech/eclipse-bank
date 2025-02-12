@@ -1,4 +1,6 @@
 {
     "admit": false,
-    "newCard": true
+    "newCard": true,
+    "deleteAccount": true,
+    "admCreate": true
 }
