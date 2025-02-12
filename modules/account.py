@@ -2,7 +2,8 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from log_functions import *
-from services import *
+from .services import *
+from .api import *
 
 async def createAccount(guild, owner):
 

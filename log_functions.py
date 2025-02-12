@@ -13,4 +13,4 @@ def cardCreateLog(banker, number, user):
     logging.info(f" • {banker} оформил карту {number} для {user}")
 
 def clientCreateLog(user):
-    logging.info(f"• {user} стал клиентов Eclipse Bank!")
+    logging.info(f"• {user} стал клиентом Eclipse Bank!")

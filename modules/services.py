@@ -1,7 +1,7 @@
 from const import *
 from log_functions import *
 import random
-from api import *
+from .api import *
 
 suffix = ""
 
