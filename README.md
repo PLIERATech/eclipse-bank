@@ -1,5 +1,5 @@
 # Eclipse Bank
-![Group 1123457112](https://github.com/user-attachments/assets/a26f06fd-e546-428f-ae79-10adc3f9306f)
+![Banner](https://i.imgur.com/x7AKTv8.png)
 Digital PRDX.so Bank  
 T-rexes are not allowed!
 
