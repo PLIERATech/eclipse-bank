@@ -2,5 +2,6 @@
     "admit": false,
     "newCard": true,
     "deleteAccount": true,
-    "admCreate": true
+    "admCreate": true,
+    "events": true
 }
