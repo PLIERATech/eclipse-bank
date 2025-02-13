@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from supabase import *
 from .params import *
-import time
+import asyncio
 
 base_color = (240, 240, 240)
 unique_color = (42, 42, 42)
@@ -24,7 +24,6 @@ def card_generate(dsc_id, number, user_nickname, color):
     get = supabase.table("cards").select("*").eq("owner", dsc_id).eq("number", number).execute()
 
     type = str(get.data[0]["type"])
-    owner = get.data[0]["owner"]
 
     color_templates = {
         "red": template_red,
@@ -41,10 +40,10 @@ def card_generate(dsc_id, number, user_nickname, color):
         font_color = unique_color
 
     type_info = {
-        "private": "EBP-",
-        "team": "EBT-",
-        "banker": "EBS-",
-        "cio": "CIO-",
+        "personal": "EBP",
+        "team": "EBT",
+        "banker": "EBS",
+        "cio": "CIO",
     }
 
     if type == "cio":
@@ -53,7 +52,7 @@ def card_generate(dsc_id, number, user_nickname, color):
         template = color_templates.get(color)
     
     suffix = type_info.get(type)
-    fullNumber = f"{suffix}{number}"
+    fullNumber = f"{suffix}-{number}"
 
     try:
         template.convert("RGBA")
@@ -73,12 +72,6 @@ def card_generate(dsc_id, number, user_nickname, color):
         final_card.text(bcard_position, card_text, fill=font_color, font=bcard_font)
 
         combine.save(f"{card_dir}{fullNumber}.png", "PNG")
-
-        time.sleep(3)
-
-        file_path = f"{card_dir}{fullNumber}.png"
-        if os.path.exists(file_path):
-            os.remove(file_path)
 
     else:
         print("Такой записи нет!")

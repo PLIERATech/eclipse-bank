@@ -10,7 +10,7 @@ import math
 command = "/admCreate"
 
 TYPE_TRANSLATION = {
-    "private": "Личная",
+    "personal": "Личная",
     "team": "Общины",
     "banker": "Банкира",
     "cio": "CIO"
@@ -21,7 +21,7 @@ class AdmCreate(commands.Cog):
         self.client = client
         
     @nxc.slash_command(guild_ids=server_id, name="admcreate", description="Admin Unit Creation")
-    async def admcreate(self, inter: nxc.Interaction, owner: nxc.Member, number: int, name: str, type: str = nxc.SlashOption(name="card_type",description="Choose 1",required=True,choices=["private", "team", "banker", "cio"]), color: str= nxc.SlashOption(name="card_color",description="Choose 1",required=True,choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"])):
+    async def admcreate(self, inter: nxc.Interaction, owner: nxc.Member, number: int, name: str, type: str = nxc.SlashOption(name="card_type",description="Choose 1",required=True,choices=["personal", "team", "banker", "cio"]), color: str= nxc.SlashOption(name="card_color",description="Choose 1",required=True,choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"])):
         
         admin = inter.user
         admin_id = inter.user.id

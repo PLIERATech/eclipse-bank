@@ -9,7 +9,7 @@ import os
 command = "/создать"
 
 TYPE_TRANSLATION = {
-    "private": "Личная",
+    "personal": "Личная",
     "team": "Общины",
     "banker": "Банкира"
 }
@@ -23,7 +23,7 @@ class NewCard(commands.Cog):
         name="card_type",
         description="Choose 1",
         required=True,
-        choices=["private", "team"]
+        choices=["personal", "team"]
     ), color: str= nxc.SlashOption(
         name="card_color",
         description="Choose 1",

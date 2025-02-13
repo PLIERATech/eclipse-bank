@@ -8,6 +8,8 @@ from nextcord.ext import commands
 import os
 import json
 import logging
+import asyncio
+from modules import *
 
 #* ==============================
 #*       НАСТРОЙКА ЛОГГЕРА       
@@ -23,6 +25,8 @@ logging.basicConfig(
 #* ==============================
 intents = nextcord.Intents.default()
 intents.message_content = True
+intents.messages = True
+intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix=".", intents=intents)
 
@@ -110,6 +114,8 @@ async def on_ready():
         logging.error(f"❌ Ошибка синхронизации слэш-команд: {e}")
 
     bot_ready(bot)
+    await start_persistent_view(bot)
+    await asyncio.create_task(deleteCardImages(60))
 
 #// ==============================
 #// СКРЫТИЕ ЛОГОВ NEXTCORD        
