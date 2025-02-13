@@ -25,35 +25,33 @@ def card_generate(dsc_id, number, user_nickname, color):
     type = str(get.data[0]["type"])
     owner = get.data[0]["owner"]
 
-    if color == "red":
-        template = template_red
-    elif color == "orange":
-        template = template_orange
-    elif color == "yellow":
-        template = template_yellow
-    elif color == "green":
-        template = template_green
-    elif color == "blue":
-        template = template_blue
-    elif color == "purple":
-        template = template_purple
-    elif color == "black":
-        template = template_black
-    elif color == "white":
-        template = template_white
+    color_templates = {
+        "red": template_red,
+        "orange": template_orange,
+        "yellow": template_yellow,
+        "green": template_green,
+        "blue": template_blue,
+        "purple": template_purple,
+        "black": template_black,
+        "white": template_white
+    }
+
+    if color == "white":
         font_color = unique_color
 
-    if type == "private":
-        suffix = "EBP-"
-    elif type == "team":
-        suffix = "EBT-"
-    elif type == "banker":
-        suffix = "EBS-"
-    elif type == "cio":
-        suffix = "CIO-"
-        template = template_cio
-        color=""
+    type_info = {
+        "private": ("EBP-"),
+        "team": ("EBT-"),
+        "banker": ("EBS-"),
+        "cio": ("CIO-")
+    }
 
+    if type == "cio":
+        template = template_cio
+    else:
+        template = color_templates.get(color)
+    
+    suffix = type_info.get(type)
     fullNumber = f"{suffix}{number}"
 
     try:
