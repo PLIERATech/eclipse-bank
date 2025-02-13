@@ -8,7 +8,7 @@ import time
 
 suffix = ""
 
-def create_card(banker, name, nickname, type, owner, color, do_random: bool, adm_number):
+def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
 
     suffixes = {
         "personal": "EBP-",
@@ -35,13 +35,20 @@ def create_card(banker, name, nickname, type, owner, color, do_random: bool, adm
         "number": number,
         "name": name,
         "type": type,
-        "owner": owner
+        "owner": owner_id,
+        "balance": balance
     }).execute()
 
-    cardCreateLog(banker, full_number, owner)
-    card_generate(owner, number, nickname, color)
+    cardCreateLog(banker, full_number, owner_id)
+    card_generate(owner_id, number, nickname, color)
     
     return full_number
+
+async def delete_card(channel_card_id, message_card_id, bot):
+    channel = bot.get_channel(channel_card_id)
+    message = await channel.fetch_message(message_card_id)
+    await message.delete()
+    return
 
 def create_client(nickname, id, account, channels):
 
@@ -78,7 +85,6 @@ async def deleteCardImages(interval):
         await asyncio.sleep(interval)  # Асинхронная пауза
 
 def check_count_cards(member_id):
-
     response = supabase.rpc("get_card_info", {"user_id": int(member_id)}).execute()
 
     if not response.data:
@@ -90,4 +96,18 @@ def check_count_cards(member_id):
 
     return card_count < count_cards_allowed  # True - можно создать карту, False - нельзя
 
+def get_card_info_demote(member_id):
+    response = supabase.rpc("get_user_cards_demote", {"user_id": member_id}).execute()
+
+    if response.data:
+        result = response.data[0]
+        return {
+            "banker_balance": result["banker_balance"],
+            "banker_select_menu_id": result["banker_select_menu_id"],
+            "banker_number": result["banker_number"],
+            "non_banker_number": result["non_banker_number"],
+            "non_banker_type": result["non_banker_type"],
+            "channels_user": result["channels_user"]
+        }
+    return None
 

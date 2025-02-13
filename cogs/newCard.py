@@ -75,34 +75,34 @@ class NewCard(commands.Cog):
 
 
         #=Создание карты
-        full_number = create_card(banker, card_name, card_name, type, owner_id, color, do_random=True, adm_number="0")
+        full_number = create_card(banker, card_name, card_name, type, owner_id, color, do_random=True, adm_number="0", balance="0")
         card_type_rus = TYPE_TRANSLATION.get(type, type)
         card_image = f"{full_number}.png"
         embed_color = colors.get(color, color)
-        print(1)
+
         await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
         await asyncio.sleep(2)
 
         card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
-        print(2)
+
         card_embed = nxc.Embed(color=embed_color)
         card_embed.add_field(name="💳 Карта:", value=full_number, inline=True)
         card_embed.add_field(name="🗂️ Тип:", value=card_type_rus, inline=True)
         card_embed.add_field(name="💬 Название", value=card_name, inline=True)
         card_embed.set_image(url=f"attachment://{card_image}")
         card_embed.set_footer(text="Eclipse Bank 2025")
-        print(3)
+
         response = supabase.table("clients").select("*").eq("dsc_id", owner_id).execute()
 
         channels_response = response.data[0]["channels"]
         channels = list(map(int, channels_response.strip("[]").split(",")))
         cards_channel_id = int(channels[1])
         cards_channel = inter.guild.get_channel(cards_channel_id)
-        print(4)
+
         view = CardSelectView()  # Используем уже готовый View
         
         message_card = await cards_channel.send(content=f"{owner.mention}", embed=card_embed, file=card, view=view)
-        print(5)
+
         #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
         card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))
         supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()

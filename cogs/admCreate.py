@@ -81,7 +81,7 @@ class AdmCreate(commands.Cog):
         }
 
         #=Создание карты
-        full_number = create_card(admin_nickname, name, card_name, type, owner_id, color, do_random=False, adm_number=number_str)
+        full_number = create_card(admin_nickname, name, card_name, type, owner_id, color, do_random=False, adm_number=number_str, balance="0")
         card_type_rus = TYPE_TRANSLATION.get(type, type)
         card_image = f"{full_number}.png"
         embed_color = colors.get(color, color)

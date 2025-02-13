@@ -2,7 +2,7 @@ import requests
 from const import *
 
 
-def invite(dsc_id):
+def invite_team(dsc_id):
     prdx_user_id = get_user_id(dsc_id)
 
     if not cookie:
@@ -25,6 +25,31 @@ def invite(dsc_id):
         print("✅ Успешный запрос!")
     else:
         print(f"❌ Ошибка! Код: {response2.status_code}")
+
+def kick_team(dsc_id):
+    prdx_user_id = get_user_id(dsc_id)
+
+    if not cookie:
+        print("❌ Ошибка: не найден MY_COOKIE в .env!")
+        exit(1)
+
+    headers = {
+        "cookie": f"token={cookie}",
+        "next-action": "ef984850ad23324ae6e74229f870cc87d1959fcc",
+    }
+
+    data = f'["{COMMUNITY_ID}","{prdx_user_id}"]'
+
+    response2 = requests.post(KICK_URL, headers=headers, data=data)
+    response_text = response2.text.strip()
+
+    print("📥 Ответ сервера:", response_text)
+
+    if response2.status_code == 200:
+        print("✅ Успешный запрос!")
+    else:
+        print(f"❌ Ошибка! Код: {response2.status_code}")
+
 
 def get_user_id(dsc_id):
         url = API_PROFILE_URL.format(dsc_id)

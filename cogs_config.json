@@ -3,5 +3,6 @@
     "newCard": true,
     "deleteAccount": true,
     "admCreate": true,
-    "events": true
+    "events": true,
+    "demote": true
 }

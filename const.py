@@ -23,7 +23,8 @@ supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_tim
 cookie = os.getenv("MY_COOKIE")
 API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?discord_id={}"
 INVITE_URL = "https://prdx.so/t/eclipse/invite"
-COMMUNITY_ID = "109"
+KICK_URL = "https://prdx.so/t/eclipse"
+COMMUNITY_ID = "110"
 
 #@Работа с когами
 COGS_FOLDER = "cogs"
@@ -40,7 +41,7 @@ BOT_TOKEN = str(token)
 
 #@Роли  Дискорда
 staff_role = [1338898054325080145]
-banker_role = [1338875585472106537, 1338898054325080145]
+banker_role = [1338875585472106537,] #1338898054325080145]
 player_role = [1338875732063162418]
 
 banker_role_id = 1338875585472106537
