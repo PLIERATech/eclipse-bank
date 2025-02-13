@@ -1,5 +1,5 @@
 from const import *
-from log_functions import *
+from .log_functions import *
 import random
 from .api import *
 from card_gen import *
@@ -45,7 +45,7 @@ def create_card(banker, name, nickname, type, owner, color, do_random: bool, adm
 
 def create_client(nickname, id, account, channels):
 
-    prdx_id = get_user_id(nickname)
+    prdx_id = get_user_id(id)
 
     supabase.table("clients").insert({
         "nickname": nickname,

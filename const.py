@@ -21,8 +21,7 @@ supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_tim
 
 #? Работа c API prdx.so
 cookie = os.getenv("MY_COOKIE")
-COOKIES = {"token": cookie} if cookie else {}
-API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?nick={}"
+API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?discord_id={}"
 INVITE_URL = "https://prdx.so/t/eclipse/invite"
 COMMUNITY_ID = "110"
 
@@ -43,6 +42,8 @@ BOT_TOKEN = str(token)
 staff_role = [1338898054325080145]
 banker_role = [1338875585472106537, 1338898054325080145]
 player_role = [1338875732063162418]
+
+banker_role_id = 1338875585472106537
 
 
 #*Каналы Дискорда

@@ -1,6 +1,6 @@
 import nextcord as nxc
 from const import *
-from log_functions import *
+from .log_functions import *
 from nextcord.ui import View, Select
 
 class CardSelectView(View):

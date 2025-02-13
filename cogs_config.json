@@ -1,5 +1,5 @@
 {
-    "admit": false,
+    "admit": true,
     "newCard": true,
     "deleteAccount": true,
     "admCreate": true,

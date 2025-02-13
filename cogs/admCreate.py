@@ -1,11 +1,8 @@
 import nextcord as nxc
 from nextcord.ext import commands
 from const import *
-from log_functions import *
 from modules import *
 import asyncio
-import os
-import math
 
 command = "/admCreate"
 

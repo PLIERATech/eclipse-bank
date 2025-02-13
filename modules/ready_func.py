@@ -1,7 +1,8 @@
 from nextcord.ext import commands
 import nextcord as nxc
 from const import *
-from modules import *
+from .select_menu import *
+from .log_functions import *
 
 async def start_persistent_view(bot):
 # Регистрируем View, чтобы оно работало после перезапуска

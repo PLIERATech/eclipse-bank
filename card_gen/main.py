@@ -48,6 +48,8 @@ def card_generate(dsc_id, number, user_nickname, color):
 
     if type == "cio":
         template = template_cio
+    elif type == "banker":
+        template = template_banker
     else:
         template = color_templates.get(color)
     
