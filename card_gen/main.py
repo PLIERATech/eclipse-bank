@@ -40,10 +40,10 @@ def card_generate(dsc_id, number, user_nickname, color):
         font_color = unique_color
 
     type_info = {
-        "private": ("EBP-"),
-        "team": ("EBT-"),
-        "banker": ("EBS-"),
-        "cio": ("CIO-")
+        "private": "EBP-",
+        "team": "EBT-",
+        "banker": "EBS-",
+        "cio": "CIO-",
     }
 
     if type == "cio":
