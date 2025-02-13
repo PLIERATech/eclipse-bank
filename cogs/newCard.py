@@ -92,12 +92,8 @@ class NewCard(commands.Cog):
         cards_channel_id = int(channels[2])
         cards_channel = inter.guild.get_channel(cards_channel_id)
 
-        # Создание Select Menu
-        view = nxc.ui.View()
-        view.add_item(create_select_menu("card_transaction"))
-        view.add_item(create_select_menu("card_settings"))
-
-        # После отправки сообщения с select menu
+        view = CardSelectView()  # Используем уже готовый View
+        
         message_card = await cards_channel.send(content=f"{owner.mention}", embed=card_embed, file=card, view=view)
 
         #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
