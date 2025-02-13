@@ -92,7 +92,13 @@ class NewCard(commands.Cog):
         cards_channel_id = int(channels[2])
         cards_channel = inter.guild.get_channel(cards_channel_id)
 
-        await cards_channel.send(content=f"{owner.mention}", embed=card_embed, file=card)
+        view = CardSelectView()  # Используем уже готовый View
+        
+        message_card = await cards_channel.send(content=f"{owner.mention}", embed=card_embed, file=card, view=view)
+
+        #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
+        card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))
+        supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
 
 
 def setup(client):

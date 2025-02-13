@@ -21,7 +21,7 @@ def create_card(banker, name, type, owner, color, do_random: bool, adm_number):
     numbers_list = [item["number"] for item in response.data]
     if do_random == True:
         while True:
-            number = int(''.join(random.choices(n, k=5)))
+            number =  f"{int(''.join(random.choices(n, k=5))):05}"
             if number not in numbers_list:
                 break
     else:
@@ -40,8 +40,6 @@ def create_card(banker, name, type, owner, color, do_random: bool, adm_number):
     card_generate(owner, number, name, color)
     
     return full_number
-
-
 
 def create_client(nickname, id, account, channels):
 
