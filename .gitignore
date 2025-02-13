@@ -3,4 +3,5 @@ __pycache__
 highlights.py
 .vscode/settings.json
 TEST.py
-card_hen/cards/
+card_hen/cards
+.gitignore

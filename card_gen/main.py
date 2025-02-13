@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from supabase import *
 from .params import *
+import time
 
 base_color = (240, 240, 240)
 unique_color = (42, 42, 42)
@@ -72,6 +73,12 @@ def card_generate(dsc_id, number, user_nickname, color):
         final_card.text(bcard_position, card_text, fill=font_color, font=bcard_font)
 
         combine.save(f"{card_dir}{fullNumber}.png", "PNG")
+
+        time.sleep(3)
+
+        file_path = f"{card_dir}{fullNumber}.png"
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
     else:
         print("Такой записи нет!")

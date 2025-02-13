@@ -68,7 +68,7 @@ class NewCard(commands.Cog):
         await createAccount(guild, owner)
 
         #=Создание карты
-        full_number = create_card(banker, card_name, type, owner_id, color, do_random=True, adm_number="0")
+        full_number = create_card(banker, card_name, card_name, type, owner_id, color, do_random=True, adm_number="0")
         card_type_rus = TYPE_TRANSLATION.get(type, type)
         card_image = f"{full_number}.png"
         embed_color = colors.get(color, color)

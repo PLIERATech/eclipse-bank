@@ -6,7 +6,7 @@ from card_gen import *
 
 suffix = ""
 
-def create_card(banker, name, type, owner, color, do_random: bool, adm_number):
+def create_card(banker, name, nickname, type, owner, color, do_random: bool, adm_number):
 
     suffixes = {
         "private": "EBP-",
@@ -37,7 +37,7 @@ def create_card(banker, name, type, owner, color, do_random: bool, adm_number):
     }).execute()
 
     cardCreateLog(banker, full_number, owner)
-    card_generate(owner, number, name, color)
+    card_generate(owner, number, nickname, color)
     
     return full_number
 
