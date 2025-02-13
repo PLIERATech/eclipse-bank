@@ -23,7 +23,7 @@ supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_tim
 cookie = os.getenv("MY_COOKIE")
 API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?discord_id={}"
 INVITE_URL = "https://prdx.so/t/eclipse/invite"
-COMMUNITY_ID = "110"
+COMMUNITY_ID = "109"
 
 #@Работа с когами
 COGS_FOLDER = "cogs"

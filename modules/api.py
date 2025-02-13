@@ -15,9 +15,8 @@ def invite(dsc_id):
     }
 
     data = f'["{COMMUNITY_ID}","{prdx_user_id}"]'
-    print(data)
 
-    response2 = requests.post(url, headers=headers, data=data)
+    response2 = requests.post(INVITE_URL, headers=headers, data=data)
     response_text = response2.text.strip()
 
     print("📥 Ответ сервера:", response_text)

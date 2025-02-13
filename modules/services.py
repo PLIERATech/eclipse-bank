@@ -76,3 +76,18 @@ async def deleteCardImages(interval):
             print(f"Ошибка при удалении файлов: {e}")
 
         await asyncio.sleep(interval)  # Асинхронная пауза
+
+def check_count_cards(member_id):
+
+    response = supabase.rpc("get_card_info", {"user_id": int(member_id)}).execute()
+
+    if not response.data:
+        print("❗ Ошибка: не удалось получить данные о картах.")
+        return None  # Ошибка получения данных
+
+    count_cards_allowed = response.data[0]["count_cards_allowed"]
+    card_count = response.data[0]["card_count"]
+
+    return card_count < count_cards_allowed  # True - можно создать карту, False - нельзя
+
+

@@ -36,13 +36,45 @@ class Admit(commands.Cog):
             PermsLog(admin, user_id, command, status)
             return
 
+        await inter.response.defer(ephemeral=True)
+
         #Создается клиент
         await createAccount(guild, member)
         if not member_id in ignore_members:
             supabase.table("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
 
-        #Выдается карточка банкира
+
+        #=Создание карты банкира
         full_number = create_card(admin, "Зарплатная", member_nick, type, member_id, "red", do_random=True, adm_number="0")
+        card_type_rus = "Банкира"
+        card_image = f"{full_number}.png"
+
+        await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
+        await asyncio.sleep(2)
+
+        card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
+
+        card_embed = nxc.Embed(color=nxc.Colour.from_rgb(31, 31, 31))
+        card_embed.add_field(name="💳 Карта:", value=full_number, inline=True)
+        card_embed.add_field(name="🗂️ Тип:", value=card_type_rus, inline=True)
+        card_embed.add_field(name="💬 Название", value=member_nick, inline=True)
+        card_embed.set_image(url=f"attachment://{card_image}")
+        card_embed.set_footer(text="Eclipse Bank 2025")
+
+        response = supabase.table("clients").select("*").eq("dsc_id", member_id).execute()
+
+        channels_response = response.data[0]["channels"]
+        channels = list(map(int, channels_response.strip("[]").split(",")))
+        cards_channel_id = int(channels[1])
+        cards_channel = inter.guild.get_channel(cards_channel_id)
+
+        view = CardSelectView()  # Используем уже готовый View
+        
+        message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
+
+        #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
+        card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))
+        supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
 
         #// Действие        
         invite(member_id)

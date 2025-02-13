@@ -22,7 +22,7 @@ async def createAccount(guild, owner):
             owner: nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True)  # Разрешаем только owner
         })
         #! Канал "Транзакции" - только чтение
-        transactions_channel = await guild.create_text_channel("💊ㆍТранзакции", category=category, overwrites={
+        transactions_channel = await guild.create_text_channel("🧮ㆍТранзакции", category=category, overwrites={
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),
             owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
         })

@@ -52,6 +52,18 @@ class AdmCreate(commands.Cog):
 
 #// Действие
 
+        await inter.response.defer(ephemeral=True)
+
+        #=Создание клиента
+        await createAccount(guild, owner)
+
+        #Проверка на исчерпание лимита создания карт
+        if not check_count_cards(owner_id):
+            status="MaxCountCard"
+            await inter.send("У пользователя максимальное количество карт.", ephemeral=True)
+            PermsLog(admin_nickname, admin_id, command, status)
+            return 
+
         status="Success"
         PermsLog(admin_nickname, admin_id, command, status)
 
@@ -67,11 +79,6 @@ class AdmCreate(commands.Cog):
             "black": nxc.Colour.from_rgb(41, 41, 41),
             "white": nxc.Colour.from_rgb(245, 245, 245)
         }
-
-        await inter.response.defer(ephemeral=True)
-
-        #=Создание клиента
-        await createAccount(guild, owner)
 
         #=Создание карты
         full_number = create_card(admin_nickname, name, card_name, type, owner_id, color, do_random=False, adm_number=number_str)
