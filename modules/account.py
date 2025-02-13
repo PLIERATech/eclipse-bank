@@ -21,12 +21,6 @@ async def createAccount(guild, owner):
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),  # Запрещаем доступ всем
             owner: nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True)  # Разрешаем только owner
         })
-        #! Канал "Команды" - можно отправлять сообщения и использовать слэш-команды
-        commands_channel = await guild.create_text_channel("📇ㆍКоманды", category=category, overwrites={
-            guild.default_role: nxc.PermissionOverwrite(view_channel=False),  # Запрещён доступ всем
-            owner: nxc.PermissionOverwrite(
-                view_channel=True, send_messages=True, read_message_history=True, use_slash_commands=True)  # Разрешены сообщения и слэш-команды
-        })
         #! Канал "Транзакции" - только чтение
         transactions_channel = await guild.create_text_channel("💊ㆍТранзакции", category=category, overwrites={
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),
@@ -38,7 +32,7 @@ async def createAccount(guild, owner):
             owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
         })
 
-        channels = [commands_channel.id, transactions_channel.id, cards_channel.id]
+        channels = [transactions_channel.id, cards_channel.id]
 
         #=Создание клиента
         create_client(card_name, owner_id, category.id, channels)

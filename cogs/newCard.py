@@ -89,7 +89,7 @@ class NewCard(commands.Cog):
 
         channels_response = response.data[0]["channels"]
         channels = list(map(int, channels_response.strip("[]").split(",")))
-        cards_channel_id = int(channels[2])
+        cards_channel_id = int(channels[1])
         cards_channel = inter.guild.get_channel(cards_channel_id)
 
         view = CardSelectView()  # Используем уже готовый View

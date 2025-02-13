@@ -25,7 +25,7 @@ class Events(commands.Cog):
             if client_data.data:
                 channels = client_data.data[0]["channels"]
                 channels_list = list(map(int, channels.strip("[]").split(",")))
-                channel_id = channels_list[2]
+                channel_id = channels_list[1]
                 channel = self.client.get_channel(channel_id)
 
                 if channel:
