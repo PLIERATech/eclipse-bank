@@ -5,3 +5,4 @@ highlights.py
 TEST.py
 .gitignore
 card_hen/cards
+cogs/tests.py

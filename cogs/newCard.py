@@ -6,39 +6,34 @@ import asyncio
 
 command = "/создать"
 
-TYPE_TRANSLATION = {
-    "personal": "Личная",
-    "team": "Общины",
-    "banker": "Банкира"
-}
-
 class NewCard(commands.Cog):
     def __init__(self, client):
         self.client = client
         
     @nxc.slash_command(guild_ids=server_id, name="создать", description="Создать карту Eclipse Bank")
-    async def newCard(self, inter: nxc.Interaction, owner: nxc.Member, type: str = nxc.SlashOption(
-        name="card_type",
-        description="Choose 1",
-        required=True,
-        choices=["personal", "team"]
-    ), color: str= nxc.SlashOption(
-        name="card_color",
-        description="Choose 1",
-        required=True,
-        choices=["black", "white", "red", "orange", "yellow", "green", "blue", "purple"]
-    )):
+    async def newCard(
+        self, 
+        inter: nxc.Interaction, 
+        member: nxc.Member, 
+        type: str = nxc.SlashOption(name="card_type", description="Choose 1", required=True, choices=bankerCardType), 
+        color: str= nxc.SlashOption(name="card_color", description="Choose 1", required=True,choices=choice_color)
+    ):
         banker_id = inter.user.id
-        banker = inter.user.display_name
+        banker_name = inter.user.display_name
         nickname = inter.user.display_name
-        card_name = owner.display_name
-        owner_id = owner.id
+        card_name = member.display_name
+        member_id = member.id
         guild = inter.guild
+
+        # Проверка находится ли человек на сервере\
+        if not await verify_user_in_server(inter, member):
+            return
 
         #Проверка прав banker
         if not any(role.id in (banker_role) for role in inter.user.roles):
             status="No Permissions"
-            await inter.response.send_message("❗ У вас недостаточно прав для использования данной команды.", ephemeral=True)
+            embed = e_noPerms()
+            await inter.response.send_message(embed=embed, ephemeral=True)
             PermsLog(nickname, banker_id, command, status) 
             return
 
@@ -47,10 +42,10 @@ class NewCard(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         #=Создание клиента
-        await createAccount(guild, owner)
+        await createAccount(guild, member)
 
         #Проверка на исчерпание лимита создания карт
-        if not check_count_cards(owner_id):
+        if not check_count_cards(member_id):
             status="MaxCountCard"
             await inter.send("У пользователя максимальное количество карт.", ephemeral=True)
             PermsLog(nickname, banker_id, command, status)
@@ -59,40 +54,23 @@ class NewCard(commands.Cog):
         status="Success"
         PermsLog(nickname, banker_id, command, status)
 
-        embed_color = None
-
-        colors = {
-            "red": nxc.Colour.from_rgb(182, 79, 81),
-            "orange": nxc.Colour.from_rgb(220, 130, 82),
-            "yellow": nxc.Colour.from_rgb(223, 186, 66),
-            "green": nxc.Colour.from_rgb(146, 182, 79),
-            "blue": nxc.Colour.from_rgb(79, 139, 182),
-            "purple": nxc.Colour.from_rgb(137, 79, 182),
-            "black": nxc.Colour.from_rgb(41, 41, 41),
-            "white": nxc.Colour.from_rgb(245, 245, 245)
-        }
-
-
-
         #=Создание карты
-        full_number = create_card(banker, card_name, card_name, type, owner_id, color, do_random=True, adm_number="0", balance="0")
-        card_type_rus = TYPE_TRANSLATION.get(type, type)
+        check_create_card = create_card(banker_name, card_name, card_name, type, member_id, color, True, "0", "0")
+        if not check_create_card[1]:
+            embed = sb_cardNotCreated()
+            await inter.followup.send(embed=embed, ephemeral=True)
+            return
+        full_number = check_create_card[0]
+        card_type_rus = type_translate.get(type, type)
         card_image = f"{full_number}.png"
-        embed_color = colors.get(color, color)
 
         await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
         await asyncio.sleep(2)
 
         card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
+        card_embed = e_cards(color,full_number,card_type_rus,card_name,card_image)
 
-        card_embed = nxc.Embed(color=embed_color)
-        card_embed.add_field(name="💳 Карта:", value=full_number, inline=True)
-        card_embed.add_field(name="🗂️ Тип:", value=card_type_rus, inline=True)
-        card_embed.add_field(name="💬 Название", value=card_name, inline=True)
-        card_embed.set_image(url=f"attachment://{card_image}")
-        card_embed.set_footer(text="Eclipse Bank 2025")
-
-        response = supabase.table("clients").select("*").eq("dsc_id", owner_id).execute()
+        response = supabase.table("clients").select("*").eq("dsc_id", member_id).execute()
 
         channels_response = response.data[0]["channels"]
         channels = list(map(int, channels_response.strip("[]").split(",")))
@@ -101,7 +79,7 @@ class NewCard(commands.Cog):
 
         view = CardSelectView()  # Используем уже готовый View
         
-        message_card = await cards_channel.send(content=f"{owner.mention}", embed=card_embed, file=card, view=view)
+        message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
 
         #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
         card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))

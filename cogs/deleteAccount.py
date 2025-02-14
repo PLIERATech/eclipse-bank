@@ -10,13 +10,27 @@ class DelClient(commands.Cog):
         self.client = client
         
     @nxc.slash_command(guild_ids=server_id, name="удалить", description="Удалить счёт Eclipse Bank ")
-    async def delClient(self, inter: nxc.Interaction, owner: nxc.Member):
+    async def delClient(
+        self, 
+        inter: nxc.Interaction, 
+        owner: nxc.Member
+    ):
+        admin = inter.user
+        admin_nick = inter.user.display_name
+        admin_id = inter.user.id
 
-        guild = inter.guild
+        # Проверка прав staff
+        if not await verify_staff(inter, admin, command):
+            return
+
+        Check_delete = await deleteAccount(inter.guild, owner)       
         
-        await deleteAccount(guild, owner)
-
-        await inter.response.send_message("ok", ephemeral=True)
+        # Проверка имеется ли аккаунт у пользователя
+        if await verify_deleteAccount(inter, Check_delete):
+            return
+        
+        embed=account_wasDeleted()
+        await inter.response.send_message(embed=embed, ephemeral=True)
 
 def setup(client):
     client.add_cog(DelClient(client))

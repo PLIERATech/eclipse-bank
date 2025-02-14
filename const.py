@@ -3,6 +3,7 @@ from supabase import Client
 from dotenv import load_dotenv
 from supabase.lib.client_options import ClientOptions
 import logging
+import nextcord as nxc
 
 n = "0123456789"
 
@@ -30,6 +31,8 @@ COMMUNITY_ID = "110"
 COGS_FOLDER = "cogs"
 CONFIG_FILE = "cogs_config.json"
 
+#*Работа с Embeds
+bank_sign = "-# Eclipse Bank"
 
 #//айди дискорд сервера
 server_id = [1338868051222859779]
@@ -41,7 +44,7 @@ BOT_TOKEN = str(token)
 
 #@Роли  Дискорда
 staff_role = [1338898054325080145]
-banker_role = [1338875585472106537,] #1338898054325080145]
+banker_role = [1338875585472106537, 1338898054325080145]
 player_role = [1338875732063162418]
 
 banker_role_id = 1338875585472106537
@@ -51,3 +54,39 @@ banker_role_id = 1338875585472106537
 bank_audit_channel = 1338888321400700928
 salary_channel = 1338884884441206825
 stats_channel = 1338886067025084426
+
+
+#- Дополнительные значения
+suffixes = {
+    "👤 Personal": "EBP-",
+    "🏰 Team": "EBT-",
+    "💸 Banker": "EBS-",
+    "💎 CEO": "CEO-"
+}
+
+type_translate = {
+    "👤 Personal": "👤 Личная",
+    "🏰 Team": "🏰 Общины",
+    "💸 Banker": "💸 Банкира",
+    "💎 CEO": "💎 CEO"
+}
+
+#. Словари для команд
+admCardTypes = ["👤 Personal", "🏰 Team", "💸 Banker", "💎 CEO"]
+bankerCardType = ["👤 Personal", "🏰 Team"]
+choice_color = ["⚫ Black", "⚪ White", "🔴 Red", "🟠 Orange", "🟡 Yellow", "🟢 Green", "🔵 Blue", "🟣 Purple"]
+
+ignore_members = [436507782263603200, 187208294161448960]
+
+embed_colors = {
+        "🔴 Red": nxc.Colour.from_rgb(182, 79, 81),
+        "🟠 Orange": nxc.Colour.from_rgb(220, 130, 82),
+        "🟡 Yellow": nxc.Colour.from_rgb(223, 186, 66),
+        "🟢 Green": nxc.Colour.from_rgb(146, 182, 79),
+        "🔵 Blue": nxc.Colour.from_rgb(79, 139, 182),
+        "🟣 Purple": nxc.Colour.from_rgb(137, 79, 182),
+        "⚫ Black": nxc.Colour.from_rgb(41, 41, 41),
+        "⚪ White": nxc.Colour.from_rgb(245, 245, 245),
+        "💎 CEO": nxc.Colour.from_rgb(5, 170, 156),
+        "💸 Banker": nxc.Colour.from_rgb(31, 31, 31)
+    }

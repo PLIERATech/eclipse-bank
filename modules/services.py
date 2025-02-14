@@ -1,21 +1,16 @@
-from const import *
-from .log_functions import *
+import nextcord as nxc
 import random
-from .api import *
-from card_gen import *
 import asyncio
 import time
+from const import *
+from .log_functions import *
+from .api import *
+from card_gen import *
 
 suffix = ""
 
 def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
-
-    suffixes = {
-        "personal": "EBP-",
-        "team": "EBT-",
-        "banker": "EBS-",
-        "cio": "CIO-"
-    }
+    
     suffix = suffixes.get(type)
 
     #Извлекаем номера уже существующих карт и добавляем в список
@@ -31,7 +26,7 @@ def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, 
     
     full_number = f"{suffix}{number}"
 
-    supabase.table("cards").insert({
+    check = supabase.table("cards").insert({
         "number": number,
         "name": name,
         "type": type,
@@ -39,10 +34,13 @@ def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, 
         "balance": balance
     }).execute()
 
+    if not check.data:
+        return [full_number, False]
+
     cardCreateLog(banker, full_number, owner_id)
-    card_generate(owner_id, number, nickname, color)
+    card_generate(full_number,type, nickname, color)
     
-    return full_number
+    return [full_number, True]
 
 async def delete_card(channel_card_id, message_card_id, bot):
     channel = bot.get_channel(channel_card_id)
@@ -111,3 +109,62 @@ def get_card_info_demote(member_id):
         }
     return None
 
+
+async def createAccount(guild, owner):
+
+    card_name = owner.display_name
+    owner_id = owner.id
+        
+    #*Работа с пользователями
+    #Проверка является ли пользователь уже зарегестрированным пользователем
+    response = supabase.table("clients").select("dsc_id").execute()
+    clients_dsc_id_list = [item["dsc_id"] for item in response.data]
+    if owner_id not in clients_dsc_id_list:
+        #? Создание категории-Банковского счёта
+        #! Создаём категорию с доступом только для указанного пользователя
+        category = await guild.create_category(card_name, overwrites={
+            guild.default_role: nxc.PermissionOverwrite(view_channel=False),  # Запрещаем доступ всем
+            owner: nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True)  # Разрешаем только owner
+        })
+        #! Канал "Транзакции" - только чтение
+        transactions_channel = await guild.create_text_channel("🧮ㆍТранзакции", category=category, overwrites={
+            guild.default_role: nxc.PermissionOverwrite(view_channel=False),
+            owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
+        })
+        #! Канал "Карты" - только чтение
+        cards_channel = await guild.create_text_channel("💳ㆍКарты", category=category, overwrites={
+            guild.default_role: nxc.PermissionOverwrite(view_channel=False),
+            owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
+        })
+
+        channels = [transactions_channel.id, cards_channel.id]
+
+        #=Создание клиента
+        create_client(card_name, owner_id, category.id, channels)
+    return
+
+async def deleteAccount(guild, owner):
+    owner_id = owner.id
+    
+    response_dsc_id = supabase.table("clients").select("dsc_id, account, channels").eq("dsc_id", owner_id).execute()
+
+    if not response_dsc_id.data:
+        return(False)
+
+    if response_dsc_id.data:
+        clients_category_id = int(response_dsc_id.data[0]["account"])
+        clients_channels_ids = list(map(int, response_dsc_id.data[0]["channels"].strip("[]").split(",")))
+
+        category = guild.get_channel(clients_category_id)
+        if category:
+            await category.delete()
+
+        for channel_id in clients_channels_ids:
+            channel = guild.get_channel(channel_id)
+            if channel:
+                await channel.delete()
+
+        supabase.rpc("delete_account", {"client_id": owner_id}).execute()
+
+        clientDeleteLog(owner.display_name)
+        return(True)
