@@ -4,15 +4,16 @@ from const import *
 from modules import *
 import asyncio
 
-command = "/admCreate"
+command = "/admCreateCard"
 
 class AdmCreate(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="admcreate", description="Admin Unit Creation")
-    async def admcreate(
-        self, inter: nxc.Interaction, 
+    @nxc.slash_command(guild_ids=server_id, name="admcreatecard", description="Admin Unit Creation")
+    async def admCreate(
+        self, 
+        inter: nxc.Interaction, 
         member: nxc.Member, 
         number: int, 
         name: str, 
@@ -27,7 +28,8 @@ class AdmCreate(commands.Cog):
         member_nickname = member.display_name
 
         card_type_rus = type_translate.get(type, type)
-        if type == "💎 CEO": color = "💎 CEO"
+        if type == "💎 CEO": color = type
+        elif type == "💸 Banker": color = type
 
         # Проверка прав staff
         if not await verify_staff(inter, admin, command):

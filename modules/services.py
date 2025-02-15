@@ -9,12 +9,8 @@ from .select_menu import *
 from .embeds import *
 from card_gen import *
 
-suffix = ""
-
 # Создать карту и записать в бд
 def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
-
-    suffix = suffixes.get(type)
 
     #Извлекаем номера уже существующих карт и добавляем в список
     response = supabase.table("cards").select("number").execute()
@@ -27,7 +23,7 @@ def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, 
     else:
         number = adm_number
     
-    full_number = f"{suffix}{number}"
+    full_number = f"{suffixes.get(type)}{number}"
 
     check = supabase.table("cards").insert({
         "number": number,

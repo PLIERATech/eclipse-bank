@@ -19,10 +19,7 @@ def card_generate(fullNumber, type, user_nickname, color):
     if color == "⚪ White":
         font_color = unique_color
 
-    if type == "💸 Banker":
-        template = color_templates.get(type)
-    else:
-        template = color_templates.get(color)
+    template = color_templates.get(color)
 
     try:
         template.convert("RGBA")

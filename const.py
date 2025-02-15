@@ -88,5 +88,5 @@ embed_colors = {
         "⚫ Black": nxc.Colour.from_rgb(41, 41, 41),
         "⚪ White": nxc.Colour.from_rgb(245, 245, 245),
         "💎 CEO": nxc.Colour.from_rgb(5, 170, 156),
-        "💸 Banker": nxc.Colour.from_rgb(31, 31, 31)
+        "💸 Banker": nxc.Colour.from_rgb(23, 181, 181)
     }

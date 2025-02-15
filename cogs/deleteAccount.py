@@ -3,13 +3,13 @@ from nextcord.ext import commands
 from const import *
 from modules import *
 
-command = "/удалить"
+command = "/admDelClient"
 
 class DelClient(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="удалить", description="Удалить счёт Eclipse Bank ")
+    @nxc.slash_command(guild_ids=server_id, name="admdelclient", description="Удалить счёт Eclipse Bank ")
     async def delClient(
         self, 
         inter: nxc.Interaction, 
