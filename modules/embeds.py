@@ -1,6 +1,7 @@
 import nextcord as nxc
 from const import *
 
+
 def e_noPerms():
     embed = nxc.Embed(
         title="⚠️ Предупреждение", 
@@ -9,6 +10,7 @@ def e_noPerms():
                     f"{bank_sign}")
         )
     return(embed)
+
 
 def num_limit():
     embed = nxc.Embed(
@@ -19,6 +21,7 @@ def num_limit():
         )
     return(embed)
 
+
 def num_isClaimed():
     embed = nxc.Embed(
         title="⚠️ Предупреждение", 
@@ -27,6 +30,7 @@ def num_isClaimed():
                     f"{bank_sign}")
         )
     return(embed)
+
 
 def user_cardLimit():
     embed = nxc.Embed(
@@ -37,6 +41,7 @@ def user_cardLimit():
             )
     return(embed)
 
+
 def user_isBanker():
     embed = nxc.Embed(
             title="⚠️ Предупреждение", 
@@ -45,6 +50,7 @@ def user_isBanker():
                         f"{bank_sign}")
             )
     return(embed)
+
 
 def account_wasDeleted():
     embed = nxc.Embed(
@@ -55,6 +61,7 @@ def account_wasDeleted():
             )
     return(embed)
 
+
 def user_isNotBanker():
     embed = nxc.Embed(
             title="⚠️ Предупреждение", 
@@ -63,6 +70,7 @@ def user_isNotBanker():
                         f"{bank_sign}")
             )
     return(embed)
+
 
 def demotedbanker(card_type_rus, full_number):
     embed = nxc.Embed(
@@ -75,6 +83,7 @@ def demotedbanker(card_type_rus, full_number):
             )
     return(embed)
 
+
 def demoteBankerWithCar():
     embed = nxc.Embed(
             title="✅ Успех!", 
@@ -84,6 +93,7 @@ def demoteBankerWithCar():
                         f"{bank_sign}")
             )
     return(embed)
+
 
 def sb_cardNotCreated():
     embed = nxc.Embed(
@@ -112,21 +122,18 @@ def sb_cardNotCreated():
 
 
 
+
+
+
+
+
+
+
+
+
+
 def e_cards(color,full_number,type_rus,name,image):
     embed_color = None
-    
-    colors = {
-        "red": nxc.Colour.from_rgb(182, 79, 81),
-        "orange": nxc.Colour.from_rgb(220, 130, 82),
-        "yellow": nxc.Colour.from_rgb(223, 186, 66),
-        "green": nxc.Colour.from_rgb(146, 182, 79),
-        "blue": nxc.Colour.from_rgb(79, 139, 182),
-        "purple": nxc.Colour.from_rgb(137, 79, 182),
-        "black": nxc.Colour.from_rgb(41, 41, 41),
-        "white": nxc.Colour.from_rgb(245, 245, 245),
-        "ceo": nxc.Colour.from_rgb(5, 170, 156),
-        "banker": nxc.Colour.from_rgb(31, 31, 31)
-    }
 
     embed_color = embed_colors.get(color, color)
 

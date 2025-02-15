@@ -22,15 +22,16 @@ class DelClient(commands.Cog):
         # Проверка прав staff
         if not await verify_staff(inter, admin, command):
             return
-
+        
+        await inter.response.defer(ephemeral=True)
         Check_delete = await deleteAccount(inter.guild, owner)       
         
         # Проверка имеется ли аккаунт у пользователя
-        if await verify_deleteAccount(inter, Check_delete):
+        if not await verify_deleteAccount(inter, Check_delete):
             return
         
         embed=account_wasDeleted()
-        await inter.response.send_message(embed=embed, ephemeral=True)
+        await inter.send(embed=embed, ephemeral=True)
 
 def setup(client):
     client.add_cog(DelClient(client))

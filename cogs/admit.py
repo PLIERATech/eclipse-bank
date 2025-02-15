@@ -22,7 +22,10 @@ class Admit(commands.Cog):
         member_nick = member.display_name
         member_id = member.id
         guild = inter.guild
+        
         type = admCardTypes[2]
+        card_type_rus = type_translate.get(type, type)
+        color = type
 
         # Проверка прав staff
         if not await verify_staff(inter, admin, command):
@@ -32,52 +35,27 @@ class Admit(commands.Cog):
         if not await verify_user_in_server(inter, member):
             return
 
-        #Проверка не является ли пользователь уже банкир
-        if any(role.id in (banker_role) for role in member.roles):
-            status="isBanker"
-            embed = user_isBanker()
-            await inter.response.send_message(embed=embed, ephemeral=True)
-            PermsLog(admin_nick, admin_id, command, status)
+        # Проверка не является ли пользователь уже банкир
+        if not await verify_dont_banker(inter, member, command):
             return
 
         await inter.response.defer(ephemeral=True)
 
-        #Создается клиент
+        # Создается клиент
         await createAccount(guild, member)
         if not member_id in ignore_members:
             supabase.table("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
 
 
         #=Создание карты банкира
-        check_create_card = create_card(admin_nick, "Зарплатная", member_nick, type, member_id, "🔴 Red", True, "0", "0")
-        if not check_create_card[1]:
-            embed = sb_cardNotCreated()
-            await inter.followup.send(embed=embed, ephemeral=True)
+        check_create_card = create_card(admin_nick, "Зарплатная", member_nick, type, member_id, color, True, "0", "0")
+         # Проверка получилось ли создать карту
+        if not await verify_create_card(inter, check_create_card[1]):
             return
-        full_number = check_create_card[0]
-        card_type_rus = "Банкира"
-        card_image = f"{full_number}.png"
-
-        await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
-        await asyncio.sleep(2)
-
-        card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
-        card_embed = e_cards("💸 Banker",full_number,card_type_rus,"Зарплатная",card_image)
-
-        response = supabase.table("clients").select("*").eq("dsc_id", member_id).execute()
-
-        channels_response = response.data[0]["channels"]
-        channels = list(map(int, channels_response.strip("[]").split(",")))
-        cards_channel_id = int(channels[1])
-        cards_channel = inter.guild.get_channel(cards_channel_id)
-
-        view = CardSelectView()  # Используем уже готовый View
         
-        message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
+        full_number = check_create_card[0]
 
-        #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
-        card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))
-        supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
+        await next_create_card(inter, member, full_number, card_type_rus, color, "Зарплатная")
 
         #// Действие        
         invite_team(member_id)

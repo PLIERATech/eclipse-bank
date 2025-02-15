@@ -33,12 +33,8 @@ class Demote(commands.Cog):
         if not await verify_user_in_server(inter, member):
             return
 
-        #Проверка является ли пользователь банкиром
-        if not any(role.id in (banker_role) for role in member.roles):
-            status="is_notBanker"
-            embed=user_isNotBanker()
-            await inter.response.send_message(embed=embed, ephemeral=True)
-            PermsLog(admin_nick, admin_id, command, status)
+        # Проверка является ли пользователь банкиром
+        if not await verify_this_banker(inter, command, member, False):
             return
 
         await inter.response.defer(ephemeral=True)
@@ -51,21 +47,27 @@ class Demote(commands.Cog):
         channels_response = get_card_info["channels_user"]
         channels = list(map(int, channels_response.strip("[]").split(",")))
         channel_card_id = channels[1]
-        if int(get_card_info['banker_balance']) > 0:
+        if int(get_card_info['banker_balance']) is None:
             if get_card_info['non_banker_number'] == None:
                 #=Создание карты если нет и есть деньги
-                card_type="👤 Personal"
-                full_number = create_card(admin_nick, member_nick, member_nick, card_type, member_id, color="🟢 Green", do_random=True, adm_number="0", balance=get_card_info['banker_balance'])
+                card_type="👤 Personal"            
+                check_create_card = create_card(admin_nick, member_nick, member_nick, card_type, member_id, color="🟢 Green", do_random=True, adm_number="0", balance=get_card_info['banker_balance'])
+                # Проверка получилось ли создать карту
+                if not await verify_create_card(inter, check_create_card[1]):
+                    return
+                
+                full_number = check_create_card[0]             
+                
                 card_type_rus = "Личная"
                 card_image = f"{full_number}.png"
 
-                #Удаление банковской карты
+                # Удаление банковской карты
                 await delete_card(channel_card_id, int(get_card_info["banker_select_menu_id"]), inter.client)
                 
-                #Продолжение создания банковской карты
+                # Продолжение создания банковской карты
                 await asyncio.sleep(2)
                 card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
-                card_embed = e_cards("🟢 Green",full_number,card_type_rus,member_nick,card_image)
+                card_embed = e_cards(choice_color[5],full_number,card_type_rus,member_nick,card_image)
 
                 cards_channel = inter.guild.get_channel(channel_card_id)
 
@@ -73,8 +75,8 @@ class Demote(commands.Cog):
                 
                 message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
 
-                #Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
-                card_numbers = full_number.translate(str.maketrans("", "", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"))
+                # Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
+                card_numbers = full_number[4:]
                 supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
                 embed = demotedbanker(card_type_rus, full_number)
                 await inter.followup.send(embed=embed)
@@ -89,7 +91,7 @@ class Demote(commands.Cog):
             embed = demoteBankerWithCar()
             await inter.followup.send(embed=embed)
         
-        #Снятие роли
+        # Снятие роли
         banker_role_remove = inter.guild.get_role(banker_role_id)
         await member.remove_roles(banker_role_remove)
 

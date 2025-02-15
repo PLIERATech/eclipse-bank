@@ -19,9 +19,7 @@ def card_generate(fullNumber, type, user_nickname, color):
     if color == "⚪ White":
         font_color = unique_color
 
-    if type == "💎 CEO":
-        template = color_templates.get(type)
-    elif type == "💸 Banker":
+    if type == "💸 Banker":
         template = color_templates.get(type)
     else:
         template = color_templates.get(color)

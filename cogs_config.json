@@ -4,7 +4,5 @@
     "deleteAccount": true,
     "admCreate": true,
     "events": true,
-    "demote": true,
-    "tests": true,
-    "TEstttt": true
+    "demote": true
 }

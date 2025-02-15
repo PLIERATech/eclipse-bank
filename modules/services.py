@@ -5,12 +5,15 @@ import time
 from const import *
 from .log_functions import *
 from .api import *
+from .select_menu import *
+from .embeds import *
 from card_gen import *
 
 suffix = ""
 
+# Создать карту и записать в бд
 def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
-    
+
     suffix = suffixes.get(type)
 
     #Извлекаем номера уже существующих карт и добавляем в список
@@ -42,26 +45,40 @@ def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, 
     
     return [full_number, True]
 
+
+# Продолжение создания карты - выкладывание ее в канале владельца
+async def next_create_card(inter, member, full_number, card_type_rus, color, name):
+    card_image = f"{full_number}.png"
+
+    await inter.followup.send(content=f"Карта типа {card_type_rus} с номером {full_number} успешно создана!")
+    await asyncio.sleep(2)
+
+    card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
+    card_embed = e_cards(color, full_number, card_type_rus, name, card_image)
+
+    response = supabase.table("clients").select("*").eq("dsc_id", member.id).execute()
+    channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
+    cards_channel_id = int(channels[1])
+    cards_channel = inter.guild.get_channel(cards_channel_id)
+
+    view = CardSelectView()  # Используем уже готовый View
+    
+    message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
+
+    # Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
+    card_numbers = full_number[4:]
+    supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
+    return
+
+
+# Удаленгие карты
 async def delete_card(channel_card_id, message_card_id, bot):
     channel = bot.get_channel(channel_card_id)
     message = await channel.fetch_message(message_card_id)
     await message.delete()
     return
 
-def create_client(nickname, id, account, channels):
-
-    prdx_id = get_user_id(id)
-
-    supabase.table("clients").insert({
-        "nickname": nickname,
-        "dsc_id": id,
-        "prdx_id": prdx_id,
-        "account": account,
-        "channels": channels
-    }).execute()
-
-    clientCreateLog(nickname)
-
+# Автоматическое удалие изображения
 async def deleteCardImages(interval):
     while True:
         try:
@@ -75,25 +92,15 @@ async def deleteCardImages(interval):
                 if os.path.isfile(file_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                     file_age = current_time - os.path.getmtime(file_path)  # Время в секундах
 
-                    if file_age > 60:  # Файл старше 60 секунд
+                    if file_age > 30:  # Файл старше 30 секунд
                         os.remove(file_path)
         except Exception as e:
             print(f"Ошибка при удалении файлов: {e}")
 
         await asyncio.sleep(interval)  # Асинхронная пауза
 
-def check_count_cards(member_id):
-    response = supabase.rpc("get_card_info", {"user_id": int(member_id)}).execute()
 
-    if not response.data:
-        print("❗ Ошибка: не удалось получить данные о картах.")
-        return None  # Ошибка получения данных
-
-    count_cards_allowed = response.data[0]["count_cards_allowed"]
-    card_count = response.data[0]["card_count"]
-
-    return card_count < count_cards_allowed  # True - можно создать карту, False - нельзя
-
+# Получение параметров из бд для удаления карты
 def get_card_info_demote(member_id):
     response = supabase.rpc("get_user_cards_demote", {"user_id": member_id}).execute()
 
@@ -110,39 +117,52 @@ def get_card_info_demote(member_id):
     return None
 
 
-async def createAccount(guild, owner):
+# Создать аккаунт
+async def createAccount(guild, member):
 
-    card_name = owner.display_name
-    owner_id = owner.id
+    member_name = member.display_name
+    member_id = member.id
         
     #*Работа с пользователями
     #Проверка является ли пользователь уже зарегестрированным пользователем
     response = supabase.table("clients").select("dsc_id").execute()
     clients_dsc_id_list = [item["dsc_id"] for item in response.data]
-    if owner_id not in clients_dsc_id_list:
+    if member_id not in clients_dsc_id_list:
         #? Создание категории-Банковского счёта
         #! Создаём категорию с доступом только для указанного пользователя
-        category = await guild.create_category(card_name, overwrites={
+        category = await guild.create_category(member_name, overwrites={
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),  # Запрещаем доступ всем
-            owner: nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True)  # Разрешаем только owner
+            member: nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True)  # Разрешаем только owner
         })
         #! Канал "Транзакции" - только чтение
         transactions_channel = await guild.create_text_channel("🧮ㆍТранзакции", category=category, overwrites={
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),
-            owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
+            member: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
         })
         #! Канал "Карты" - только чтение
         cards_channel = await guild.create_text_channel("💳ㆍКарты", category=category, overwrites={
             guild.default_role: nxc.PermissionOverwrite(view_channel=False),
-            owner: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
+            member: nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False)  # Только чтение
         })
 
         channels = [transactions_channel.id, cards_channel.id]
 
         #=Создание клиента
-        create_client(card_name, owner_id, category.id, channels)
+        prdx_id = get_user_id(member_id)
+
+        supabase.table("clients").insert({
+            "nickname": member_name,
+            "dsc_id": member_id,
+            "prdx_id": prdx_id,
+            "account": category.id,
+            "channels": channels
+        }).execute()
+
+        clientCreateLog(member_name)
     return
 
+
+# Удалить аккаунт
 async def deleteAccount(guild, owner):
     owner_id = owner.id
     
