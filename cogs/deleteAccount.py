@@ -13,7 +13,7 @@ class DelClient(commands.Cog):
     async def delClient(
         self, 
         inter: nxc.Interaction, 
-        owner: nxc.Member
+        member: nxc.Member
     ):
         admin = inter.user
         admin_nick = inter.user.display_name
@@ -24,7 +24,7 @@ class DelClient(commands.Cog):
             return
         
         await inter.response.defer(ephemeral=True)
-        Check_delete = await deleteAccount(inter.guild, owner)       
+        Check_delete = await deleteAccount(inter.guild, member)       
         
         # Проверка имеется ли аккаунт у пользователя
         if not await verify_deleteAccount(inter, Check_delete):

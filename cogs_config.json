@@ -4,5 +4,6 @@
     "deleteAccount": true,
     "admCreate": true,
     "events": true,
-    "demote": true
+    "demote": true,
+    "updateAllCards": true
 }

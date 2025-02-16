@@ -50,7 +50,11 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
     await asyncio.sleep(2)
 
     card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
-    card_embed = e_cards(color, full_number, card_type_rus, name, card_image)
+    
+    card_embed = e_cards(color, full_number, card_type_rus, name, card_image)  
+    card_embed_user = e_cards_users(inter, color, member.display_name, members={})
+    card_embed.set_image(url=f"attachment://{card.filename}")  
+    embeds = [card_embed, card_embed_user]  
 
     response = supabase.table("clients").select("*").eq("dsc_id", member.id).execute()
     channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
@@ -59,12 +63,16 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     view = CardSelectView()  # Используем уже готовый View
     
-    message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
+    message_card = await cards_channel.send(content=f"{member.mention}", embeds=embeds, file=card, view=view)
 
     # Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
     card_numbers = full_number[4:]
     supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
     return
+
+
+
+
 
 
 # Удаленгие карты
