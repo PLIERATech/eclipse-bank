@@ -68,12 +68,15 @@ class Demote(commands.Cog):
                 await asyncio.sleep(2)
                 card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
                 card_embed = e_cards(choice_color[5],full_number,card_type_rus,member_nick,card_image)
+                card_embed_image = e_cards_image(choice_color[5],card.filename)  
+                card_embed_user = e_cards_users(inter, choice_color[5], member.display_name, members={})
+                embeds = [card_embed, card_embed_image, card_embed_user]  
 
                 cards_channel = inter.guild.get_channel(channel_card_id)
 
                 view = CardSelectView()  # Используем уже готовый View
                 
-                message_card = await cards_channel.send(content=f"{member.mention}", embed=card_embed, file=card, view=view)
+                message_card = await cards_channel.send(content=f"{member.mention}", embeds=embeds, file=card, view=view)
 
                 # Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
                 card_numbers = full_number[4:]

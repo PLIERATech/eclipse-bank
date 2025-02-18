@@ -51,14 +51,14 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
     
-    card_embed = e_cards(color, full_number, card_type_rus, name, card_image)  
+    card_embed = e_cards(color, full_number, card_type_rus, name)
+    card_embed_image = e_cards_image(color,card.filename)  
     card_embed_user = e_cards_users(inter, color, member.display_name, members={})
-    card_embed.set_image(url=f"attachment://{card.filename}")  
-    embeds = [card_embed, card_embed_user]  
+    embeds = [card_embed, card_embed_image, card_embed_user]  
 
-    response = supabase.table("clients").select("*").eq("dsc_id", member.id).execute()
+    response = supabase.table("clients").select("channels").eq("dsc_id", member.id).execute()
     channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
-    cards_channel_id = int(channels[1])
+    cards_channel_id = channels[1]
     cards_channel = inter.guild.get_channel(cards_channel_id)
 
     view = CardSelectView()  # Используем уже готовый View
@@ -75,7 +75,7 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
 
 
-# Удаленгие карты
+# Удаление карты
 async def delete_card(channel_card_id, message_card_id, bot):
     channel = bot.get_channel(channel_card_id)
     message = await channel.fetch_message(message_card_id)
@@ -131,6 +131,7 @@ async def createAccount(guild, member):
     #Проверка является ли пользователь уже зарегестрированным пользователем
     response = supabase.table("clients").select("dsc_id").execute()
     clients_dsc_id_list = [item["dsc_id"] for item in response.data]
+
     if member_id not in clients_dsc_id_list:
         #? Создание категории-Банковского счёта
         #! Создаём категорию с доступом только для указанного пользователя
@@ -162,6 +163,9 @@ async def createAccount(guild, member):
             "channels": channels
         }).execute()
 
+        client_role_add = guild.get_role(client_role_id)
+        await member.add_roles(client_role_add)
+
         clientCreateLog(member_name)
     return
 
@@ -189,6 +193,9 @@ async def deleteAccount(guild, owner):
                 await channel.delete()
 
         supabase.rpc("delete_account", {"client_id": owner_id}).execute()
+
+        client_role_remove = guild.get_role(client_role_id)
+        await owner.remove_roles(client_role_remove)
 
         clientDeleteLog(owner.display_name)
         return(True)

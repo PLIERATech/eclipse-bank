@@ -141,58 +141,45 @@ def emb_updateAllCards_processbar(progress_bar, percent):
 
 
 
-
-def e_cards(color,full_number,type_rus,name,image):
+# Embed №1 для карты
+def e_cards(color,full_number,type_rus,name):
     embed_color = embed_colors.get(color, color)
 
     embed = nxc.Embed(color=embed_color)
-    embed.add_field(name="💳 Карта:", value=full_number, inline=True)
-    embed.add_field(name="🗂️ Тип:", value=type_rus, inline=True)
-    embed.add_field(name="💬 Название", value=name, inline=True)
-    if not image == None:
-        embed.set_image(url=f"attachment://{image}")
+    embed.add_field(name="💳 Карта:⠀⠀⠀⠀⠀", value=full_number, inline=True)
+    embed.add_field(name="🗂️ Тип:⠀⠀⠀⠀⠀⠀", value=type_rus, inline=True)
+    embed.add_field(name="💬 Название⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀", value=name, inline=True)
     return(embed)
 
+# Embed №2 для карты
+def e_cards_image(color, filename):
+    embed_color = embed_colors.get(color, color)
 
+    embed = nxc.Embed(color=embed_color)
+    embed.set_image(url=f"attachment://{filename}") 
+    return(embed)
 
-
-# def e_cards_users(color,owner_name,members):
-#     embed_color = embed_colors.get(color, color)
-
-#     embed = nxc.Embed(color=embed_color)
-#     embed.add_field(name="👑 Владелец:⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀", value=owner_name, inline=False)
-#     embed.add_field(name="👥 Пользователи:", value=members, inline=False)
-#     return(embed)
-    
-
-
-# Функция для создания Embed с никнеймами пользователей
+# Embed №3 для карты
 def e_cards_users(inter, color, owner_name, members):
     embed_color = embed_colors.get(color, color)
     
     embed = nxc.Embed(color=embed_color)
     embed.add_field(name="👑 Владелец:⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀", value=owner_name, inline=False)
 
-    # Если нет пользователей, выводим сообщение об этом
     if not members:
         embed.add_field(name="👥 Пользователи:", value="-", inline=False)
         return embed
 
-    # Составляем список никнеймов пользователей
     user_names = []
     for user_id in members:
-        # Проверяем, что user_id — это строка или число, а не кортеж
         if isinstance(user_id, (str, int)):
-            # Пытаемся найти пользователя в гильдии по ID
             member = inter.guild.get_member(int(user_id))
             if member:
-                user_names.append(member.nick)  # Добавляем имя пользователя в список
+                user_names.append(member.display_name)
             else:
-                user_names.append(f"Не найден {user_id}")  # Если не нашли пользователя, добавляем сообщение об ошибке
+                user_names.append(f"Не найден {user_id}")
         else:
-            user_names.append(f"Неверный формат ID: {user_id}")  # Если user_id — это не строка или число
-
-    # Добавляем список пользователей в embed
+            user_names.append(f"Неверный формат ID: {user_id}")
     embed.add_field(name="👥 Пользователи:", value="\n".join(user_names), inline=False)
     
     return embed

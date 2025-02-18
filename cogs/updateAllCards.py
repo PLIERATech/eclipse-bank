@@ -2,8 +2,6 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
-import asyncio
-import json
 
 command = "/updateAllCards"
 
@@ -27,32 +25,30 @@ class UpdateAllCards(commands.Cog):
 
         progress_bar = "                    "
         percent = 0
-        embed1 = emb_updateAllCards_processbar(progress_bar, percent)
-        progress_message = await inter.send(embed=embed1, ephemeral=True)
+        embed_start = emb_updateAllCards_processbar(progress_bar, percent)
+        progress_message = await inter.send(embed=embed_start, ephemeral=True)
 
         for index, card in enumerate(cards_data.data, start=1):
             select_menu_id = card["select_menu_id"]
             owner_id = card["owner"]
+            members = card["members"]
             number = card["number"]
             type = card["type"]
             name = card["name"]
-            members = card["members"]
             full_number = f"{suffixes.get(type, type)}{number}"
             card_type_rus = type_translate.get(type, type)
 
-            client_data = card.get("clients")
-            if not client_data:
-                print(f"❌ Клиент {owner_id} не найден в таблице clients.")
-                continue
+            if isinstance(members, str):
+                try:
+                    members = json.loads(members)
+                except json.JSONDecodeError:
+                    members = {}
 
+            client_data = card.get("clients")
             owner_name = client_data["nickname"]
             channels_list = list(map(int, client_data["channels"].strip("[]").split(",")))
             channel_id = channels_list[1]
             channel = self.client.get_channel(channel_id)
-
-            if not channel:
-                print(f"❌ Канал {channel_id} не найден.")
-                continue
 
             try:
                 message = await channel.fetch_message(select_menu_id)
@@ -61,46 +57,15 @@ class UpdateAllCards(commands.Cog):
                     continue
 
                 existing_embeds = message.embeds
-                if not existing_embeds:
-                    print(f"⚠ У сообщения {select_menu_id} нет эмбедов.")
+                if len(existing_embeds) < 3:
+                    print(f"⚠ У сообщения {select_menu_id} нет 3 эмбедов.")
                     continue
-
-                card_embed = existing_embeds[0]
-
-                # Проверяем изображение перед обновлением
-                old_image_url = card_embed.image.url if card_embed.image else None
-                if not old_image_url:
-                    print(f"⚠ Изображение отсутствует у карты {select_menu_id}, возможно, Discord его удалил.")
-
-                color = card_embed.color
-
-                # Создаём новый эмбед
-                new_card_embed = e_cards(color, full_number, card_type_rus, name, image=None)
-
-                # Восстанавливаем изображение
-                if old_image_url:
-                    new_card_embed.set_image(url=old_image_url)
-                else:
-                    print(f"⚠ Картинка для {select_menu_id} не была установлена.")
-
-                if isinstance(members, str):
-                    members = json.loads(members)
-                # Создаём второй эмбед
+                
+                second_embed = existing_embeds[1]
+                color = existing_embeds[0].color
+                new_card_embed = e_cards(color, full_number, card_type_rus, name) 
                 card_embed_user = e_cards_users(inter, color, owner_name, members)
-
-                # Добавляем небольшую задержку перед обновлением
-                await asyncio.sleep(0.2)
-
-                # Обновляем сообщение
-                await message.edit(embeds=[new_card_embed, card_embed_user], attachments=[])
-
-                # Проверяем изображение после обновления
-                updated_message = await channel.fetch_message(select_menu_id)
-                updated_embed = updated_message.embeds[0] if updated_message.embeds else None
-                updated_image_url = updated_embed.image.url if updated_embed and updated_embed.image else None
-
-                if not updated_image_url:
-                    print(f"❌ Изображение пропало после обновления {select_menu_id}!")
+                await message.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
 
             except nxc.NotFound:
                 print(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")
@@ -110,11 +75,11 @@ class UpdateAllCards(commands.Cog):
 
             percent = int((index / total) * 100)
             progress_bar = "▓" * (percent // 5) + "░" * (20 - (percent // 5))
-            embed1 = emb_updateAllCards_processbar(progress_bar, percent)
-            await progress_message.edit(embed=embed1)
+            embed_progress = emb_updateAllCards_processbar(progress_bar, percent)
+            await progress_message.edit(embed=embed_progress)
 
-        embed2 = emb_updateAllCards()
-        await progress_message.edit(embed=embed2)
+        embed_finish = emb_updateAllCards()
+        await progress_message.edit(embed=embed_finish)
 
 def setup(client):
     client.add_cog(UpdateAllCards(client))
