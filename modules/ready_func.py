@@ -16,12 +16,15 @@ async def start_persistent_view(bot):
             await guild.leave()
 
     # Получаем все карты
-    cards_data = supabase.table("cards").select("select_menu_id, owner, members, clients(channels)").execute()
+    cards_data = supabase.table("cards").select("type, number, select_menu_id, owner, members, clients(channels, nickname)").execute()
 
     for card in cards_data.data:
         select_menu_id = card["select_menu_id"]
         owner_id = card["owner"]
         members = card["members"]
+        type = card['type']
+        number = card['number']
+        full_number = f"{suffixes.get(type, type)}{number}"
 
         if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
             members = {}
@@ -32,13 +35,25 @@ async def start_persistent_view(bot):
             channels_list = list(map(int, channels.strip("[]").split(",")))
             channel_id = channels_list[1]
             channel = bot.get_channel(channel_id)
+            owner_name = client_data["nickname"]
 
             if channel:
                 try:
                     message_owner = await channel.fetch_message(select_menu_id)  # Проверяем, что карта существует
                 except nxc.NotFound:
                     supabase.table("cards").delete().eq("select_menu_id", select_menu_id).execute()
-                    print(f"Удалена карта {select_menu_id} (сообщение отсутствует)")
+                    for user_id, data in members.items():
+                        msg_id = data.get("id_message")
+                        channel_member_id = data.get("id_channel")
+                        channel_member = bot.get_channel(channel_member_id)
+                        message_member = await channel_member.fetch_message(msg_id)
+                        await message_member.delete()
+
+                    channel_image = bot.get_channel(image_saver_channel)
+                    async for message in channel_image.history(limit=None):
+                        if full_number in message.content:
+                            await message.delete()
+                    print(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
                     continue
             else:
                 print(f"Канал с ID {channel_id} не найден.")
@@ -68,10 +83,9 @@ async def start_persistent_view(bot):
             if members_to_delete:
                 existing_embeds = message_owner.embeds
                 color = existing_embeds[1].color  # Цвет карты
-                owner_name = client_data.get("nickname", "Неизвестный владелец")  # Имя владельца
 
                 # Обновляем embed с пользователями
-                card_embed_user = e_cards_users(channel.guild, color, owner_name, members)
+                card_embed_user = e_cards_users(channel, color, owner_name, members)
 
                 await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
