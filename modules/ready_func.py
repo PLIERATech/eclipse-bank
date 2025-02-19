@@ -50,9 +50,9 @@ async def start_persistent_view(bot):
                         await message_member.delete()
 
                     channel_image = bot.get_channel(image_saver_channel)
-                    async for message in channel_image.history(limit=None):
-                        if full_number in message.content:
-                            await message.delete()
+                    async for msg in channel_image.history(limit=None):
+                        if full_number in msg.content:
+                            await msg.delete()
                     print(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
                     continue
             else:

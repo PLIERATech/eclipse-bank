@@ -209,7 +209,24 @@ async def deleteAccount(guild, owner):
             if channel:
                 await channel.delete()
 
-        supabase.rpc("delete_account", {"client_id": owner_id}).execute()
+        delete_account_request = supabase.rpc("delete_account", {"client_id": owner_id}).execute()
+        for del_account in delete_account_request.data:
+            type = del_account['type']
+            number = del_account['number']
+            members = del_account["members"]
+            del_card_full_number = f"{suffixes.get(type, type)}{number}"
+
+            for user_id, data in members.items():
+                msg_id = data.get("id_message")
+                channel_member_id = data.get("id_channel")
+                channel_member = guild.get_channel(channel_member_id)
+                message_member = await channel_member.fetch_message(msg_id)
+                await message_member.delete()
+
+            channel_image = guild.get_channel(image_saver_channel)
+            async for msg in channel_image.history(limit=None):
+                if del_card_full_number in msg.content:
+                    await msg.delete()
 
         client_role_remove = guild.get_role(client_role_id)
         await owner.remove_roles(client_role_remove)
