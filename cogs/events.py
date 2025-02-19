@@ -51,7 +51,7 @@ class Events(commands.Cog):
                     message_member = await channel_member.fetch_message(msg_id)
                     await message_member.delete()
 
-                await delete_image_card_in_channel(self.client, full_number)
+                await del_img_in_channel(self.client, full_number)
                 print("Карта успешно удалена")
 
             elif query_type == 'members':

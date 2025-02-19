@@ -1,11 +1,12 @@
+from nextcord.ui import View, Select
 import nextcord as nxc
 from const import *
 from .log_functions import *
 from .embeds import *
 from .verify import *
+from .services import *
 from card_gen import *
 import asyncio
-from nextcord.ui import View, Select
 
 class CardSelectView(View):
     def __init__(self):
@@ -548,7 +549,7 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             await card_generate(full_number, nickname, color_name)
             # Удалить старую картинку
-            await delete_image_card_in_channel(inter.client, full_number)
+            await del_img_in_channel(inter.client, full_number)
             #вставка новой картинки в embed
             await inter.send(f"{nickname} успешно стал владельцем карты `{full_number}`!", ephemeral=True)
             await asyncio.sleep(1,5)

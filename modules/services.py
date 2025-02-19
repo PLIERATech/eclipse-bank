@@ -224,7 +224,7 @@ async def deleteAccount(guild, owner):
                 message_member = await channel_member.fetch_message(msg_id)
                 await message_member.delete()
 
-            await delete_image_card_in_channel(guild, del_card_full_number)
+            await del_img_in_channel(guild, del_card_full_number)
 
         client_role_remove = guild.get_role(client_role_id)
         await owner.remove_roles(client_role_remove)
@@ -232,8 +232,8 @@ async def deleteAccount(guild, owner):
         clientDeleteLog(owner.display_name)
         return(True)
     
-
-async def delete_image_card_in_channel(client, full_number):
+# Удалить старую картинку
+async def del_img_in_channel(client, full_number):
     channel = client.get_channel(image_saver_channel)
     async for message in channel.history(limit=None):
         if full_number in message.content:

@@ -50,7 +50,7 @@ async def start_persistent_view(bot):
                         message_member = await channel_member.fetch_message(msg_id)
                         await message_member.delete()
 
-                    await delete_image_card_in_channel(bot, full_number)
+                    await del_img_in_channel(bot, full_number)
                     print(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
                     continue
             else:
