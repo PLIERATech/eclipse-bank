@@ -3,6 +3,7 @@ import nextcord as nxc
 from const import *
 from .select_menu import *
 from .log_functions import *
+from .services import *
 
 async def start_persistent_view(bot):
     # Регистрируем View, чтобы оно работало после перезапуска
@@ -49,10 +50,7 @@ async def start_persistent_view(bot):
                         message_member = await channel_member.fetch_message(msg_id)
                         await message_member.delete()
 
-                    channel_image = bot.get_channel(image_saver_channel)
-                    async for msg in channel_image.history(limit=None):
-                        if full_number in msg.content:
-                            await msg.delete()
+                    await delete_image_card_in_channel(bot, full_number)
                     print(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
                     continue
             else:

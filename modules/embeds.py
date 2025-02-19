@@ -12,11 +12,11 @@ def e_noPerms():
     return(embed)
 
 
-def num_limit():
+def e_noPerms00000():
     embed = nxc.Embed(
         title="⚠️ Предупреждение", 
-        color=nxc.Color.gold(), 
-        description=(f"Параметр `number` должен быть числом из ровно 5 цифр. \n\n"
+        color=nxc.Color.red(), 
+        description=(f"У вас недостаточно прав для взаимодействия с картой CEO-00000! \n\n"
                     f"{bank_sign}")
         )
     return(embed)

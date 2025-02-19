@@ -34,7 +34,6 @@ class Events(commands.Cog):
         if request_card_member.data:
             # Проверяем, из какого запроса пришли данные
             query_type = request_card_member.data[0].get('query_type')
-
             if query_type == 'select_menu_id':
                 supabase.table("cards").delete().eq("select_menu_id", message_id).execute()
                 type = request_card_member.data[0]['type']
@@ -52,10 +51,7 @@ class Events(commands.Cog):
                     message_member = await channel_member.fetch_message(msg_id)
                     await message_member.delete()
 
-                channel = self.client.get_channel(image_saver_channel)
-                async for message in channel.history(limit=None):
-                    if full_number in message.content:
-                        await message.delete()
+                await delete_image_card_in_channel(self.client, full_number)
                 print("Карта успешно удалена")
 
             elif query_type == 'members':

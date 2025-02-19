@@ -83,7 +83,7 @@ class CardSelectView(View):
 
 async def sm_check_balance(inter, user, message, channel):
     await inter.response.defer(ephemeral=True)
-    response_card = supabase.rpc("find_card_in_message", {"msg_id": message.id}).execute()
+    response_card = supabase.rpc("find_balance", {"msg_id": message.id}).execute()
 
     if response_card.data:
         balance = response_card.data[0]['balance']
@@ -180,7 +180,7 @@ async def sm_transfer(inter, user, message, channel):
 
             # Отправка сообщений в каналы транзакций
             sender_message_text = f"**Перевод**\n💳 Откуда `{sender_full_number}`\n📤 Кому `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`"
-            receimer_message_text = f"**Поступи средства**\n💳 От `{sender_full_number}`\n📤 Куда `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`"
+            receimer_message_text = f"**Поступили средства**\n💳 От `{sender_full_number}`\n📤 Куда `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`"
             sender_owner_transaction_channel = inter.client.get_channel(sender_owner_transaction_channel_id)
             receiver_owner_transaction_channel = inter.client.get_channel(receiver_owner_transaction_channel_id)
             await sender_owner_transaction_channel.send(sender_message_text)
@@ -548,10 +548,7 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             await card_generate(full_number, nickname, color_name)
             # Удалить старую картинку
-            channel_images = inter.client.get_channel(image_saver_channel)
-            async for msg in channel_images.history(limit=None):
-                if full_number in msg.content:
-                    await msg.delete()
+            await delete_image_card_in_channel(inter.client, full_number)
             #вставка новой картинки в embed
             await inter.send(f"{nickname} успешно стал владельцем карты `{full_number}`!", ephemeral=True)
             await asyncio.sleep(1,5)

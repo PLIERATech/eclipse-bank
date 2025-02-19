@@ -9,7 +9,7 @@ class DelClient(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="admdelclient", description="Удалить счёт Eclipse Bank ")
+    @nxc.slash_command(guild_ids=server_id, name="admdelclient", description="Delete user", default_member_permissions=nxc.Permissions(administrator=True))
     async def delClient(
         self, 
         inter: nxc.Interaction, 

@@ -5,5 +5,8 @@
     "admCreate": true,
     "events": true,
     "demote": true,
-    "updateAllCards": true
+    "updateAllCards": true,
+    "replenishMoney": true,
+    "searchCards": true,
+    "withdrawMoney": true
 }

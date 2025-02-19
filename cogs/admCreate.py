@@ -10,13 +10,13 @@ class AdmCreate(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="admcreatecard", description="Admin Unit Creation")
+    @nxc.slash_command(guild_ids=server_id, name="admcreatecard", description="Admin Card Creation", default_member_permissions=nxc.Permissions(administrator=True))
     async def admCreate(
         self, 
         inter: nxc.Interaction, 
         member: nxc.Member, 
-        number: int, 
-        name: str, 
+        number: int = nxc.SlashOption(name="number", description="Номер карты", max_value=99999),
+        name: str = nxc.SlashOption(name="name", description="Название карты"), 
         type: str = nxc.SlashOption(name="card_type", description="Choose 1", required=True, choices=admCardTypes), 
         color: str= nxc.SlashOption(name="card_color", description="Choose 1", required=True, choices=choice_color)
     ):
@@ -39,9 +39,7 @@ class AdmCreate(commands.Cog):
         if not await verify_user_in_server(inter, member):
             return
 
-        # Проверка написания числа
-        if not await verify_number_lenght(inter, number):
-            return
+        # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
         # Проверка занятости номера карты

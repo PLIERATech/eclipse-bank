@@ -128,12 +128,13 @@ def get_card_info_demote(member_id):
     if response.data:
         result = response.data[0]
         return {
-            "banker_balance": result["banker_balance"],
-            "banker_select_menu_id": result["banker_select_menu_id"],
-            "banker_number": result["banker_number"],
-            "non_banker_number": result["non_banker_number"],
-            "non_banker_type": result["non_banker_type"],
-            "channels_user": result["channels_user"]
+            "banker_balance": result["banker_balance"],                     # Баланс карты (первой из списка, должна быть одна)
+            "banker_select_menu_id": result["banker_select_menu_id"],       # возвращает id сообщения банковской карты
+            "banker_number": result["banker_number"],                       # возвращает номер банковской карты
+            "banker_type": result["banker_type"],                           # возвращает тип банковской карты
+            "non_banker_number": result["non_banker_number"],               # ищет 1 карту не банкирскую и дает ее номер
+            "non_banker_type": result["non_banker_type"],                   # ищет 1 карту не банкирскую и дает ее тип
+            "channels_user": result["channels_user"]                        # выдает значение channels пользователя
         }
     return None
 
@@ -223,13 +224,18 @@ async def deleteAccount(guild, owner):
                 message_member = await channel_member.fetch_message(msg_id)
                 await message_member.delete()
 
-            channel_image = guild.get_channel(image_saver_channel)
-            async for msg in channel_image.history(limit=None):
-                if del_card_full_number in msg.content:
-                    await msg.delete()
+            await delete_image_card_in_channel(guild, del_card_full_number)
 
         client_role_remove = guild.get_role(client_role_id)
         await owner.remove_roles(client_role_remove)
 
         clientDeleteLog(owner.display_name)
         return(True)
+    
+
+async def delete_image_card_in_channel(client, full_number):
+    channel = client.get_channel(image_saver_channel)
+    async for message in channel.history(limit=None):
+        if full_number in message.content:
+            await message.delete()
+    return

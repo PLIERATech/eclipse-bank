@@ -47,15 +47,19 @@ class Demote(commands.Cog):
         channels_response = get_card_info["channels_user"]
         channels = list(map(int, channels_response.strip("[]").split(",")))
         channel_card_id = channels[1]
-        if int(get_card_info['banker_balance']) is None:
-            if get_card_info['non_banker_number'] == None:
+        banker_card_number = get_card_info['banker_number']
+        banker_card_type = get_card_info['banker_type']
+        banker_card_full_number = f"{suffixes.get(banker_card_type, banker_card_type)}{banker_card_number}"
+
+        if get_card_info['banker_balance'] is not None: # если есть баланс
+            if get_card_info['non_banker_number'] is None: # если нет обычной карты
                 #=Создание карты если нет и есть деньги
                 card_type="👤 Personal"            
-                check_create_card = await create_card(admin_nick, member_nick, member_nick, card_type, member_id, color="🟢 Green", do_random=True, adm_number="0", balance=get_card_info['banker_balance'])
+                check_create_card = await create_card(admin_nick, member_nick, member_nick, card_type, member_id, "🟢 Green", True, "0", balance=get_card_info['banker_balance'])
                 # Проверка получилось ли создать карту
                 if not await verify_create_card(inter, check_create_card[1]):
                     return
-                
+
                 full_number = check_create_card[0]             
                 
                 card_type_rus = "Личная"

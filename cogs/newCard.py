@@ -25,12 +25,12 @@ class NewCard(commands.Cog):
         guild = inter.guild
         card_type_rus = type_translate.get(type, type)
 
-        # Проверка находится ли человек на сервере\
-        if not await verify_user_in_server(inter, member):
-            return
-
         # Проверка прав banker
         if not await verify_this_banker(inter, command, inter.user, True):
+            return
+
+        # Проверка находится ли человек на сервере\
+        if not await verify_user_in_server(inter, member):
             return
 
 #// Действие

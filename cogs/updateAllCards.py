@@ -9,7 +9,7 @@ class UpdateAllCards(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @nxc.slash_command(guild_ids=server_id, name="updateallcards", description="Обновить информацию обо всех созданных картах")
+    @nxc.slash_command(guild_ids=server_id, name="updateallcards", description="Update information about all created maps", default_member_permissions=nxc.Permissions(administrator=True))
     async def updateAllCards(self, inter: nxc.Interaction):
         admin = inter.user
         if not await verify_staff(inter, admin, command):
