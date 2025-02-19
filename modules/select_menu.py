@@ -4,7 +4,6 @@ from const import *
 from .log_functions import *
 from .embeds import *
 from .verify import *
-from .services import *
 from card_gen import *
 import asyncio
 
@@ -549,7 +548,11 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             await card_generate(full_number, nickname, color_name)
             # Удалить старую картинку
-            await del_img_in_channel(inter.client, full_number)
+            channel = inter.client.get_channel(image_saver_channel)
+            async for msg in channel.history(limit=None):
+                if full_number in msg.content:
+                    await msg.delete()
+
             #вставка новой картинки в embed
             await inter.send(f"{nickname} успешно стал владельцем карты `{full_number}`!", ephemeral=True)
             await asyncio.sleep(1,5)

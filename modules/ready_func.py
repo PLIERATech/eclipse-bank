@@ -1,7 +1,7 @@
 from nextcord.ext import commands
 import nextcord as nxc
 from const import *
-from .select_menu import *
+from .select_menu import CardSelectView
 from .log_functions import *
 from .services import *
 
