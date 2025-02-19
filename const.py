@@ -94,3 +94,4 @@ embed_colors = {
         "💎 CEO": nxc.Colour.from_rgb(5, 170, 156),
         "💸 Banker": nxc.Colour.from_rgb(23, 181, 181)
     }
+reverse_embed_colors = {v: k for k, v in embed_colors.items()}

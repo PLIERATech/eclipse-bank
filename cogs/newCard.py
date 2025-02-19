@@ -45,7 +45,7 @@ class NewCard(commands.Cog):
             return
 
         #=Создание карты
-        check_create_card = create_card(banker_name, member_name, member_name, type, member_id, color, True, "0", "0")
+        check_create_card = await create_card(banker_name, member_name, member_name, type, member_id, color, True, "0", "0")
         # Проверка получилось ли создать карту
         if not await verify_create_card(inter, check_create_card[1]):
             return

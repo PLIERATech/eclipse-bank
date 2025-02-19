@@ -10,7 +10,7 @@ from .embeds import *
 from card_gen import *
 
 # Создать карту и записать в бд
-def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
+async def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
 
     #Извлекаем номера уже существующих карт и добавляем в список
     response = supabase.table("cards").select("number").execute()
@@ -37,7 +37,7 @@ def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, 
         return [full_number, False]
 
     cardCreateLog(banker, full_number, owner_id)
-    card_generate(full_number,type, nickname, color)
+    await card_generate(full_number, nickname, color)
     
     return [full_number, True]
 

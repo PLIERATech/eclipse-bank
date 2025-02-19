@@ -61,7 +61,7 @@ class AdmCreate(commands.Cog):
             return
 
         #=Создание карты
-        check_create_card = create_card(admin_nickname, name, member_nickname, type, member_id, color, False, number, "0")
+        check_create_card = await create_card(admin_nickname, name, member_nickname, type, member_id, color, False, number, "0")
         # Проверка получилось ли создать карту
         if not await verify_create_card(inter, check_create_card[1]):
             return

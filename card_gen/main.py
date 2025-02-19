@@ -11,7 +11,7 @@ bcard_position = (534, 559)
 nickname_font = ImageFont.truetype(font, 48)
 bcard_font = ImageFont.truetype(font, 96)
 
-def card_generate(fullNumber, type, user_nickname, color):
+async def card_generate(fullNumber, user_nickname, color):
 
     template = ""
     font_color = base_color

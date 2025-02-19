@@ -51,7 +51,7 @@ class Demote(commands.Cog):
             if get_card_info['non_banker_number'] == None:
                 #=Создание карты если нет и есть деньги
                 card_type="👤 Personal"            
-                check_create_card = create_card(admin_nick, member_nick, member_nick, card_type, member_id, color="🟢 Green", do_random=True, adm_number="0", balance=get_card_info['banker_balance'])
+                check_create_card = await create_card(admin_nick, member_nick, member_nick, card_type, member_id, color="🟢 Green", do_random=True, adm_number="0", balance=get_card_info['banker_balance'])
                 # Проверка получилось ли создать карту
                 if not await verify_create_card(inter, check_create_card[1]):
                     return
