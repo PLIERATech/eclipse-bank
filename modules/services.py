@@ -50,12 +50,28 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
     await asyncio.sleep(2)
 
     card = nxc.File(f"card_gen/cards/{card_image}", filename=card_image)
-    
-    card_embed = e_cards(color, full_number, card_type_rus, name)
-    card_embed_image = e_cards_image(color,card.filename)  
-    card_embed_user = e_cards_users(inter, color, member.display_name, members={})
-    embeds = [card_embed, card_embed_image, card_embed_user]  
 
+    # Канал для загрузки изображений
+    image_upload_channel = inter.guild.get_channel(image_saver_channel)
+
+    # Отправляем картинку в канал загрузки
+    temp_message = await image_upload_channel.send(content=f"{full_number}",file=card)
+    
+    # Получаем URL изображения
+    image_url = temp_message.attachments[0].url if temp_message.attachments else None
+
+    # Проверяем, что картинка успешно загрузилась
+    if not image_url:
+        await inter.followup.send("Ошибка загрузки изображения.", ephemeral=True)
+        return
+
+    # Создаём эмбеды с картинкой
+    card_embed = e_cards(color, full_number, card_type_rus, name)
+    card_embed_image = e_cards_image(color, image_url)  # Устанавливаем ссылку
+    card_embed_user = e_cards_users(inter, color, member.display_name, members={})
+    embeds = [card_embed, card_embed_image, card_embed_user]
+
+    # Получаем канал для отправки карточек
     response = supabase.table("clients").select("channels").eq("dsc_id", member.id).execute()
     channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
     cards_channel_id = channels[1]
@@ -63,12 +79,13 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     view = CardSelectView()  # Используем уже готовый View
     
-    message_card = await cards_channel.send(content=f"{member.mention}", embeds=embeds, file=card, view=view)
+    # Отправляем финальное сообщение с картой
+    message_card = await cards_channel.send(content=f"{member.mention}", embeds=embeds, view=view)
 
-    # Получаем только цифры созданной карты / Удаляем все символы, кроме цифр
-    card_numbers = full_number[4:]
+    # Сохраняем ID сообщения в БД
+    card_numbers = full_number[4:]  # Оставляем только цифры из номера карты
     supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
-    return
+
 
 
 

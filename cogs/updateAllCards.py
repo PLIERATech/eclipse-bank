@@ -38,11 +38,8 @@ class UpdateAllCards(commands.Cog):
             full_number = f"{suffixes.get(type, type)}{number}"
             card_type_rus = type_translate.get(type, type)
 
-            if isinstance(members, str):
-                try:
-                    members = json.loads(members)
-                except json.JSONDecodeError:
-                    members = {}
+            if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
+                members = {}
 
             client_data = card.get("clients")
             owner_name = client_data["nickname"]
@@ -66,6 +63,15 @@ class UpdateAllCards(commands.Cog):
                 new_card_embed = e_cards(color, full_number, card_type_rus, name) 
                 card_embed_user = e_cards_users(inter, color, owner_name, members)
                 await message.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
+
+                # Обновляем все сообщения пользователей
+                if members:
+                    for user_id, data in members.items():
+                        msg_id = data.get("id_message")
+                        channel_id = data.get("id_channel")
+                        channel = inter.client.get_channel(channel_id) 
+                        message_users = await channel.fetch_message(msg_id)
+                        await message_users.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
 
             except nxc.NotFound:
                 print(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")

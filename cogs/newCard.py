@@ -41,7 +41,7 @@ class NewCard(commands.Cog):
         await createAccount(guild, member)
 
         # Проверка на исчерпание лимита создания карт
-        if not verify_count_cards(inter, member_id, command):
+        if not await verify_count_cards(inter, member_id, command):
             return
 
         #=Создание карты

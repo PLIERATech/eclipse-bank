@@ -156,7 +156,7 @@ def e_cards_image(color, filename):
     embed_color = embed_colors.get(color, color)
 
     embed = nxc.Embed(color=embed_color)
-    embed.set_image(url=f"attachment://{filename}") 
+    embed.set_image(url=filename) 
     return(embed)
 
 # Embed №3 для карты
