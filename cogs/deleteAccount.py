@@ -27,7 +27,7 @@ class DelClient(commands.Cog):
         Check_delete = await deleteAccount(inter.guild, member)       
         
         # Проверка имеется ли аккаунт у пользователя
-        if not await verify_deleteAccount(inter, Check_delete):
+        if not await verify_deleteAccount(inter, Check_delete[0]):
             return
         
         embed=account_wasDeleted()

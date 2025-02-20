@@ -20,6 +20,7 @@ async def start_persistent_view(bot):
     cards_data = supabase.table("cards").select("type, number, select_menu_id, owner, members, clients(channels, nickname)").execute()
 
     for card in cards_data.data:
+        own_guild = bot.get_guild(server_id[0])
         select_menu_id = card["select_menu_id"]
         owner_id = card["owner"]
         members = card["members"]
@@ -83,7 +84,7 @@ async def start_persistent_view(bot):
                 color = existing_embeds[1].color  # Цвет карты
 
                 # Обновляем embed с пользователями
-                card_embed_user = e_cards_users(channel, color, owner_name, members)
+                card_embed_user = e_cards_users(own_guild, color, owner_name, members)
 
                 await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 

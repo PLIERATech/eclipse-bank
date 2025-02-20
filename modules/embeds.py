@@ -160,7 +160,7 @@ def e_cards_image(color, filename):
     return(embed)
 
 # Embed №3 для карты
-def e_cards_users(inter, color, owner_name, members):
+def e_cards_users(guild, color, owner_name, members):
     embed_color = embed_colors.get(color, color)
     
     embed = nxc.Embed(color=embed_color)
@@ -173,7 +173,7 @@ def e_cards_users(inter, color, owner_name, members):
     user_names = []
     for user_id in members:
         if isinstance(user_id, (str, int)):
-            member = inter.guild.get_member(int(user_id))
+            member = guild.get_member(int(user_id))
             if member:
                 user_names.append(member.display_name)
             else:

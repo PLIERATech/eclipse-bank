@@ -115,7 +115,7 @@ async def on_ready():
 
     bot_ready(bot)
     await start_persistent_view(bot)
-    await asyncio.create_task(deleteCardImages(60))
+    await asyncio.gather(deleteCardImages(60), scheduler(bot))
 
 #// ==============================
 #// СКРЫТИЕ ЛОГОВ NEXTCORD        

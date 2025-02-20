@@ -352,7 +352,7 @@ async def sm_add_user(inter, user, message, channel):
 
             existing_embeds = message.embeds
             color = existing_embeds[1].color
-            card_embed_user = e_cards_users(inter, color, owner_name, {})
+            card_embed_user = e_cards_users(inter.guild, color, owner_name, {})
 
             view = CardSelectView()  # Используем уже готовый View
             message_member_card = await member_channel.send(content=f"<@{member_id}>", embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], view=view)
@@ -360,7 +360,7 @@ async def sm_add_user(inter, user, message, channel):
             # Добавляем нового пользователя в список
             members[str(member_id)] = {"id_transactions_channel": member_transactions_channel_id, "id_channel": member_channel_id, "id_message": message_member_card.id}
 
-            card_embed_user = e_cards_users(inter, color, owner_name, members)
+            card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
 
             await inter.send(f"Пользователь {nickname} успешно добавлен к карте {full_number}!", ephemeral=True)
 
@@ -448,7 +448,7 @@ async def sm_del_user(inter, user, message, channel):
             # Обновляем карту
             existing_embeds = message.embeds
             color = existing_embeds[1].color
-            card_embed_user = e_cards_users(inter, color, owner_name, members)
+            card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
 
             await inter.send(f"Пользователь {nickname} успешно удален с карты {full_number}!", ephemeral=True)
 
@@ -563,7 +563,7 @@ async def sm_transfer_owner(inter, user, message, channel):
             image_url = temp_message.attachments[0].url if temp_message.attachments else None
 
             card_embed_image = e_cards_image(color, image_url)
-            card_embed_user = e_cards_users(inter, color, nickname, members)
+            card_embed_user = e_cards_users(inter.guild, color, nickname, members)
             new_owner_channel = inter.client.get_channel(new_owner_channel_id)
             new_owner_message = await new_owner_channel.fetch_message(new_owner_message_id)
             await new_owner_message.edit(embeds=[existing_embeds[0], card_embed_image, card_embed_user], attachments=[])

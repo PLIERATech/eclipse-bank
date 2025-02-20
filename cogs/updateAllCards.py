@@ -61,7 +61,7 @@ class UpdateAllCards(commands.Cog):
                 second_embed = existing_embeds[1]
                 color = existing_embeds[0].color
                 new_card_embed = e_cards(color, full_number, card_type_rus, name) 
-                card_embed_user = e_cards_users(inter, color, owner_name, members)
+                card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
                 await message.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
 
                 # Обновляем все сообщения пользователей

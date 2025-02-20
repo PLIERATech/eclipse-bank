@@ -68,3 +68,22 @@ def get_user_id(dsc_id):
             return None
 
         return user["id"]
+
+
+def get_prdx_nickname(dsc_id):
+        url = API_PROFILE_URL.format(dsc_id)
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
+        if not data.get("status"):
+            return None
+
+        user = data["data"]
+        
+        if user["is_banned"] or not user["has_access"]:
+            return None
+
+        return user["nick"]

@@ -49,12 +49,6 @@ class ReplenishMoney(commands.Cog):
         if not isinstance(card_members, dict):  # Проверяем, если это не словарь (jsonb)
             card_members = {}
 
-        ceo_data = supabase.rpc("get_ceo_card", {"number_card": "00000"}).execute()
-        ceo_type = ceo_data.data[0]["type"]
-        ceo_balance = ceo_data.data[0]["balance"]
-        ceo_owner_transaction_channel_id = ceo_data.data[0]["owner_transactions"]
-        ceo_full_number = f"{suffixes.get(ceo_type, ceo_type)}00000"
-
         cr1 = commission_replenish.get("1")
         cr2 = commission_replenish.get("2")
         cr3 = commission_replenish.get("3")
@@ -78,13 +72,13 @@ class ReplenishMoney(commands.Cog):
         )
 
         # 🔹 Обновляем баланс в базе данных
-        supabase.table("cards").update({"balance": ceo_balance + commission}).eq("number", "00000").execute()
+        supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
         supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
 
         # Отправка сообщений в каналы транзакций
         ceo_message_text = f"**Пополнение карты**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📤 Комиссия `{commission} алм.`\n💰 Итого `{total_amount} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`"
         card_message_text = f"**Пополнение карты**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📤 Комиссия `{commission} алм.`\n💰 Итого `{total_amount} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`"
-        ceo_owner_transaction_channel = inter.client.get_channel(ceo_owner_transaction_channel_id)
+        ceo_owner_transaction_channel = inter.client.get_channel(bank_card_transaction)
         card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
         await ceo_owner_transaction_channel.send(ceo_message_text)
         await card_owner_transaction_channel.send(card_message_text)

@@ -2,6 +2,8 @@ import nextcord as nxc
 import random
 import asyncio
 import time
+import datetime
+from datetime import datetime, timedelta
 from const import *
 from .log_functions import *
 from .api import *
@@ -68,7 +70,7 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
     # Создаём эмбеды с картинкой
     card_embed = e_cards(color, full_number, card_type_rus, name)
     card_embed_image = e_cards_image(color, image_url)  # Устанавливаем ссылку
-    card_embed_user = e_cards_users(inter, color, member.display_name, members={})
+    card_embed_user = e_cards_users(inter.guild, color, member.display_name, members={})
     embeds = [card_embed, card_embed_image, card_embed_user]
 
     # Получаем канал для отправки карточек
@@ -188,14 +190,17 @@ async def createAccount(guild, member):
     return
 
 
+
 # Удалить аккаунт
 async def deleteAccount(guild, owner):
     owner_id = owner.id
+    full_count = 0
+    cards_info = []
     
     response_dsc_id = supabase.table("clients").select("dsc_id, account, channels").eq("dsc_id", owner_id).execute()
 
     if not response_dsc_id.data:
-        return(False)
+        return[False, full_count, "-"]
 
     if response_dsc_id.data:
         clients_category_id = int(response_dsc_id.data[0]["account"])
@@ -214,8 +219,15 @@ async def deleteAccount(guild, owner):
         for del_account in delete_account_request.data:
             type = del_account['type']
             number = del_account['number']
+            count = del_account['balance']
             members = del_account["members"]
             del_card_full_number = f"{suffixes.get(type, type)}{number}"
+
+            full_count += count
+
+            # Добавляем информацию о карте в список
+            cards_info.append(f"{del_card_full_number} - {count} алм.")
+
 
             for user_id, data in members.items():
                 msg_id = data.get("id_message")
@@ -226,12 +238,59 @@ async def deleteAccount(guild, owner):
 
             await del_img_in_channel(guild, del_card_full_number)
 
-        client_role_remove = guild.get_role(client_role_id)
-        await owner.remove_roles(client_role_remove)
+        if guild.get_member(owner.id):
+            client_role_remove = guild.get_role(client_role_id)
+            await owner.remove_roles(client_role_remove)
 
         clientDeleteLog(owner.display_name)
-        return(True)
+        cards_output = "\n".join(cards_info) if cards_info else "-"
+
+        if full_count > 0:
+            supabase.rpc("add_balance", {"card_number": "00000", "amount": full_count}).execute()
+
+            ceo_message_text = f"**Удаление аккаута**\n💳 Общее пополнение с удаленных карт `{full_count}`\n📤 Подробности:\n📤 {cards_output}"
+            ceo_owner_transaction_channel = guild.get_channel(bank_card_transaction)
+            await ceo_owner_transaction_channel.send(ceo_message_text)
+
+
+        request_cards_member = supabase.rpc("find_user_in_members", {"user_id": owner_id}).execute()
+
+        # Обновить все карты где клиент был добавлен как пользователь, удаляя его.
+        for request_card_member in request_cards_member.data:
+            members_users = request_card_member['members']
+            client_data = request_card_member.get("clients")
+            owner_name = client_data["nickname"]
+            channels_list = list(map(int, client_data["channels"].strip("[]").split(",")))
+            channel_owner = guild.get_channel(channels_list[1])
+            messege_owner_id = request_card_member['select_menu_id']
+            if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
+                members_users = {}
+
+            if request_card_member:
+                members_users.pop(str(owner_id), None)
+                message_owner = await channel_owner.fetch_message(messege_owner_id)
+
+                # Обновляем карту
+                existing_embeds = message_owner.embeds
+                color = existing_embeds[1].color
+                card_embed_user = e_cards_users(channel_owner.guild, color, owner_name, members_users)
+                await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
+
+                # Обновляем сообщения всех пользователей
+                for user_id, data in members_users.items():
+                    msg_id = data.get("id_message")
+                    channel_id = data.get("id_channel")
+                    channel = guild.get_channel(channel_id)
+                    message_users = await channel.fetch_message(msg_id)
+                    await message_users.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
+
+                # Обновляем данные в базе данных
+                supabase.table("cards").update({"members": members_users}).eq("select_menu_id", messege_owner_id).execute()
+
+        return[True, full_count, cards_output]
     
+
+
 # Удалить старую картинку
 async def del_img_in_channel(client, full_number):
     channel = client.get_channel(image_saver_channel)
@@ -239,3 +298,38 @@ async def del_img_in_channel(client, full_number):
         if full_number in message.content:
             await message.delete()
     return
+
+
+# Проверяет сколько времени аккаунт недействительный и при превышении лимита удаляет его.
+async def scheduled_task(bot):
+    check_status_clients = supabase.table("clients").select("dsc_id, freeze_date").eq("status", "freeze").execute()
+
+    for client in check_status_clients.data:
+        freeze_date = client["freeze_date"]
+        member_id = client["dsc_id"]
+
+        if freeze_date is None:
+            return
+
+        freeze_date = datetime.strptime(freeze_date, "%Y-%m-%d") # Преобразуем строку в дату (если в БД хранится строка формата YYYY-MM-DD)
+
+        # Проверяем, прошло ли 31 день
+        if datetime.now() - freeze_date >= timedelta(days=days_freeze_delete):
+            guild = bot.get_guild(server_id[0])
+            member = await bot.fetch_user(member_id)
+            check_delete_acc = await deleteAccount(guild, member)
+
+            if check_delete_acc[0] == True:
+                print(f"Клиент {member.name} удален за незаход 31 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
+
+
+# Тоже самое что сверху
+async def scheduler(bot):
+    """Основной цикл, проверяющий текущее время"""
+    while True:
+        now = datetime.now()  # Получаем локальное время
+        if now.hour in TARGET_HOURS and now.minute == 0:
+            await scheduled_task(bot)
+            await asyncio.sleep(180)
+                
+        await asyncio.sleep(40)
