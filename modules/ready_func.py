@@ -28,10 +28,10 @@ async def start_persistent_view(bot):
         number = card['number']
         full_number = f"{suffixes.get(type, type)}{number}"
 
-        if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
+        if not isinstance(members, dict):
             members = {}
 
-        client_data = card.get("clients")  # Данные уже получены с JOIN
+        client_data = card.get("clients")
         if client_data:
             channels = client_data["channels"]
             channels_list = list(map(int, channels.strip("[]").split(",")))

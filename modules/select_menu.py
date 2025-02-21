@@ -123,15 +123,16 @@ async def sm_transfer(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             """Обрабатывает данные после отправки формы"""
             receiver_card = self.card_number.value.strip()
+            amount_text = self.amount.value
 
-            # 🔹 Проверка: сумма должна быть целым числом
-            try:
-                amount = int(self.amount.value)
-                if amount <= 0:
-                    raise ValueError
-            except ValueError:
-                await inter.send("❌ Ошибка: сумма должна быть **целым положительным числом**!", ephemeral=True)
-                return 
+            # Проверка является ли номер карты цифрами
+            if not await verify_card_int(inter, receiver_card):
+                return
+
+            # Проверка на целое число
+            if not await verify_an_integer(inter, amount_text):
+                return
+            amount = int(amount_text)
             
 
             receiver_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
@@ -204,9 +205,123 @@ async def sm_transfer(inter, user, message, channel):
 
 
 #@ ---------------------------------------------------------------------------------------------------------------------------------
-#@                                                       Пыставить счёт                                                             
+#@                                                       Выставить счёт                                                             
 #@ ---------------------------------------------------------------------------------------------------------------------------------
-# async def sm_invoice(inter, user, message, channel):
+
+async def sm_invoice(inter, user, message, channel):
+    """Вызывает модальное окно для выставления счёта"""
+
+    class InvoiceModal(nxc.ui.Modal):
+        def __init__(self):
+            super().__init__(title="Выставить счёт")
+
+            self.nickname_input = nxc.ui.TextInput(label="Никнейм пользователя", placeholder="Введите никнейм...", required=True, min_length=2, max_length=32)
+            self.add_item(self.nickname_input)
+
+            self.amount = nxc.ui.TextInput(label="Сумма запроса", placeholder="Введите сумму...", required=True)
+            self.add_item(self.amount)
+
+            self.comment = nxc.ui.TextInput(label="Комментарий", placeholder="Опционально...", required=False, style=nxc.TextInputStyle.paragraph, max_length=100 )
+            self.add_item(self.comment)
+
+
+        async def callback(self, inter: nxc.Interaction):
+            await inter.response.defer(ephemeral=True)
+            """Обрабатывает данные после отправки формы"""
+            nickname = self.nickname_input.value.strip()
+            amount_text = self.amount.value
+
+            # Проверка на целое число
+            if not await verify_an_integer(inter, amount_text):
+                return
+            amount = int(amount_text)
+            
+
+            receiver_data = supabase.table("clients").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
+
+            # 🔹 Проверяем, существует ли карта получателя
+            if not receiver_data.data:
+                await inter.send("❌ Ошибка: карта **не найдена**!", ephemeral=True)
+                return
+
+            receiver_type = receiver_data.data[0]["type"]
+            receiver_balance = receiver_data.data[0]["balance"]
+            receiver_members = receiver_data.data[0]["members"]
+            receiver_client_data = receiver_data.data[0].get("clients")
+            receiver_owner_transaction_channel_id = list(map(int, receiver_client_data["channels"].strip("[]").split(",")))[0]
+            receiver_full_number = f"{suffixes.get(receiver_type, receiver_type)}{receiver_card}"
+
+            if not isinstance(receiver_members, dict):  # Проверяем, если это не словарь (jsonb)
+                receiver_members = {}
+
+            # 🔹 Определяем карту отправителя через message.id
+
+            sender_data = supabase.rpc("find_card_in_message", {"msg_id": message.id}).execute()
+            sender_type = sender_data.data[0]["type"]
+            sender_card = sender_data.data[0]["number"]
+            sender_balance = sender_data.data[0]["balance"]
+            sender_members = sender_data.data[0]["members"]
+            sender_owner_transaction_channel_id = sender_data.data[0]["owner_transactions"]
+            sender_full_number = f"{suffixes.get(sender_type, sender_type)}{sender_card}"
+
+            if not isinstance(sender_members, dict):  # Проверяем, если это не словарь (jsonb)
+                sender_members = {}
+
+            # 🔹 Проверяем, хватает ли денег
+            if sender_balance < amount:
+                await inter.sende("❌ Ошибка: **недостаточно средств**!", ephemeral=True)
+                return
+
+            await inter.send(
+                f"✅ **Перевод выполнен!**\n💳 Откуда `{sender_full_number}`\n📤 Кому `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`",
+                ephemeral=True
+            )
+
+            # 🔹 Обновляем баланс в базе данных
+            supabase.table("cards").update({"balance": sender_balance - amount}).eq("number", sender_card).execute()
+            supabase.table("cards").update({"balance": receiver_balance + amount}).eq("number", receiver_card).execute()
+
+            # Отправка сообщений в каналы транзакций
+            sender_message_text = f"**Перевод**\n💳 Откуда `{sender_full_number}`\n📤 Кому `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`"
+            receimer_message_text = f"**Поступили средства**\n💳 От `{sender_full_number}`\n📤 Куда `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`"
+            sender_owner_transaction_channel = inter.client.get_channel(sender_owner_transaction_channel_id)
+            receiver_owner_transaction_channel = inter.client.get_channel(receiver_owner_transaction_channel_id)
+            await sender_owner_transaction_channel.send(sender_message_text)
+            await receiver_owner_transaction_channel.send(receimer_message_text)
+
+            # Отправка сообщений в каналы транзакций пользователей
+            for user_id, data in sender_members.items():
+                channel_id_transactions_sender = data.get("id_transactions_channel")
+                channel_transactions_sender = inter.client.get_channel(channel_id_transactions_sender)
+                await channel_transactions_sender.send(sender_message_text)
+
+            for user_id, data in receiver_members.items():
+                channel_id_transactions_receiver = data.get("id_transactions_channel")
+                channel_transactions_receiver = inter.client.get_channel(channel_id_transactions_receiver)
+                await channel_transactions_receiver.send(receimer_message_text)
+
+    # 🔹 Показываем форму пользователю
+    model = InvoiceModal()
+    await inter.response.send_modal(model)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #     await inter.response.send_message(f"Вы выбрали выставить счёт. Пользователь: {user.mention}, Сообщение ID: {message.id}, Канал: {channel.mention}", ephemeral=True)
 #     return 
 
