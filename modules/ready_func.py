@@ -2,12 +2,15 @@ from nextcord.ext import commands
 import nextcord as nxc
 from const import *
 from .select_menu import CardSelectView
+from .invoice_button import MyInvoiceView, BankerInvoiceView
 from .log_functions import *
 from .services import *
 
 async def start_persistent_view(bot):
     # Регистрируем View, чтобы оно работало после перезапуска
-    bot.add_view(CardSelectView())
+    bot.add_view(CardSelectView()) 
+    bot.add_view(MyInvoiceView())
+    bot.add_view(BankerInvoiceView())   
     print("Persistent View зарегистрирован.")
 
     # Выход из сервера, если бот добавлен на неразрешённый сервер

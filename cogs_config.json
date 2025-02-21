@@ -8,5 +8,6 @@
     "updateAllCards": true,
     "replenishMoney": true,
     "searchCards": true,
-    "withdrawMoney": true
+    "withdrawMoney": true,
+    "takeOffMoney": true
 }

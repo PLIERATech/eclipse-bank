@@ -9,7 +9,7 @@ class SearchCards(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="поиск-карт", description="Поиск всех карт клиента")
+    @nxc.slash_command(guild_ids=server_id, name="поиск-карт", description="Поиск всех карт клиента", default_member_permissions=nxc.Permissions(administrator=True))
     async def searchCards(
         self, 
         inter: nxc.Interaction, 
@@ -21,8 +21,8 @@ class SearchCards(commands.Cog):
         member_nick = member.display_name
         member_id = member.id
 
-        # Проверка прав banker
-        if not await verify_this_banker(inter, command, inter.user, True):
+        # Проверка прав staff
+        if not await verify_staff(inter, admin, command):
             return
 
         # Проверка находится ли человек на сервере

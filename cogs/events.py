@@ -72,8 +72,13 @@ class Events(commands.Cog):
             return
 
         # Проверяем, есть ли у канала категория и не нужно ли его игнорировать
-        if channel.category and channel.category.id in ignored_categories:
+        # if channel.category and channel.category.id in ignored_categories:
+        #     return
+
+        # Проверка на канал с названием "транзакции"
+        if not "💳ㆍкарты" in channel.name.lower():  # Игнорируем каналы с этим словом в имени
             return
+
 
         print(f"Удаление сообщения {message_id} зафиксировано!")
 

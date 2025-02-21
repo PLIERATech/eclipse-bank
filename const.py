@@ -57,6 +57,7 @@ salary_channel = 1338884884441206825
 stats_channel = 1338886067025084426
 image_saver_channel = 1341363839542755399
 bank_card_transaction = 1341758044408647762
+banker_invoice_channel_id = 1342500616584433776
 
 ignored_categories = {
     1338888139493605496,    # Admin
