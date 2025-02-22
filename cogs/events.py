@@ -127,7 +127,7 @@ class Events(commands.Cog):
                     # Обновляем карту
                     existing_embeds = message_owner.embeds
                     color = existing_embeds[1].color
-                    card_embed_user = e_cards_users(channel_owner.guild, color, owner_name, members)
+                    card_embed_user = emb_cards_users(channel_owner.guild, color, owner_name, members)
                     await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
                     # Обновляем сообщения всех пользователей

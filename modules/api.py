@@ -1,7 +1,9 @@
 import requests
 from const import *
 
+#@ API для взаимодействия с prdx.so
 
+#! Пригласить в общину
 def invite_team(dsc_id):
     prdx_user_id = get_user_id(dsc_id)
 
@@ -26,6 +28,9 @@ def invite_team(dsc_id):
     else:
         print(f"❌ Ошибка! Код: {response2.status_code}")
 
+
+
+#! Выкинуть из общины
 def kick_team(dsc_id):
     prdx_user_id = get_user_id(dsc_id)
 
@@ -51,6 +56,8 @@ def kick_team(dsc_id):
         print(f"❌ Ошибка! Код: {response2.status_code}")
 
 
+
+#! Получить prdx id пользователя по discord id
 def get_user_id(dsc_id):
         url = API_PROFILE_URL.format(dsc_id)
         response = requests.get(url)
@@ -70,6 +77,8 @@ def get_user_id(dsc_id):
         return user["id"]
 
 
+
+#! Получить minecraft nick пользователя по discord id
 def get_prdx_nickname(dsc_id):
         url = API_PROFILE_URL.format(dsc_id)
         response = requests.get(url)

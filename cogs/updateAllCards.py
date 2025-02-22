@@ -20,8 +20,10 @@ class UpdateAllCards(commands.Cog):
 
         cards_data = supabase.table("cards").select("select_menu_id, owner, number, members, type, name, clients(channels, nickname)").execute()
         total = len(cards_data.data)
-        if total == 0:
-            return await inter.send("⚠ Нет карт для обновления.", ephemeral=True)
+
+        # Проверка есть ли карты в бд
+        if not await verify_total_card_update(inter, total):
+            return
 
         progress_bar = "                    "
         percent = 0
@@ -60,8 +62,8 @@ class UpdateAllCards(commands.Cog):
                 
                 second_embed = existing_embeds[1]
                 color = existing_embeds[0].color
-                new_card_embed = e_cards(color, full_number, card_type_rus, name) 
-                card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
+                new_card_embed = emb_cards(color, full_number, card_type_rus, name) 
+                card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
                 await message.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
 
                 # Обновляем все сообщения пользователей

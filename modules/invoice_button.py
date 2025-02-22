@@ -41,10 +41,9 @@ class MyInvoiceView(View):
 
                 invoice_data = supabase.table("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, balance, members, clients(channels))").eq("memb_message_id", message.id).execute()
 
-                if not invoice_data.data[0].get("cards"):
-                    await inter.send(f"Карта с которой выставлен счёт больше не действительна", ephemeral=True)
-                    supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
-                    await message.delete()
+
+                # Проверка является ли карта с выставленного счёта действительной
+                if not await verify_invoice_card(inter, invoice_data, message):
                     return
 
                 member_id = invoice_data.data[0]["memb_dsc_id"]
@@ -156,10 +155,8 @@ class MyInvoiceView(View):
 
         invoice_data = supabase.table("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, members, clients(channels))").eq("memb_message_id", message.id).execute()
 
-        if not invoice_data.data[0].get("cards"):
-            inter.send(f"Карта с которой выставлен счёт больше не действительна", ephemeral=True)
-            supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
-            await message.delete()
+        # Проверка является ли карта с выставленного счёта действительной
+        if not await verify_invoice_card(inter, invoice_data, message):
             return
 
         member_id = invoice_data.data[0]["memb_dsc_id"]
@@ -240,14 +237,14 @@ class BankerInvoiceView(View):
 
         invoice_data = supabase.table("invoice").select("own_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
 
-        if not invoice_data.data[0]:
-            inter.send(f"Счёт не найден в бд", ephemeral=True)
+        # Не найдены данные
+        if not await verify_found_data(inter, invoice_data):
             return
 
         banker_invoice_start_id = invoice_data.data[0]["own_dsc_id"]
 
-        if member_id != banker_invoice_start_id and not any(role.id in (staff_role) for role in member.roles):
-            inter.send(f"Ошибка: у вас нет прав на отмену данного счёта", ephemeral=True)
+        # Проверка прав на отмену счёта определенного банкира
+        if not await verify_invoice_banker_cancel(inter, member_id, banker_invoice_start_id, member):
             return
 
         member_message_id = invoice_data.data[0]["memb_message_id"]
@@ -259,33 +256,8 @@ class BankerInvoiceView(View):
 
         await inter.send(f"❌ **Счёт отменён!**", ephemeral=True)
 
-        if invoice_type == "banker":
-
-            # Отправка сообщений в каналы транзакций
-            await member_message.edit(f"**Счёт выставленный банкиром {member.mention} на сумму `{invoice_count} алм.` отменён**", view=None)
+        # Отправка сообщений в каналы транзакций
+        await member_message.edit(f"**Счёт выставленный банкиром {member.mention} на сумму `{invoice_count} алм.` отменён**", view=None)
 
         supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
         await message.edit(f"❌ Счёт отменён банкиром {member.mention}", view=None)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# засунуть в отправку сообщения 
-    # await ctx.send("Выберите действие:", view=MyPersistentView())
-

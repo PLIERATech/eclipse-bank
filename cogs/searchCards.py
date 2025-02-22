@@ -15,9 +15,9 @@ class SearchCards(commands.Cog):
         inter: nxc.Interaction, 
         member: nxc.Member
     ):
-        banker = inter.user
-        banker_nick = inter.user.display_name
-        banker_id = inter.user.id
+        admin = inter.user
+        admin_nick = inter.user.display_name
+        admin_id = inter.user.id
         member_nick = member.display_name
         member_id = member.id
 

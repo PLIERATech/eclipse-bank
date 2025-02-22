@@ -86,15 +86,18 @@ async def sm_check_balance(inter, user, message, channel):
     await inter.response.defer(ephemeral=True)
     response_card = supabase.rpc("find_balance", {"msg_id": message.id}).execute()
 
-    if response_card.data:
-        balance = response_card.data[0]['balance']
-        type = response_card.data[0]['type']
-        number = response_card.data[0]['number']
-        full_number = f"{suffixes.get(type, type)}{number}"
+    # Проверка на имеются ли данные
+    if not verify_found_data(inter, response_card):
+        return
 
-        await inter.send(f"На карте {full_number} хранится {balance} алм.", ephemeral=True)
-    else:
-        await inter.send(f"Данные не найдены.", ephemeral=True)
+    balance = response_card.data[0]['balance']
+    type = response_card.data[0]['type']
+    number = response_card.data[0]['number']
+    full_number = f"{suffixes.get(type, type)}{number}"
+
+
+    embed = emb_check_balance(full_number, balance)
+    await inter.send(embed=embed, ephemeral=True) 
 
 
 
@@ -138,9 +141,8 @@ async def sm_transfer(inter, user, message, channel):
 
             receiver_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
 
-            # 🔹 Проверяем, существует ли карта получателя
-            if not receiver_data.data:
-                await inter.send("❌ Ошибка: карта **не найдена**!", ephemeral=True)
+            # Проверяем, существует ли карта получателя   
+            if not await verify_found_card(inter, receiver_data):
                 return
 
             receiver_type = receiver_data.data[0]["type"]
@@ -167,18 +169,18 @@ async def sm_transfer(inter, user, message, channel):
                 sender_members = {}
 
             if sender_card == receiver_card:
-                await inter.send("❌ Ошибка: **Нельзя переводить на эту же карту**!", ephemeral=True)
+                embed_error1 = emb_no_self_transfer()
+                await inter.send(embed=embed_error1, ephemeral=True)
                 return
 
-            # 🔹 Проверяем, хватает ли денег
+            # Проверяем, хватает ли денег
             if sender_balance < amount:
-                await inter.send("❌ Ошибка: **недостаточно средств**!", ephemeral=True)
+                embed_error2 = emb_insufficient_funds()
+                await inter.send(embed=embed_error2, ephemeral=True)
                 return
 
-            await inter.send(
-                f"✅ **Перевод выполнен!**\n💳 Откуда `{sender_full_number}`\n📤 Кому `{receiver_full_number}`\n💰 Сумма `{amount} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`",
-                ephemeral=True
-            )
+            embed_complete_transfer = emb_complete_transfer(sender_full_number, receiver_full_number, amount, self.comment.value)
+            await inter.send(embed=embed_complete_transfer, ephemeral=True)
 
             # 🔹 Обновляем баланс в базе данных
             supabase.table("cards").update({"balance": sender_balance - amount}).eq("number", sender_card).execute()
@@ -373,7 +375,7 @@ async def sm_change_name(inter, user, message, channel):
 
             existing_embeds = message.embeds
             color = existing_embeds[1].color
-            new_card_embed = e_cards(color, full_number, card_type_rus, cardname) 
+            new_card_embed = emb_cards(color, full_number, card_type_rus, cardname) 
             await message.edit(embeds=[new_card_embed, existing_embeds[1], existing_embeds[2]], attachments=[])
 
             # Обновляем все сообщения пользователей
@@ -452,7 +454,7 @@ async def sm_add_user(inter, user, message, channel):
 
             existing_embeds = message.embeds
             color = existing_embeds[1].color
-            card_embed_user = e_cards_users(inter.guild, color, owner_name, {})
+            card_embed_user = emb_cards_users(inter.guild, color, owner_name, {})
 
             view = CardSelectView()  # Используем уже готовый View
             message_member_card = await member_channel.send(content=f"<@{member_id}>", embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], view=view)
@@ -460,7 +462,7 @@ async def sm_add_user(inter, user, message, channel):
             # Добавляем нового пользователя в список
             members[str(member_id)] = {"id_transactions_channel": member_transactions_channel_id, "id_channel": member_channel_id, "id_message": message_member_card.id}
 
-            card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
+            card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
 
             await inter.send(f"Пользователь {nickname} успешно добавлен к карте {full_number}!", ephemeral=True)
 
@@ -548,7 +550,7 @@ async def sm_del_user(inter, user, message, channel):
             # Обновляем карту
             existing_embeds = message.embeds
             color = existing_embeds[1].color
-            card_embed_user = e_cards_users(inter.guild, color, owner_name, members)
+            card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
 
             await inter.send(f"Пользователь {nickname} успешно удален с карты {full_number}!", ephemeral=True)
 
@@ -662,8 +664,8 @@ async def sm_transfer_owner(inter, user, message, channel):
             temp_message = await image_upload_channel.send(content=f"{full_number}",file=card)
             image_url = temp_message.attachments[0].url if temp_message.attachments else None
 
-            card_embed_image = e_cards_image(color, image_url)
-            card_embed_user = e_cards_users(inter.guild, color, nickname, members)
+            card_embed_image = emb_cards_image(color, image_url)
+            card_embed_user = emb_cards_users(inter.guild, color, nickname, members)
             new_owner_channel = inter.client.get_channel(new_owner_channel_id)
             new_owner_message = await new_owner_channel.fetch_message(new_owner_message_id)
             await new_owner_message.edit(embeds=[existing_embeds[0], card_embed_image, card_embed_user], attachments=[])

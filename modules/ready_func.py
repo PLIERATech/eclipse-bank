@@ -87,7 +87,7 @@ async def start_persistent_view(bot):
                 color = existing_embeds[1].color  # Цвет карты
 
                 # Обновляем embed с пользователями
-                card_embed_user = e_cards_users(own_guild, color, owner_name, members)
+                card_embed_user = emb_cards_users(own_guild, color, owner_name, members)
 
                 await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 

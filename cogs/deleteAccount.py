@@ -30,7 +30,7 @@ class DelClient(commands.Cog):
         if not await verify_deleteAccount(inter, Check_delete[0]):
             return
         
-        embed=account_wasDeleted()
+        embed=emb_account_wasDeleted()
         await inter.send(embed=embed, ephemeral=True)
 
 def setup(client):

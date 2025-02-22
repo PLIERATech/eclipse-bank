@@ -27,12 +27,13 @@ class WithdrawMoney(commands.Cog):
         if not await verify_this_banker(inter, command, inter.user, True):
             return
 
+        # Проверка является ли пользователь клиентом
+        if not await verify_user_is_client(inter, member):
+            return
+
         await inter.response.defer(ephemeral=True)
 
         nick_table = supabase.table("clients").select("channels").eq("nickname", member_nick).execute()
-        if not nick_table.data:
-            await inter.send(f"Ошибка: клиент {member.mention} не найден, проверьте является ли он клиентом.", ephemeral=True)
-            return
         
         nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
 

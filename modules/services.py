@@ -11,10 +11,11 @@ from .select_menu import *
 from .embeds import *
 from card_gen import *
 
-# Создать карту и записать в бд
+
+#! Создать карту и записать в бд
 async def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
 
-    #Извлекаем номера уже существующих карт и добавляем в список
+    # Извлекаем номера уже существующих карт и добавляем в список
     response = supabase.table("cards").select("number").execute()
     numbers_list = [item["number"] for item in response.data]
     if do_random == True:
@@ -44,7 +45,8 @@ async def create_card(banker, name, nickname, type, owner_id, color, do_random: 
     return [full_number, True]
 
 
-# Продолжение создания карты - выкладывание ее в канале владельца
+
+#! Продолжение создания карты - выкладывание ее в канале владельца
 async def next_create_card(inter, member, full_number, card_type_rus, color, name):
     card_image = f"{full_number}.png"
 
@@ -62,15 +64,14 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
     # Получаем URL изображения
     image_url = temp_message.attachments[0].url if temp_message.attachments else None
 
-    # Проверяем, что картинка успешно загрузилась
-    if not image_url:
-        await inter.followup.send("Ошибка загрузки изображения.", ephemeral=True)
+    # Проверка загрузки изображения
+    if not await verify_image_upload(inter, image_url):
         return
 
     # Создаём эмбеды с картинкой
-    card_embed = e_cards(color, full_number, card_type_rus, name)
-    card_embed_image = e_cards_image(color, image_url)  # Устанавливаем ссылку
-    card_embed_user = e_cards_users(inter.guild, color, member.display_name, members={})
+    card_embed = emb_cards(color, full_number, card_type_rus, name)
+    card_embed_image = emb_cards_image(color, image_url)  # Устанавливаем ссылку
+    card_embed_user = emb_cards_users(inter.guild, color, member.display_name, members={})
     embeds = [card_embed, card_embed_image, card_embed_user]
 
     # Получаем канал для отправки карточек
@@ -90,18 +91,16 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
 
 
-
-
-
-
-# Удаление карты
+#! Удаление карты
 async def delete_card(channel_card_id, message_card_id, bot):
     channel = bot.get_channel(channel_card_id)
     message = await channel.fetch_message(message_card_id)
     await message.delete()
     return
 
-# Автоматическое удалие изображения
+
+
+#! Автоматическое удалие изображения
 async def deleteCardImages(interval):
     while True:
         try:
@@ -123,7 +122,8 @@ async def deleteCardImages(interval):
         await asyncio.sleep(interval)  # Асинхронная пауза
 
 
-# Получение параметров из бд для удаления карты
+
+#! Получение параметров из бд для удаления карты
 def get_card_info_demote(member_id):
     response = supabase.rpc("get_user_cards_demote", {"user_id": member_id}).execute()
 
@@ -141,7 +141,8 @@ def get_card_info_demote(member_id):
     return None
 
 
-# Создать аккаунт
+
+#! Создать аккаунт
 async def createAccount(guild, member):
 
     member_name = member.display_name
@@ -191,7 +192,7 @@ async def createAccount(guild, member):
 
 
 
-# Удалить аккаунт
+#! Удалить аккаунт
 async def deleteAccount(guild, owner):
     owner_id = owner.id
     full_count = 0
@@ -273,7 +274,7 @@ async def deleteAccount(guild, owner):
                 # Обновляем карту
                 existing_embeds = message_owner.embeds
                 color = existing_embeds[1].color
-                card_embed_user = e_cards_users(channel_owner.guild, color, owner_name, members_users)
+                card_embed_user = emb_cards_users(channel_owner.guild, color, owner_name, members_users)
                 await message_owner.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
                 # Обновляем сообщения всех пользователей
@@ -291,7 +292,7 @@ async def deleteAccount(guild, owner):
     
 
 
-# Удалить старую картинку
+#! Удалить старую картинку
 async def del_img_in_channel(client, full_number):
     channel = client.get_channel(image_saver_channel)
     async for message in channel.history(limit=None):
@@ -300,7 +301,8 @@ async def del_img_in_channel(client, full_number):
     return
 
 
-# Проверяет сколько времени аккаунт недействительный и при превышении лимита удаляет его.
+
+#! Проверяет сколько времени аккаунт недействительный и при превышении лимита удаляет его.
 async def scheduled_task(bot):
     check_status_clients = supabase.table("clients").select("dsc_id, freeze_date").eq("status", "freeze").execute()
 
@@ -323,7 +325,8 @@ async def scheduled_task(bot):
                 print(f"Клиент {member.name} удален за незаход 31 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
 
 
-# Тоже самое что сверху
+
+#! Тоже самое что сверху
 async def scheduler(bot):
     """Основной цикл, проверяющий текущее время"""
     while True:

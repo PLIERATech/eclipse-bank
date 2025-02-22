@@ -3,14 +3,11 @@ from .embeds import *
 from .log_functions import *
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                        Проверка на staff роль                                                 
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка на staff роль
 async def verify_staff(inter, userUsage, command):
     if not any(role.id in (staff_role) for role in userUsage.roles):
         status="No Permissions"
-        embed = e_noPerms()
+        embed = emb_e_noPerms()
         await inter.response.send_message(embed=embed, ephemeral=True) 
         PermsLog(inter.user.display_name, inter.user.id, command, status)
         return(False)
@@ -18,75 +15,60 @@ async def verify_staff(inter, userUsage, command):
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                              Проверка прав на обработку с карты CEO-00000                                     
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка прав на обработку с карты CEO-00000
 async def verify_ceo_card(inter, banker, number):
     if number == 0:
         if not any(role.id in (staff_role) for role in banker.roles):
-            embed = e_noPerms00000()
+            embed = emb_e_noPerms00000()
             await inter.response.send_message(embed=embed, ephemeral=True) 
             return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                              Проверка находится ли пользователь на сервере                                    
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка находится ли пользователь на сервере
 async def verify_user_in_server(inter, member):
     if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+        embed = emb_user_in_server()
+        await inter.response.send_message(embed=embed, ephemeral=True) 
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                               Проверка является ли пользователь клиентом                                      
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка является ли пользователь клиентом
 async def verify_user_is_client(inter, member):
     if not any(role.id == client_role_id for role in member.roles):
-        await inter.response.send_message("❌ Этот пользователь не является клиентом!", ephemeral=True)
+        embed = emb_user_is_client()
+        await inter.response.send_message(embed=embed, ephemeral=True) 
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                       Проверка является ли пользователь клиентом при удалении                                 
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка является ли пользователь клиентом при удалении
 async def verify_deleteAccount(inter, check):
     if not check:
-        await inter.response.send_message("❌ У данного пользователя нет аккаунта!", ephemeral=True)
+        embed = emb_user_is_client()
+        await inter.response.send_message(embed=embed, ephemeral=True) 
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                       Проверка занятости номера карты                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка занятости номера карты
 async def verify_num_is_claimed(inter, number):
     response = supabase.table("cards").select("number").execute()
     numbers_list = [item["number"] for item in response.data]
     if number in numbers_list:
-        embed = num_isClaimed()
+        embed = emb_num_isClaimed()
         await inter.response.send_message(embed=embed, ephemeral=True)
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                              Проверка на исчерпание лимита создания карт                                      
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка на исчерпание лимита создания карт
 async def verify_count_cards(inter, member_id, command):
     response = supabase.rpc("get_card_info", {"user_id": int(member_id)}).execute()
     if not response.data:
@@ -98,7 +80,7 @@ async def verify_count_cards(inter, member_id, command):
     
     if not result_check:
         status="MaxCountCard"
-        embed = user_cardLimit()
+        embed = emb_user_cardLimit()
         await inter.send(embed=embed, ephemeral=True)
         PermsLog(inter.user.display_name, inter.user.id, command, status)
         return(False) 
@@ -106,27 +88,21 @@ async def verify_count_cards(inter, member_id, command):
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                    Проверка получилось ли создать карту                                       
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка получилось ли создать карту
 async def verify_create_card(inter, check):
     if not check:
-        embed = sb_cardNotCreated()
+        embed = emb_sb_cardNotCreated()
         await inter.followup.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                             Проверка не является ли пользователь уже банкиром                                 
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка не является ли пользователь уже банкиром
 async def verify_dont_banker(inter, member, command):
     if any(role.id in (banker_role) for role in member.roles):
         status="isBanker"
-        embed = user_isBanker()
+        embed = emb_user_isBanker()
         await inter.response.send_message(embed=embed, ephemeral=True)
         PermsLog(inter.user.display_name, inter.user.id, command, status)
         return(False)
@@ -134,17 +110,14 @@ async def verify_dont_banker(inter, member, command):
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка является ли банкиром
 async def verify_this_banker(inter, command, member, owner):
     if owner:
         status="No Permissions"
-        embed = e_noPerms()
+        embed = emb_e_noPerms()
     else:
         status="is_notBanker"
-        embed=user_isNotBanker()
+        embed = emb_user_isNotBanker()
 
     if not any(role.id in (banker_role) for role in member.roles):
         await inter.response.send_message(embed=embed, ephemeral=True)
@@ -154,10 +127,7 @@ async def verify_this_banker(inter, command, member, owner):
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                           Проверка на целое число                                             
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка на целое число
 async def verify_an_integer(inter, value):
     try:
         amount = int(value)
@@ -165,170 +135,80 @@ async def verify_an_integer(inter, value):
             raise ValueError
         return(True)
     except ValueError:
-        await inter.send("❌ Ошибка: сумма должна быть **целым положительным числом**!", ephemeral=True)
+        embed = emb_count_an_integer()
+        await inter.send(embed=embed, ephemeral=True) 
         return(False)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                 # Проверка является ли номер карты цифрами                                    
-#@ --------------------------------------------------------------------------------------------------------------
-
+#! Проверка является ли номер карты цифрами
 async def verify_card_int(inter, number):
     try:
         int(number)
         return(True)
     except ValueError:
-        await inter.send("❌ Ошибка: номер карты должен состоять из чисел**!", ephemeral=True)
+        embed = emb_card_int()
+        await inter.send(embed=embed, ephemeral=True) 
         return(False)
 
 
 
-# ---------------------------------------------------------------------------------------------------------------
-#-                                                                                                               
-# ---------------------------------------------------------------------------------------------------------------
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Проверка загрузки картинки
+async def verify_image_upload(inter, url):
+    if not url:
+        embed = emb_e_image_upload()
+        await inter.send(embed=embed, ephemeral=True) 
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Проверка является ли карта с выставленного счёта действительной
+async def verify_invoice_card(inter, check_data, message):
+    if not check_data.data[0].get("cards"):
+        embed = verify_dont_invoice_card()
+        await inter.send(embed=embed, ephemeral=True) 
+        supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
+        await message.delete()
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Не найдены данные
+async def verify_found_data(inter, check_data):
+    if not check_data.data[0]:
+        embed = emb_e_no_found_data()
+        await inter.send(embed=embed, ephemeral=True) 
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Проверка прав на отмену счёта определенного банкира
+async def verify_invoice_banker_cancel(inter, member_id, banker_id, member):
+    if member_id != banker_id and not any(role.id in (staff_role) for role in member.roles):
+        embed = emb_e_invoice_banker_cansel()
+        await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Проверка есть ли карты в бд
+async def verify_total_card_update(inter, total):
+    if total == 0:
+        embed = emb_no_global_card_update()
+        await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
 
 
 
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
+#! Проверка найдена ли карта
+async def verify_found_card(inter, check_data):
+    if not check_data.data:
+        embed = emb_no_found_card()
+        await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-
-#@ --------------------------------------------------------------------------------------------------------------
-#@                                         Проверка является ли банкиром                                         
-#@ --------------------------------------------------------------------------------------------------------------
-
-async def verify_user_in_server(inter, member):
-    if not inter.guild.get_member(member.id):
-        await inter.response.send_message("❌ Этот пользователь **не находится** на сервере!", ephemeral=True)
-        return(False)
-    return(True)
-
-
-

@@ -34,9 +34,8 @@ class ReplenishMoney(commands.Cog):
 
         card_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
 
-        # 🔹 Проверяем, существует ли карта получателя
-        if not card_data.data:
-            await inter.send("❌ Ошибка: карта **не найдена**!", ephemeral=True)
+        # Проверяем, существует ли карта получателя
+        if not await verify_found_card(inter, card_data):
             return
 
         card_type = card_data.data[0]["type"]
