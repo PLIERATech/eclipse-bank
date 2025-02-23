@@ -70,6 +70,11 @@ class AdmCreate(commands.Cog):
         status="Success"
         PermsLog(admin_nickname, admin_id, command, status)
 
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_createCustomCard = emb_aud_createCustomCard(full_number, member_id, admin_id)
+        await member_audit.send(embed=embed_aud_createCustomCard)
+
 
 def setup(client):
     client.add_cog(AdmCreate(client))

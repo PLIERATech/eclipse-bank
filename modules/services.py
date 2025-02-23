@@ -315,14 +315,19 @@ async def scheduled_task(bot):
 
         freeze_date = datetime.strptime(freeze_date, "%Y-%m-%d") # Преобразуем строку в дату (если в БД хранится строка формата YYYY-MM-DD)
 
-        # Проверяем, прошло ли 31 день
+        # Проверяем, прошло ли 30 день
         if datetime.now() - freeze_date >= timedelta(days=days_freeze_delete):
             guild = bot.get_guild(server_id[0])
             member = await bot.fetch_user(member_id)
             check_delete_acc = await deleteAccount(guild, member)
 
             if check_delete_acc[0] == True:
-                print(f"Клиент {member.name} удален за незаход 31 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
+                print(f"Клиент {member.name} удален за незаход 30 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
+
+                #Аудит действия
+                on_audit = guild.get_channel(bank_audit_channel)
+                embed_aud_autoDeleteAccount = emb_aud_autoDeleteAccount(member_id)
+                await on_audit.send(embed=embed_aud_autoDeleteAccount)
 
 
 

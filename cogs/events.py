@@ -38,10 +38,16 @@ class Events(commands.Cog):
             print(f"Клиент {member.display_name} вернулся на сервер и вернул роль {role.name} с правами на каналы.")
             supabase.table("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
 
+            #Аудит действия
+            member_audit = guild.get_channel(bank_audit_channel)
+            embed_aud_member_join = emb_aud_member_join(member.id)
+            await member_audit.send(embed=embed_aud_member_join)    
+
 
     # Игрок вышел с сервера
     @commands.Cog.listener()
     async def on_member_remove(self, member):
+        guild = member.guild
         client_info = supabase.table("clients").select("account, nickname, status").eq("dsc_id", member.id).execute()
 
         if client_info.data:
@@ -49,6 +55,11 @@ class Events(commands.Cog):
             today_date = datetime.now().strftime("%Y-%m-%d")
             print(f"Клиент {member.name} вышел из сервера, его ник {client_nick} и его аккаунт заморожен с {today_date}")
             supabase.table("clients").update({"status": "freeze","freeze_date": today_date}).eq("dsc_id", member.id).execute()
+
+            #Аудит действия
+            member_audit = guild.get_channel(bank_audit_channel)
+            embed_aud_member_remove = emb_aud_member_remove(member.id)
+            await member_audit.send(embed=embed_aud_member_remove)    
 
 
     # Игрок обновил про себя информацию (поменял ник)

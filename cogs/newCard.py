@@ -56,6 +56,11 @@ class NewCard(commands.Cog):
         status="Success"
         PermsLog(banker_name, banker_id, command, status)
 
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_createCard = emb_aud_createCard(full_number, member_id, banker_id)
+        await member_audit.send(embed=embed_aud_createCard)
+
 
 def setup(client):
     client.add_cog(NewCard(client))

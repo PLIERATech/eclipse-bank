@@ -63,5 +63,10 @@ class TakeOffMoney(commands.Cog):
             channel_transactions_card = inter.client.get_channel(channel_id_transactions_card)
             await channel_transactions_card.send(embed=embed_take_off_money)
 
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_takeOffMoney = emb_aud_takeOffMoney(admin_id, card_full_number, count, description)
+        await member_audit.send(embed=embed_aud_takeOffMoney)
+
 def setup(client):
     client.add_cog(TakeOffMoney(client))

@@ -113,6 +113,8 @@ class MyInvoiceView(View):
                     supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
                     supabase.table("cards").update({"balance": invoice_card_balance + invoice_count}).eq("number", invoice_card_number).execute()
 
+                    embed_aud_invoice_pay = emb_aud_invoice_pay_member(member_id, invoice_card_own_id, member_full_number, invoice_full_number, invoice_count, self.comment.value)
+
                 elif invoice_type == "banker":
                     banker_message_id = invoice_data.data[0]["banker_message_id"]
                     banker_invoice_channel = inter.client.get_channel(banker_invoice_channel_id)
@@ -135,8 +137,14 @@ class MyInvoiceView(View):
                     embed_banker_invoice_message = emb_banker_invoice_message(member_id, invoice_count, invoice_card_own_id)
                     await banker_invoice_message.edit(embed=embed_banker_invoice_message, view=None)
 
+                    embed_aud_invoice_pay = emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_number, invoice_count, self.comment.value)
+
                 supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
                 await message.edit("✅ Счёт подтверждён!", view=None)
+
+                #Аудит действия
+                member_audit = inter.guild.get_channel(bank_audit_channel)
+                await member_audit.send(embed=embed_aud_invoice_pay)
                 
 
         await inter.response.send_modal(MyModal())

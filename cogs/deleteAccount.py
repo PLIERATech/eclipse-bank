@@ -18,6 +18,7 @@ class DelClient(commands.Cog):
         admin = inter.user
         admin_nick = inter.user.display_name
         admin_id = inter.user.id
+        member_id = member.id
 
         # Проверка прав staff
         if not await verify_staff(inter, admin, command):
@@ -32,6 +33,11 @@ class DelClient(commands.Cog):
         
         embed=emb_account_wasDeleted()
         await inter.send(embed=embed, ephemeral=True)
+
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_deleteAccount = emb_aud_deleteAccount(member_id, admin_id)
+        await member_audit.send(embed=embed_aud_deleteAccount)       
 
 def setup(client):
     client.add_cog(DelClient(client))

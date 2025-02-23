@@ -67,19 +67,17 @@ class ReplenishMoney(commands.Cog):
         if 1 < count <= cr1:
             commission = 0
             salary = 1
-            total_amount = count - commission - salary
         elif cr1 < count <= cr2:
             commission = 1
             salary = 1
-            total_amount = count - commission - salary
         elif cr2 < count <= cr3:
             commission = 2
             salary = 1
-            total_amount = count - commission - salary
         else:
             commission = 2
             salary = 2
-            total_amount = count - commission - salary
+
+        total_amount = count - commission - salary
 
         embed_comp_replenish = emb_comp_replenish(card_full_number, count, commission, salary, total_amount, description, banker_id)
         await inter.send(embed=embed_comp_replenish, ephemeral=True)
@@ -106,6 +104,11 @@ class ReplenishMoney(commands.Cog):
         supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
         supabase.table("cards").update({"balance": banker_card_balance + salary}).eq("number", banker_card_number).execute()
         supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
+
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_replenishMoney = emb_aud_replenishMoney(banker_id, card_full_number, banker_card_full_number, commission, salary, total_amount, description)
+        await member_audit.send(embed=embed_aud_replenishMoney)
 
 
 def setup(client):

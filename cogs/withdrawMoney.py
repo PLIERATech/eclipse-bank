@@ -61,5 +61,10 @@ class WithdrawMoney(commands.Cog):
             "type":"banker"
         }).execute()
 
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_withdrawMoney = emb_aud_withdrawMoney(banker_id, member_id, count, description)
+        await member_audit.send(embed=embed_aud_withdrawMoney)
+
 def setup(client):
     client.add_cog(WithdrawMoney(client))

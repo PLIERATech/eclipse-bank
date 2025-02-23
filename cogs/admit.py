@@ -44,7 +44,7 @@ class Admit(commands.Cog):
         # Создается клиент
         await createAccount(guild, member)
         if not member_id in ignore_members:
-            supabase.table("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
+            supabase.table("clients").update({"count_cards": 4}).eq("dsc_id", member_id).execute()
 
 
         #=Создание карты банкира
@@ -67,6 +67,11 @@ class Admit(commands.Cog):
         
         status="Success"
         PermsLog(admin_nick, admin_id, command, status)
+
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_admitBanker = emb_aud_admitBanker(member_id, full_number, admin_id)
+        await member_audit.send(embed=embed_aud_admitBanker)        
 
 
 def setup(client):

@@ -89,5 +89,10 @@ class UpdateAllCards(commands.Cog):
         embed_finish = emb_updateAllCards()
         await progress_message.edit(embed=embed_finish)
 
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_updateAllCards = emb_aud_updateAllCards(admin.id)
+        await member_audit.send(embed=embed_aud_updateAllCards)
+
 def setup(client):
     client.add_cog(UpdateAllCards(client))

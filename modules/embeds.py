@@ -956,3 +956,244 @@ def emb_sb_cardNotCreated():
                     f"{bank_sign}")
         )
     return(embed)
+
+
+
+
+
+
+
+
+#@ ----------------------------------------------------------------------------------------------
+#@ АУДИТ                                                                                         
+#@ ----------------------------------------------------------------------------------------------
+
+#! Создание кастомной карты админом 
+def emb_aud_createCustomCard(full_number, member_id, admin_id):
+    embed = nxc.Embed(
+        title="Создание кастомной карты админом", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Создана карта {full_number} для клиента <@{member_id}>. \n"
+                    f"Администратор: <@{admin_id}>. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Создание карты банкиром 
+def emb_aud_createCard(full_number, member_id, banker_id):
+    embed = nxc.Embed(
+        title="Создание карты банкиром", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Создана карта {full_number} для клиента <@{member_id}>. \n"
+                    f"Банкир: <@{banker_id}>. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Нанимание банкира 
+def emb_aud_admitBanker(member_id, full_number, admin_id):
+    embed = nxc.Embed(
+        title="Банкир нанят", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{member_id}> принят на службу и получил зарплатную карту {full_number}. \n"
+                    f"Назначил администратор: <@{admin_id}>.\n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Разжалование банкира + создание карты с балансом 
+def emb_aud_demoteBanker_create_card(full_number, member_id, balance, admin_id):
+    embed = nxc.Embed(
+        title="Банкир разжалован", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{member_id}> разжалован и получил карту {full_number} с балансом {balance} алм. \n"
+                    f"Разжаловал администратор: <@{admin_id}>.\n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Разжалование банкира + перевод средств на первую карту 
+def emb_aud_demoteBanker_send_balance(full_number, member_id, balance, admin_id):
+    embed = nxc.Embed(
+        title="Банкир разжалован", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{member_id}> разжалован и {balance} алм. переведено на карту {full_number}. \n"
+                    f"Разжаловал администратор: <@{admin_id}>.\n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Разжалование банкира 
+def emb_aud_demoteBanker(member_id, admin_id):
+    embed = nxc.Embed(
+        title="Банкир разжалован", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{member_id}> разжалован. \n"
+                    f"Разжаловал администратор: <@{admin_id}>.\n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Удаление карты 
+def emb_aud_deleteAccount(member_id, admin_id):
+    embed = nxc.Embed(
+        title="Клиент удалён", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> был удалён администратором <@{admin_id}>. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Автоматическое удаление карты 
+def emb_aud_autoDeleteAccount(member_id):
+    embed = nxc.Embed(
+        title="Клиент удалён автомотически", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> был заморожен и был удален за незаход на сервер {days_freeze_delete} дней. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Клиент вернулся на сервер 
+def emb_aud_member_join(member_id):
+    embed = nxc.Embed(
+        title="Клиент вернулся на сервер", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> вернулся на сервер и его аккаунт был разморожен. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Клиент вышел с сервера 
+def emb_aud_member_remove(member_id):
+    embed = nxc.Embed(
+        title="Клиент вышел с сервера", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> вышел с сервера и его аккаунт был заморожен. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Пополнение баланса 
+def emb_aud_replenishMoney(banker_id, member_full_number, banker_full_number, commission, salary, total_amount, comment):
+    embed = nxc.Embed(
+        title="Пополнение баланса", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{banker_id}> пополнил баланс карты {member_full_number}."))
+    embed.add_field(name="Получатель", value=f"{member_full_number} ({total_amount} алм.)", inline=True)
+    embed.add_field(name="Комисия", value=f"CEO-00000 ({commission} алм.)", inline=True)
+    embed.add_field(name="ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
+    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return(embed)
+
+
+#! Обновил все карты 
+def emb_aud_updateAllCards(member_id):
+    embed = nxc.Embed(
+        title="Обновлены все карты", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Администратор <@{member_id}> обновил все карты банка. \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Изъятие средств 
+def emb_aud_takeOffMoney(admin_id, full_number, amount, comment):
+    embed = nxc.Embed(
+        title="Изъятие средств", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Администратор <@{admin_id}> изъял с карты {full_number} - {amount} алм. \n"
+                     f"Комментарий: {comment}\n\n"
+                    f"{bank_sign}"))
+    return(embed)
+
+
+#! Обналичивание средств 
+def emb_aud_withdrawMoney(banker_id, member_id, count, comment):
+    embed = nxc.Embed(
+        title="Выставлен счёт на снятие средств", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
+                     f"Комментарий: {comment}\n\n"
+                    f"{bank_sign}"))
+    return(embed)
+
+
+#! Подтверждён выставленный счёт игрока 
+def emb_aud_invoice_pay_member(member_id, invoice_card_own_id, member_full_number, invoice_full_number, amount, comment):
+    embed = nxc.Embed(
+        title="Подтверждён счёт игрока", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> подтвердил счёт выставленный <@{invoice_card_own_id}>."))
+    embed.add_field(name="Снятие из", value=f"{member_full_number}", inline=True)
+    embed.add_field(name="Начисление в", value=f"{invoice_full_number}", inline=True)
+    embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
+    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return(embed)
+
+
+#! Подтверждён выставленный счёт банкира 
+def emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_number, amount, comment):
+    embed = nxc.Embed(
+        title="Подтверждён счёт банкира", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> подтвердил счёт выставленный банкиром <@{invoice_card_own_id}>."))
+    embed.add_field(name="Снятие из", value=f"{member_full_number}", inline=True)
+    embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
+    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return(embed)
+
+
+#! Отказ от выставленный счёт игрока 
+def emb_aud_invoice_decline3(banker_id, member_id, count, comment):
+    embed = nxc.Embed(
+        title="Выставлен счёт на снятие средств", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
+                     f"Комментарий: {comment}\n\n"
+                    f"{bank_sign}"))
+    return(embed)
+
+
+#! Отказ от выставленный счёт банкира 
+def emb_aud_withdrawMoney2(banker_id, member_id, count, comment):
+    embed = nxc.Embed(
+        title="Выставлен счёт на снятие средств", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
+                     f"Комментарий: {comment}\n\n"
+                    f"{bank_sign}"))
+    return(embed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
