@@ -51,7 +51,7 @@ class MyInvoiceView(View):
                 check_card = supabase.rpc("check_user_card", {"user_id": member_id, "number_value": user_card}).execute()
 
                 # Проверка нашло ли карту (не правильная, либо не владелец данной карты)
-                if not verify_select_pay_button(inter, check_card):
+                if not await verify_select_pay_button(inter, check_card):
                     return
 
                 member_card_type = check_card.data[0]["type"]

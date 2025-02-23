@@ -261,3 +261,12 @@ async def verify_found_banker_card(inter, check_data):
         await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
+
+
+#! Проверка найдена ли карта банкира 
+async def verify_delete_card_balance(inter, balance):
+    if balance != 0:
+        embed = emb_no_delete_card_balance()
+        await inter.send(embed=embed, ephemeral=True)
+        return(False)
+    return(True)

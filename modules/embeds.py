@@ -96,6 +96,18 @@ def emb_updateAllCards():
     return(embed)
 
 
+#= Деньги хранящиеся в банке (Total Balance) 
+#! Узнать сколько деняг хранится в банке
+def emb_total_balance(total):
+    embed = nxc.Embed(
+            title="✅ Общий баланс!", 
+            color=nxc.Color.brand_green(), 
+            description=(f"В банке хранится {total} алм.! ({total // 9} аб + {total - (total // 9 * 9)} алм.) \n\n"
+                        f"{bank_sign}")
+            )
+    return(embed)
+
+
 #= Изъять деньги (Take Off Money) 
 #! Успех в изъятии денег
 def emb_comp_take_off_money(full_number, amount, comment):
@@ -468,6 +480,42 @@ def emb_no_added_in_card_transfer(member_id):
                     f"{bank_sign}")
         )
     return(embed)
+
+
+#= Удалить карту 
+#! Успех в удалении карты 
+def emb_comp_delete_card(full_number):
+    embed = nxc.Embed(
+            title="✅ Карта удалена", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Карта {full_number} успешно удалена! \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Карта банкира не найдена 
+def emb_no_delete_card_balance():
+    embed = nxc.Embed(
+        title="⚠️ Предупреждение", 
+        color=nxc.Color.red(), 
+        description=(f"Для удаления карты, на ней не должно быть средств! \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
+#! Карта неправильно введена 
+def emb_no_delete_card_wrong_number():
+    embed = nxc.Embed(
+        title="⚠️ Предупреждение", 
+        color=nxc.Color.red(), 
+        description=(f"Для данной операции вы должны правильно написать название карты! \n\n"
+                    f"{bank_sign}")
+        )
+    return(embed)
+
+
 
 
 #@ invoice_button                                                                             

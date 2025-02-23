@@ -49,6 +49,7 @@ class CardSelectView(View):
             nxc.SelectOption(label="Добавить пользователя", value="sm_addUser"),
             nxc.SelectOption(label="Удалить пользователя", value="sm_delUser"),
             nxc.SelectOption(label="Передать карту", value="sm_transferOwner"),
+            nxc.SelectOption(label="Удалить карту", value="sm_deleteCard"),
         ],
     )
     async def card_settings_callback(self, select: Select, inter: nxc.Interaction):
@@ -62,6 +63,7 @@ class CardSelectView(View):
             "sm_addUser": sm_add_user,
             "sm_delUser": sm_del_user,
             "sm_transferOwner": sm_transfer_owner,
+            "sm_deleteCard": sm_delete_card,
         }
 
         handler = action_sm.get(select.values[0], sm_unknown)
@@ -87,7 +89,7 @@ async def sm_check_balance(inter, user, message, channel):
     response_card = supabase.rpc("find_balance", {"msg_id": message.id}).execute()
 
     # Проверка на имеются ли данные
-    if not verify_found_data(inter, response_card):
+    if not await verify_found_data(inter, response_card):
         return
 
     balance = response_card.data[0]['balance']
@@ -313,7 +315,7 @@ async def sm_change_name(inter, user, message, channel):
     cards_table = supabase.table("cards").select("type, name, number, members").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
-    if not verify_select_menu_owner(inter, cards_table):
+    if not await verify_select_menu_owner(inter, cards_table):
         return
 
     type = cards_table.data[0]['type']
@@ -324,7 +326,7 @@ async def sm_change_name(inter, user, message, channel):
     card_type_rus = type_translate.get(type, type)
     
     # Проверка является ли карта банковской
-    if not verify_not_banker_card(inter, type):
+    if not await verify_not_banker_card(inter, type):
         return
     
     if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
@@ -381,7 +383,7 @@ async def sm_add_user(inter, user, message, channel):
     cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
-    if not verify_select_menu_owner(inter, cards_table):
+    if not await verify_select_menu_owner(inter, cards_table):
         return
 
     type = cards_table.data[0]['type']
@@ -393,7 +395,7 @@ async def sm_add_user(inter, user, message, channel):
     owner_id = cards_table.data[0]['owner'] 
 
     # Проверка является ли карта банковской
-    if not verify_not_banker_card(inter, type):
+    if not await verify_not_banker_card(inter, type):
         return
 
     if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
@@ -474,7 +476,7 @@ async def sm_del_user(inter, user, message, channel):
     cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
-    if not verify_select_menu_owner(inter, cards_table):
+    if not await verify_select_menu_owner(inter, cards_table):
         return
 
     type = cards_table.data[0]['type']
@@ -486,7 +488,7 @@ async def sm_del_user(inter, user, message, channel):
     owner_id = cards_table.data[0]['owner'] 
 
     # Проверка является ли карта банковской
-    if not verify_not_banker_card(inter, type):
+    if not await verify_not_banker_card(inter, type):
         return
 
     # Убираем проверку на строку и конвертацию в json
@@ -566,7 +568,7 @@ async def sm_transfer_owner(inter, user, message, channel):
     cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname, channels)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
-    if not verify_select_menu_owner(inter, cards_table):
+    if not await verify_select_menu_owner(inter, cards_table):
         return
 
     type = cards_table.data[0]['type']
@@ -580,7 +582,7 @@ async def sm_transfer_owner(inter, user, message, channel):
     old_owner_card_channel_id = list(map(int, client_data["channels"].strip("[]").split(",")))[1]
 
     # Проверка является ли карта банковской
-    if not verify_not_banker_card(inter, type):
+    if not await verify_not_banker_card(inter, type):
         return
 
     # Убираем проверку на строку и конвертацию в json
@@ -672,6 +674,62 @@ async def sm_transfer_owner(inter, user, message, channel):
     modal = TransferOwner()
     await inter.response.send_modal(modal)
 
+
+
+#@ ---------------------------------------------------------------------------------------------------------------------------------
+#@                                                        Удалить карту                                                             
+#@ ---------------------------------------------------------------------------------------------------------------------------------
+
+async def sm_delete_card(inter, user, message, channel):
+    cards_table = supabase.table("cards").select("type, number, balance").eq("select_menu_id", message.id).execute()
+
+    # Проверка является ли владельцем карты
+    if not await verify_select_menu_owner(inter, cards_table):
+        return
+
+    type = cards_table.data[0]['type']
+    number = cards_table.data[0]['number']
+    balance = cards_table.data[0]['balance']
+    full_number = f"{suffixes.get(type, type)}{number}"
+    card_type_rus = type_translate.get(type, type)
+    
+    # Проверка является ли карта банковской
+    if not await verify_not_banker_card(inter, type):
+        return
+    
+    print(balance)
+    # Проверка имеется ли средства на карте
+    if not await verify_delete_card_balance(inter, balance):
+        return
+
+    class DeleteCardModal(nxc.ui.Modal):
+        def __init__(self):
+            super().__init__(title="Подтверждение на удаление карты")
+
+            self.cardname_input = nxc.ui.TextInput(label=f"Введите `{full_number}` для подтверждения.", placeholder="Введите название...", required=True, min_length=9, max_length=9)
+            self.add_item(self.cardname_input)
+
+
+        async def callback(self, inter: nxc.Interaction):
+            await inter.response.defer(ephemeral=True)
+
+            # Получаем никнейм из поля
+            cardname = self.cardname_input.value.strip()
+
+            if cardname != full_number:
+                embed=emb_no_delete_card_wrong_number()
+                await inter.send(embed=embed, ephemeral=True)
+                return
+
+            embed_complete=emb_comp_delete_card(full_number)
+            await inter.send(embed=embed_complete, ephemeral=True)
+
+            #Удаление карты
+            await message.delete()
+
+
+    modal = DeleteCardModal()
+    await inter.response.send_modal(modal)
 
 
 

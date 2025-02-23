@@ -9,5 +9,6 @@
     "replenishMoney": true,
     "searchCards": true,
     "withdrawMoney": true,
-    "takeOffMoney": true
+    "takeOffMoney": true,
+    "totalbalance": true
 }
