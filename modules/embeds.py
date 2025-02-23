@@ -147,13 +147,13 @@ def emb_no_cards_search(member_id):
 
 #= Пополнить (Replenish Money) 
 #! Успех в пополнении
-def emb_comp_replenish(full_number, count, commission, total_amount, description, banker_id):
+def emb_comp_replenish(full_number, count, commission, salary, total_amount, description, banker_id):
     embed = nxc.Embed(
             title="✅ Карта пополнена", 
             color=nxc.Color.brand_green())
     embed.add_field(name="💳 Карта", value=f"{full_number}", inline=False)
     embed.add_field(name="💰 Сумма", value=f"{count}", inline=True)
-    embed.add_field(name="📤 Комиссия", value=f"{commission}", inline=True)
+    embed.add_field(name="📤 Комиссия", value=f"{commission+salary}", inline=True)
     embed.add_field(name="💰 Итого", value=f"{total_amount}", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
@@ -161,14 +161,28 @@ def emb_comp_replenish(full_number, count, commission, total_amount, description
     return(embed)
 
 
-#! Выполненый перевод для пользователей карты отправителя
-def emb_replenish_ceo(full_number, count, commission, total_amount, description, banker_id):
+#! Выполнено пополнение, комиссия CEO 
+def emb_replenish_ceo(full_number, count, commission, salary, total_amount, description, banker_id):
+    embed = nxc.Embed(
+            title="💵 Пополнение карты пользователя", 
+            color=nxc.Color.brand_green())
+    embed.add_field(name="💳 Карта", value=f"{full_number}", inline=False)
+    embed.add_field(name="💰 Сумма", value=f"{count}", inline=True)
+    embed.add_field(name="📤 Комиссия", value=f"{commission+salary}", inline=True)
+    embed.add_field(name="💰 Итого к пополнению CEO-00000", value=f"{commission}", inline=False)
+    embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
+    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return(embed)
+
+
+#! Выполнено пополнение для пользователей карты получателя 
+def emb_replenish_user(full_number, count, commission, salary, total_amount, description, banker_id):
     embed = nxc.Embed(
             title="💵 Пополнение карты", 
             color=nxc.Color.brand_green())
     embed.add_field(name="💳 Карта", value=f"{full_number}", inline=False)
     embed.add_field(name="💰 Сумма", value=f"{count}", inline=True)
-    embed.add_field(name="📤 Комиссия", value=f"{commission}", inline=True)
+    embed.add_field(name="📤 Комиссия", value=f"{commission+salary}", inline=True)
     embed.add_field(name="💰 Итого", value=f"{total_amount}", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
@@ -176,18 +190,26 @@ def emb_replenish_ceo(full_number, count, commission, total_amount, description,
     return(embed)
 
 
-#! Выполненый перевод для пользователей карты получателя
-def emb_replenish_user(full_number, count, commission, total_amount, description, banker_id):
+#! Выполнено пополнение, комиссия банкира 
+def emb_replenish_banker(full_number, salary):
     embed = nxc.Embed(
             title="💵 Пополнение карты", 
             color=nxc.Color.brand_green())
     embed.add_field(name="💳 Карта", value=f"{full_number}", inline=False)
-    embed.add_field(name="💰 Сумма", value=f"{count}", inline=True)
-    embed.add_field(name="📤 Комиссия", value=f"{commission}", inline=True)
-    embed.add_field(name="💰 Итого", value=f"{total_amount}", inline=True)
-    embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
-    embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
+    embed.add_field(name="💰 Сумма", value=f"{salary}", inline=False)
+    embed.add_field(name="📝 Комментарий", value=f"Комиссия с пополнение чужой карты", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return(embed)
+
+
+#! Карта банкира не найдена 
+def emb_no_found_banker_card():
+    embed = nxc.Embed(
+        title="⚠️ Предупреждение", 
+        color=nxc.Color.red(), 
+        description=(f"Для данного действия у вас должна быть карта банкира! \n\n"
+                    f"{bank_sign}")
+        )
     return(embed)
 
 
@@ -587,39 +609,6 @@ def emb_edit_bancer_cancel_button(member_id):
     return(embed)
 
 
-
-
-
-
-
-
-
-#! Выполненый перевод для пользователей карты отправителя
-def emb_transfer_sender(sender_full_number, receiver_full_number, amount, comment):
-    embed = nxc.Embed(
-            title="🚀 Средства переведены", 
-            color=nxc.Color.brand_green())
-    embed.add_field(name="💳 Откуда", value=f"{sender_full_number}", inline=True)
-    embed.add_field(name="📤 Кому", value=f"{receiver_full_number}", inline=True)
-    embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
-    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
-    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
-
-
-#! Выполненый перевод для пользователей карты получателя
-def emb_transfer_receimer(sender_full_number, receiver_full_number, amount, comment):
-    embed = nxc.Embed(
-            title="💵 Поступили средства", 
-            color=nxc.Color.brand_green())
-    embed.add_field(name="💳 От", value=f"{sender_full_number}", inline=True)
-    embed.add_field(name="📤 Куда", value=f"{receiver_full_number}", inline=True)
-    embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
-    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
-    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
-
-
 #= Выставить счёт 
 #! Успех в выставлении счёта
 def emb_comp_invoice(nick_id, amount, comment):
@@ -657,18 +646,6 @@ def emb_invoice_nick(sender_id, sender_full_number, amount, comment):
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
     return(embed)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

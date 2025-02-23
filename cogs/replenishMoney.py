@@ -47,33 +47,54 @@ class ReplenishMoney(commands.Cog):
 
         if not isinstance(card_members, dict):  # Проверяем, если это не словарь (jsonb)
             card_members = {}
+        
+        banker_data = supabase.rpc("get_banker_card", {"user_id": banker_id}).execute()
+
+        # Проверяет, есть ли карта у банкира
+        if not await verify_found_banker_card(inter, banker_data):
+            return
+        
+        banker_card_type = banker_data.data[0]["type"]
+        banker_card_number = banker_data.data[0]["number"]
+        banker_card_balance = banker_data.data[0]["balance"]
+        banker_card_full_number = f"{suffixes.get(banker_card_type, banker_card_type)}{banker_card_number}"
+        banker_tranaction_channel_id = banker_data.data[0]["banker_transactions"]
 
         cr1 = commission_replenish.get("1")
         cr2 = commission_replenish.get("2")
         cr3 = commission_replenish.get("3")
 
         if 1 < count <= cr1:
-            commission = 1
-            total_amount = count - commission
+            commission = 0
+            salary = 1
+            total_amount = count - commission - salary
         elif cr1 < count <= cr2:
-            commission = 2
-            total_amount = count - commission
+            commission = 1
+            salary = 1
+            total_amount = count - commission - salary
         elif cr2 < count <= cr3:
-            commission = 3
-            total_amount = count - commission
+            commission = 2
+            salary = 1
+            total_amount = count - commission - salary
         else:
-            commission = 4
-            total_amount = count - commission
+            commission = 2
+            salary = 2
+            total_amount = count - commission - salary
 
-        embed_comp_replenish = emb_comp_replenish(card_full_number, count, commission, total_amount, description, banker_id)
+        embed_comp_replenish = emb_comp_replenish(card_full_number, count, commission, salary, total_amount, description, banker_id)
         await inter.send(embed=embed_comp_replenish, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        embed_replenish_ceo = emb_replenish_ceo(card_full_number, count, commission, total_amount, description, banker_id)
-        embed_replenish_user = emb_replenish_user(card_full_number, count, commission, total_amount, description, banker_id)
+        embed_replenish_ceo = emb_replenish_ceo(card_full_number, count, commission, salary, total_amount, description, banker_id)
         ceo_owner_transaction_channel = inter.client.get_channel(bank_card_transaction)
-        card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
         await ceo_owner_transaction_channel.send(embed=embed_replenish_ceo)
+
+        embed_replenish_banker = emb_replenish_banker(banker_card_full_number, salary)
+        banker_owner_transaction_channel = inter.client.get_channel(banker_tranaction_channel_id)
+        await banker_owner_transaction_channel.send(embed=embed_replenish_banker)
+
+        embed_replenish_user = emb_replenish_user(card_full_number, count, commission, salary, total_amount, description, banker_id)
+        card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
         await card_owner_transaction_channel.send(embed=embed_replenish_user)
 
         for user_id, data in card_members.items():
@@ -83,6 +104,7 @@ class ReplenishMoney(commands.Cog):
 
         # Обновляем баланс в базе данных
         supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
+        supabase.table("cards").update({"balance": banker_card_balance + salary}).eq("number", banker_card_number).execute()
         supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
 
 

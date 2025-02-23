@@ -252,3 +252,12 @@ async def verify_select_pay_button(inter, check_data):
         await inter.response.send_message(embed=embed, ephemeral=True)
         return(False)
     return(True)
+
+
+#! Проверка найдена ли карта банкира 
+async def verify_found_banker_card(inter, check_data):
+    if not check_data.data:
+        embed = emb_no_found_banker_card()
+        await inter.send(embed=embed, ephemeral=True)
+        return(False)
+    return(True)
