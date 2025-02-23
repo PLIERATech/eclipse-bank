@@ -32,11 +32,14 @@ class SearchCards(commands.Cog):
         # Проверка является ли человек клиентом
         if not await verify_user_is_client(inter, member):
             return
+        
+        await inter.response.defer(ephemeral=True)
 
         search_cards_response = supabase.rpc("find_all_cards_user", {"user_id": member_id}).execute()
 
         if not search_cards_response.data:
-            await inter.send(f"У клиента {member.mention} нет карт.")
+            embed_no_cards_search = emb_no_cards_search(member_id, ephemeral=True)
+            await inter.send(embed=embed_no_cards_search, )
         else:
             cards = []
 
@@ -58,8 +61,8 @@ class SearchCards(commands.Cog):
 
             # Сортируем: сначала owner, потом user, баланс по убыванию
             cards.sort(key=lambda x: (x[0] != "owner", -x[1]))
-
-            await inter.send(f"Карты клиента {member.mention}:\n" + "\n".join(card[2] for card in cards))    
+            embed_comp_search_cards = emb_comp_search_cards(member_id, cards)
+            await inter.send(embed=embed_comp_search_cards, ephemeral=True)    
 
 
 

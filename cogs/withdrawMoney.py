@@ -37,20 +37,18 @@ class WithdrawMoney(commands.Cog):
         
         nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
 
-        await inter.send(
-            f"✅ **Успешно выставили счёт на снятие!**\n📤 Кому `{member.mention}`\n💰 Сумма `{count} алм.`\n📝 Комментарий: `{description or '—'}`",
-            ephemeral=True
-        )
+        embed_comp_withdram_invoice = emb_comp_withdram_invoice(member_id, count, description)    
+        await inter.send(embed=embed_comp_withdram_invoice, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        nick_message_text = f"**Запрос на снятие наличных**\n💳 От банкира`{banker.mention}`\n📤 Кому `{member_nick}`\n💰 Сумма `{count} алм.`\n📝 Комментарий: `{description or '—'}`"
+        embed_withdram_request = emb_withdram_request(banker_id, member_id, count, description)
         nick_transaction_channel = inter.client.get_channel(nick_transaction_channel_id)
         view_member=MyInvoiceView() # Кнопочки
-        nick_message = await nick_transaction_channel.send(nick_message_text, view = view_member)
+        nick_message = await nick_transaction_channel.send(embed=embed_withdram_request, view = view_member)
 
         banker_invoice_channel = inter.client.get_channel(banker_invoice_channel_id)
         view_banker=BankerInvoiceView() # Кнопочки
-        banker_message = await banker_invoice_channel.send(nick_message_text, view = view_banker)
+        banker_message = await banker_invoice_channel.send(embed=embed_withdram_request, view = view_banker)
 
         supabase.table("invoice").insert({
             "own_dsc_id":banker_id,

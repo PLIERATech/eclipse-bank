@@ -212,3 +212,43 @@ async def verify_found_card(inter, check_data):
         await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
+
+
+
+#! Проверка существует ли клиент по нику
+async def verify_select_menu_client(inter, check_data, nickname):
+    if not check_data.data:
+        embed = emb_no_client_select_menu(nickname)
+        await inter.send(embed=embed, ephemeral=True)
+        return(False)
+    return(True)
+
+
+
+
+#! Проверка является ли карта не зарплатной
+async def verify_not_banker_card(inter, type):
+    if type == admCardTypes[2]:
+        embed = emb_is_banker_card()
+        await inter.response.send_message(embed=embed, ephemeral=True)
+        return(False)
+    return(True)
+
+
+
+#! Проверка владелец ли карты в select menu
+async def verify_select_menu_owner(inter, check_data):
+    if not check_data.data:
+        embed = emb_no_owner_select_menu()
+        await inter.response.send_message(embed=embed, ephemeral=True)
+        return(False)
+    return(True)
+
+
+#! Проверка правильности номера или владельца в invoice button
+async def verify_select_pay_button(inter, check_data):
+    if not check_data.data:
+        embed = emb_no_card_pay_button()
+        await inter.response.send_message(embed=embed, ephemeral=True)
+        return(False)
+    return(True)

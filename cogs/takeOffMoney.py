@@ -17,18 +17,16 @@ class TakeOffMoney(commands.Cog):
         count: int = nxc.SlashOption(name="сумма", description="Сумма обналичивания", min_value=1, max_value=1000000), 
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
-        banker = inter.user
-        banker_nick = inter.user.display_name
-        banker_id = inter.user.id
+        admin = inter.user
+        admin_nick = inter.user.display_name
+        admin_id = inter.user.id
 
-        # Проверка прав banker
-        if not await verify_this_banker(inter, command, inter.user, True):
+        # Проверка прав staff
+        if not await verify_staff(inter, admin, command):
             return
+
+        await inter.response.defer(ephemeral=True)
         
-        # Проверка прав на взаимодействие с картой CEO-00000
-        if not await verify_ceo_card(inter, banker, number):
-            return
-
         # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
@@ -45,10 +43,9 @@ class TakeOffMoney(commands.Cog):
         card_owner_transaction_channel_id = list(map(int, card_client_data["channels"].strip("[]").split(",")))[0]
         card_full_number = f"{suffixes.get(card_type, card_type)}{number}"
 
-        await inter.send(
-            f"✅ **Снятие выполнено!**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`",
-            ephemeral=True
-        )
+
+        embed_comp_take_off_money = emb_comp_take_off_money(card_full_number, count, description)
+        await inter.send(embed=embed_comp_take_off_money, ephemeral=True)
 
         if not isinstance(card_members, dict):  # Проверяем, если это не словарь (jsonb)
             card_members = {}
@@ -57,14 +54,14 @@ class TakeOffMoney(commands.Cog):
         supabase.table("cards").update({"balance": card_balance - count}).eq("number", number).execute()
 
         # Отправка сообщений в каналы транзакций
-        card_message_text = f"**Снятие наличных**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`"
+        embed_take_off_money = emb_take_off_money(admin_id, card_full_number, count, description)
         card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
-        await card_owner_transaction_channel.send(card_message_text)
+        await card_owner_transaction_channel.send(embed=embed_take_off_money)
 
         for user_id, data in card_members.items():
             channel_id_transactions_card = data.get("id_transactions_channel")
             channel_transactions_card = inter.client.get_channel(channel_id_transactions_card)
-            await channel_transactions_card.send(card_message_text)
+            await channel_transactions_card.send(embed=embed_take_off_money)
 
 def setup(client):
     client.add_cog(TakeOffMoney(client))

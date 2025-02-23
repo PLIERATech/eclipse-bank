@@ -48,7 +48,7 @@ class Admit(commands.Cog):
 
 
         #=Создание карты банкира
-        check_create_card = create_card(admin_nick, "Зарплатная", member_nick, type, member_id, color, True, "0", "0")
+        check_create_card = await create_card(admin_nick, "Зарплатная", member_nick, type, member_id, color, True, "0", "0")
         
          # Проверка получилось ли создать карту
         if not await verify_create_card(inter, check_create_card[1]):

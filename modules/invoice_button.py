@@ -47,12 +47,11 @@ class MyInvoiceView(View):
                     return
 
                 member_id = invoice_data.data[0]["memb_dsc_id"]
-                member = await inter.client.fetch_user(member_id)
 
                 check_card = supabase.rpc("check_user_card", {"user_id": member_id, "number_value": user_card}).execute()
 
-                if not check_card.data:
-                    await inter.send(f"Вы написали не существующий номер или не владелец / пользователь данной карты", ephemeral=True)
+                # Проверка нашло ли карту (не правильная, либо не владелец данной карты)
+                if not verify_select_pay_button(inter, check_card):
                     return
 
                 member_card_type = check_card.data[0]["type"]
@@ -66,7 +65,6 @@ class MyInvoiceView(View):
                     member_card_members = {}
 
                 invoice_card_own_id = invoice_data.data[0]["own_dsc_id"]
-                invoice_card_own = await inter.client.fetch_user(invoice_card_own_id)
                 invoice_count = invoice_data.data[0]["count"]
                 invoice_type = invoice_data.data[0]["type"]
                 invoice_cards_data = invoice_data.data[0].get("cards")
@@ -79,60 +77,63 @@ class MyInvoiceView(View):
                 if not isinstance(invoice_card_members, dict):
                     invoice_card_members = {}
 
-                # 🔹 Проверяем, хватает ли денег
+                # Проверяем, хватает ли денег
                 if member_card_balance < invoice_count:
-                    await inter.send("❌ Ошибка: **недостаточно средств**!", ephemeral=True)
+                    embed_insufficient_funds = emb_insufficient_funds()
+                    await inter.send(embed=embed_insufficient_funds, ephemeral=True)
                     return
 
-                await inter.send(f"✅ **Счёт подтверждён!**", ephemeral=True)
+                embed_comp_pay_button = emb_comp_pay_button()
+                await inter.send(embed=embed_comp_pay_button, ephemeral=True)
 
                 if invoice_type == "member":
                     invoice_card_number = invoice_data.data[0]["own_number"]
                     invoice_full_number = f"{suffixes.get(invoice_card_type, invoice_card_type)}{invoice_card_number}"
 
-                    # 🔹 Обновляем баланс в базе данных
-                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
-                    supabase.table("cards").update({"balance": invoice_card_balance + invoice_count}).eq("number", invoice_card_number).execute()
-
                     # Отправка сообщений в каналы транзакций
-                    member_message_text = f"**Счёт оплачен {member.mention}**\n💳 Откуда `{member_full_number}`\n📤 Кому `{invoice_full_number}`\n💰 Сумма `{invoice_count} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`\n Запросивший: `{invoice_card_own.mention}`"
-                    invoice_message_text = f"**Счёт оплачен  {member.mention}**\n💳 От `{member_full_number}`\n📤 Куда `{invoice_full_number}`\n💰 Сумма `{invoice_count} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`\n Запросивший: `{invoice_card_own.mention}`"
+                    embed_member_pay_button = emb_member_pay_button(member_id, member_full_number, invoice_full_number, invoice_count, self.comment.value, invoice_card_own_id)
+                    embed_invoice_pay_button = emb_invoice_pay_button(member_id, member_full_number, invoice_full_number, invoice_count, self.comment.value, invoice_card_own_id)
                     member_owner_transaction_channel = inter.client.get_channel(member_card_owner_transaction_channel_id)
                     invoice_owner_transaction_channel = inter.client.get_channel(invoice_owner_transaction_channel_id)
-                    await member_owner_transaction_channel.send(member_message_text)
-                    await invoice_owner_transaction_channel.send(invoice_message_text)
+                    await member_owner_transaction_channel.send(embed=embed_member_pay_button)
+                    await invoice_owner_transaction_channel.send(embed=embed_invoice_pay_button)
 
                     # Отправка сообщений в каналы транзакций пользователей
                     for user_id, data in member_card_members.items():
                         channel_id_transactions_member = data.get("id_transactions_channel")
                         channel_transactions_member = inter.client.get_channel(channel_id_transactions_member)
-                        await channel_transactions_member.send(member_message_text)
+                        await channel_transactions_member.send(embed=embed_member_pay_button)
 
                     for user_id, data in invoice_card_members.items():
                         channel_id_transactions_invoice = data.get("id_transactions_channel")
                         channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
-                        await channel_transactions_invoicer.send(invoice_message_text)
+                        await channel_transactions_invoicer.send(embed=embed_invoice_pay_button)
+
+                    # Обновляем баланс в базе данных
+                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
+                    supabase.table("cards").update({"balance": invoice_card_balance + invoice_count}).eq("number", invoice_card_number).execute()
 
                 elif invoice_type == "banker":
                     banker_message_id = invoice_data.data[0]["banker_message_id"]
                     banker_invoice_channel = inter.client.get_channel(banker_invoice_channel_id)
                     banker_invoice_message = await banker_invoice_channel.fetch_message(banker_message_id)
 
-                    # 🔹 Обновляем баланс в базе данных
-                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
-
                     # Отправка сообщений в каналы транзакций
-                    member_message_text = f"**Счёт оплачен {member.mention}**\n💳 Откуда `{member_full_number}`\n📤 Действие: `снятие наличных`\n💰 Сумма `{invoice_count} алм.`\n📝 Комментарий: `{self.comment.value or '—'}`\n Банкир: `{invoice_card_own.mention}`"
+                    embed_member_pay_button_banker = emb_member_pay_button_banker(member_id, member_full_number, invoice_count, self.comment.value, invoice_card_own_id)
                     member_owner_transaction_channel = inter.client.get_channel(member_card_owner_transaction_channel_id)
-                    await member_owner_transaction_channel.send(member_message_text)
+                    await member_owner_transaction_channel.send(embed=embed_member_pay_button_banker)
 
                     # Отправка сообщений в каналы транзакций пользователей
                     for user_id, data in member_card_members.items():
                         channel_id_transactions_member = data.get("id_transactions_channel")
                         channel_transactions_member = inter.client.get_channel(channel_id_transactions_member)
-                        await channel_transactions_member.send(member_message_text)
+                        await channel_transactions_member.send(embed=embed_member_pay_button_banker)
 
-                    await banker_invoice_message.edit(f"**Счёт оплачен {member.mention}**\n📤 Действие: `снятие наличных`\n💰 Сумма `{invoice_count} алм.`", view=None)
+                     # Обновляем баланс в базе данных
+                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
+
+                    embed_banker_invoice_message = emb_banker_invoice_message(member_id, invoice_count, invoice_card_own_id)
+                    await banker_invoice_message.edit(embed=embed_banker_invoice_message, view=None)
 
                 supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
                 await message.edit("✅ Счёт подтверждён!", view=None)
@@ -160,10 +161,8 @@ class MyInvoiceView(View):
             return
 
         member_id = invoice_data.data[0]["memb_dsc_id"]
-        member = await inter.client.fetch_user(member_id)
 
         invoice_card_own_id = invoice_data.data[0]["own_dsc_id"]
-        invoice_card_own = await inter.client.fetch_user(invoice_card_own_id)
         invoice_card_number = invoice_data.data[0]["own_number"]
         invoice_count = invoice_data.data[0]["count"]
         invoice_type = invoice_data.data[0]["type"]
@@ -177,19 +176,21 @@ class MyInvoiceView(View):
         if not isinstance(invoice_card_members, dict):
             invoice_card_members = {}
 
-        await inter.send(f"✅ **Счёт отменён!**", ephemeral=True)
+        embed_comp_decline_button = emb_comp_decline_button()
+        await inter.send(embed=embed_comp_decline_button, ephemeral=True)
 
         if invoice_type == "member":
             # Отправка сообщений в каналы транзакций
-            invoice_message_text = f"**Счёт выставленный {member.mention} на сумму `{invoice_count} алм.` отменён**"
+
+            embed_msg_decline_button = emb_msg_decline_button(member_id, invoice_count)
             invoice_owner_transaction_channel = inter.client.get_channel(invoice_owner_transaction_channel_id)
-            await invoice_owner_transaction_channel.send(invoice_message_text)
+            await invoice_owner_transaction_channel.send(embed=embed_msg_decline_button)
 
             # Отправка сообщений в каналы транзакций пользователей
             for user_id, data in invoice_card_members.items():
                 channel_id_transactions_invoice = data.get("id_transactions_channel")
                 channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
-                await channel_transactions_invoicer.send(invoice_message_text)
+                await channel_transactions_invoicer.send(embed=embed_msg_decline_button)
                 
         elif invoice_type == "banker":
             banker_message_id = invoice_data.data[0]["banker_message_id"]
@@ -197,10 +198,10 @@ class MyInvoiceView(View):
             banker_invoice_message = await banker_invoice_channel.fetch_message(banker_message_id)
 
             # Отправка сообщений в каналы транзакций
-            await banker_invoice_message.edit(f"**Счёт выставленный {member.mention} на сумму `{invoice_count} алм.` отменён**", view=None)
+            await banker_invoice_message.edit(embed=embed_msg_decline_button, view=None)
 
         supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
-        await message.edit("✅ Счёт отменён!", view=None)
+        await message.edit(embed=embed_comp_decline_button, view=None)
 
 
 
@@ -254,10 +255,13 @@ class BankerInvoiceView(View):
         invoice_count = invoice_data.data[0]["count"]
         invoice_type = invoice_data.data[0]["type"]
 
-        await inter.send(f"❌ **Счёт отменён!**", ephemeral=True)
+        embed_comp_cancel_button = emb_comp_cancel_button()
+        await inter.send(embed=embed_comp_cancel_button, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        await member_message.edit(f"**Счёт выставленный банкиром {member.mention} на сумму `{invoice_count} алм.` отменён**", view=None)
+        embed_edit_member_cancel_button = emb_edit_member_cancel_button(member_id, invoice_count)
+        await member_message.edit(embed=embed_edit_member_cancel_button, view=None)
 
         supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
-        await message.edit(f"❌ Счёт отменён банкиром {member.mention}", view=None)
+        embed_edit_bancer_cancel_button = emb_edit_bancer_cancel_button(member_id)
+        await message.edit(embed=embed_edit_bancer_cancel_button, view=None)

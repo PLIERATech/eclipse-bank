@@ -65,27 +65,25 @@ class ReplenishMoney(commands.Cog):
             commission = 4
             total_amount = count - commission
 
-        await inter.send(
-            f"✅ **Пополнение выполнено!**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📤 Комиссия `{commission} алм.`\n💰 Итого `{total_amount} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`",
-            ephemeral=True
-        )
-
-        # 🔹 Обновляем баланс в базе данных
-        supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
-        supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
+        embed_comp_replenish = emb_comp_replenish(card_full_number, count, commission, total_amount, description, banker_id)
+        await inter.send(embed=embed_comp_replenish, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        ceo_message_text = f"**Пополнение карты**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📤 Комиссия `{commission} алм.`\n💰 Итого `{total_amount} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`"
-        card_message_text = f"**Пополнение карты**\n💳 карта `{card_full_number}`\n📤 Сумма `{count} алм.`\n📤 Комиссия `{commission} алм.`\n💰 Итого `{total_amount} алм.`\n📝 Комментарий: `{description or '—'}`\n Банкир: `{banker_nick}`"
+        embed_replenish_ceo = emb_replenish_ceo(card_full_number, count, commission, total_amount, description, banker_id)
+        embed_replenish_user = emb_replenish_user(card_full_number, count, commission, total_amount, description, banker_id)
         ceo_owner_transaction_channel = inter.client.get_channel(bank_card_transaction)
         card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
-        await ceo_owner_transaction_channel.send(ceo_message_text)
-        await card_owner_transaction_channel.send(card_message_text)
+        await ceo_owner_transaction_channel.send(embed=embed_replenish_ceo)
+        await card_owner_transaction_channel.send(embed=embed_replenish_user)
 
         for user_id, data in card_members.items():
             channel_id_transactions_card = data.get("id_transactions_channel")
             channel_transactions_card = inter.client.get_channel(channel_id_transactions_card)
-            await channel_transactions_card.send(card_message_text)
+            await channel_transactions_card.send(embed=embed_replenish_user)
+
+        # Обновляем баланс в базе данных
+        supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
+        supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
 
 
 def setup(client):
