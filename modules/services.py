@@ -187,6 +187,11 @@ async def createAccount(guild, member):
         client_role_add = guild.get_role(client_role_id)
         await member.add_roles(client_role_add)
 
+        #Аудит действия
+        member_audit = guild.get_channel(bank_audit_channel)
+        embed_aud_create_client = emb_aud_create_client(member_id)
+        await member_audit.send(embed=embed_aud_create_client)      
+
         clientCreateLog(member_name)
     return
 
@@ -287,6 +292,11 @@ async def deleteAccount(guild, owner):
 
                 # Обновляем данные в базе данных
                 supabase.table("cards").update({"members": members_users}).eq("select_menu_id", messege_owner_id).execute()
+
+        #Аудит действия
+        member_audit = guild.get_channel(bank_audit_channel)
+        embed_aud_create_client = emb_aud_create_client(banker_id, member_id, invoice_count)
+        await member_audit.send(embed=embed_aud_create_client)
 
         return[True, full_count, cards_output]
     

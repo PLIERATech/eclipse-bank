@@ -200,6 +200,9 @@ class MyInvoiceView(View):
                 channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
                 await channel_transactions_invoicer.send(embed=embed_msg_decline_button)
                 
+            embed_aud_invoice_decline = emb_aud_invoice_decline_member(member_id, invoice_card_own_id, invoice_count)
+
+
         elif invoice_type == "banker":
             banker_message_id = invoice_data.data[0]["banker_message_id"]
             banker_invoice_channel = inter.client.get_channel(banker_invoice_channel_id)
@@ -208,28 +211,27 @@ class MyInvoiceView(View):
             # Отправка сообщений в каналы транзакций
             await banker_invoice_message.edit(embed=embed_msg_decline_button, view=None)
 
+            embed_aud_invoice_decline = emb_aud_invoice_decline_banker(member_id, invoice_card_own_id, invoice_count)
+
         supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
         await message.edit(embed=embed_comp_decline_button, view=None)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        await member_audit.send(embed=embed_aud_invoice_decline)
 
 
 class BankerInvoiceView(View):
     def __init__(self):
         super().__init__(timeout=None)  # Ставим timeout=None, чтобы кнопки оставались активными
+
+
+
+
+
+
+
+
 
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 #@                                                           Отменить                                                               
@@ -241,19 +243,20 @@ class BankerInvoiceView(View):
         
         message = inter.message
         channel = inter.channel
-        member = inter.user
-        member_id = member.id
+        banker = inter.user
+        banker_id = banker.id
 
-        invoice_data = supabase.table("invoice").select("own_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
+        invoice_data = supabase.table("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
 
         # Не найдены данные
         if not await verify_found_data(inter, invoice_data):
             return
 
         banker_invoice_start_id = invoice_data.data[0]["own_dsc_id"]
+        member_id = invoice_data.data[0]["memb_dsc_id"]
 
         # Проверка прав на отмену счёта определенного банкира
-        if not await verify_invoice_banker_cancel(inter, member_id, banker_invoice_start_id, member):
+        if not await verify_invoice_banker_cancel(inter, banker_id, banker_invoice_start_id, banker):
             return
 
         member_message_id = invoice_data.data[0]["memb_message_id"]
@@ -267,9 +270,14 @@ class BankerInvoiceView(View):
         await inter.send(embed=embed_comp_cancel_button, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        embed_edit_member_cancel_button = emb_edit_member_cancel_button(member_id, invoice_count)
+        embed_edit_member_cancel_button = emb_edit_member_cancel_button(banker_id, invoice_count)
         await member_message.edit(embed=embed_edit_member_cancel_button, view=None)
 
         supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
-        embed_edit_bancer_cancel_button = emb_edit_bancer_cancel_button(member_id)
+        embed_edit_bancer_cancel_button = emb_edit_bancer_cancel_button(banker_id)
         await message.edit(embed=embed_edit_bancer_cancel_button, view=None)
+
+        #Аудит действия
+        member_audit = inter.guild.get_channel(bank_audit_channel)
+        embed_aud_invoice_cancel_banker = emb_aud_invoice_cancel_banker(banker_id, member_id, invoice_count)
+        await member_audit.send(embed=embed_aud_invoice_cancel_banker)

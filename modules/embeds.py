@@ -1158,35 +1158,44 @@ def emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_numbe
     return(embed)
 
 
-#! Отказ от выставленный счёт игрока 
-def emb_aud_invoice_decline3(banker_id, member_id, count, comment):
+#! Отказ на выставленный счёт игрока 
+def emb_aud_invoice_decline_member(member_id, invoice_member_id, count):
     embed = nxc.Embed(
-        title="Выставлен счёт на снятие средств", 
+        title="Отказ счёта игрока", 
         color=nxc.Color.brand_green(), 
-        description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
-                     f"Комментарий: {comment}\n\n"
+        description=(f"Клиент <@{member_id}> отказался от счёта выставленный <@{invoice_member_id}> на снятие {count} алм. \n\n"
                     f"{bank_sign}"))
     return(embed)
 
 
-#! Отказ от выставленный счёт банкира 
-def emb_aud_withdrawMoney2(banker_id, member_id, count, comment):
+#! Отказ на выставленный счёт банкира 
+def emb_aud_invoice_decline_banker(member_id, banker_id, count):
     embed = nxc.Embed(
-        title="Выставлен счёт на снятие средств", 
+        title="Отказ счёта банкира", 
         color=nxc.Color.brand_green(), 
-        description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
-                     f"Комментарий: {comment}\n\n"
+        description=(f"Клиент <@{member_id}> отказался от счёта выставленный банкиром <@{banker_id}> на снятие {count} алм. \n\n"
                     f"{bank_sign}"))
     return(embed)
 
 
+#! Банкир отменил высталвенный счёт 
+def emb_aud_invoice_cancel_banker(banker_id, member_id, count):
+    embed = nxc.Embed(
+        title="Банкир отменил высталвенный счёт", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Банкир <@{banker_id}> отменил счёта выставленный клиенту <@{member_id}> на снятие {count} алм. \n\n"
+                    f"{bank_sign}"))
+    return(embed)
 
 
-
-
-
-
-
+#! Создан клиент 
+def emb_aud_create_client(member_id):
+    embed = nxc.Embed(
+        title="Новый клиент", 
+        color=nxc.Color.brand_green(), 
+        description=(f"<@{member_id}> стал клиентом Eclipse Bank. \n\n"
+                    f"{bank_sign}"))
+    return(embed)
 
 
 
