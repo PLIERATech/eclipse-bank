@@ -10,13 +10,14 @@ from .api import *
 from .select_menu import *
 from .embeds import *
 from card_gen import *
+from db import *
 
 
 #! Создать карту и записать в бд
 async def create_card(banker, name, nickname, type, owner_id, color, do_random: bool, adm_number, balance):
 
     # Извлекаем номера уже существующих карт и добавляем в список
-    response = supabase.table("cards").select("number").execute()
+    response = db_cursor("cards").select("number").execute()
     numbers_list = [item["number"] for item in response.data]
     if do_random == True:
         while True:
@@ -28,7 +29,7 @@ async def create_card(banker, name, nickname, type, owner_id, color, do_random: 
     
     full_number = f"{suffixes.get(type)}{number}"
 
-    check = supabase.table("cards").insert({
+    check = db_cursor("cards").insert({
         "number": number,
         "name": name,
         "type": type,
@@ -75,7 +76,7 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
     embeds = [card_embed, card_embed_image, card_embed_user]
 
     # Получаем канал для отправки карточек
-    response = supabase.table("clients").select("channels").eq("dsc_id", member.id).execute()
+    response = db_cursor("clients").select("channels").eq("dsc_id", member.id).execute()
     channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
     cards_channel_id = channels[1]
     cards_channel = inter.guild.get_channel(cards_channel_id)
@@ -87,7 +88,7 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     # Сохраняем ID сообщения в БД
     card_numbers = full_number[4:]  # Оставляем только цифры из номера карты
-    supabase.table("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
+    db_cursor("cards").update({"select_menu_id": message_card.id}).eq("number", card_numbers).execute()
 
 
 
@@ -125,7 +126,7 @@ async def deleteCardImages(interval):
 
 #! Получение параметров из бд для удаления карты
 def get_card_info_demote(member_id):
-    response = supabase.rpc("get_user_cards_demote", {"user_id": member_id}).execute()
+    response = db_rpc("get_user_cards_demote", {"user_id": member_id}).execute()
 
     if response.data:
         result = response.data[0]
@@ -150,7 +151,7 @@ async def createAccount(guild, member):
         
     #*Работа с пользователями
     #Проверка является ли пользователь уже зарегестрированным пользователем
-    response = supabase.table("clients").select("dsc_id").execute()
+    response = db_cursor("clients").select("dsc_id").execute()
     clients_dsc_id_list = [item["dsc_id"] for item in response.data]
 
     if member_id not in clients_dsc_id_list:
@@ -176,7 +177,7 @@ async def createAccount(guild, member):
         #=Создание клиента
         prdx_id = get_user_id(member_id)
 
-        supabase.table("clients").insert({
+        db_cursor("clients").insert({
             "nickname": member_name,
             "dsc_id": member_id,
             "prdx_id": prdx_id,
@@ -203,7 +204,7 @@ async def deleteAccount(guild, owner):
     full_count = 0
     cards_info = []
     
-    response_dsc_id = supabase.table("clients").select("dsc_id, account, channels").eq("dsc_id", owner_id).execute()
+    response_dsc_id = db_cursor("clients").select("dsc_id, account, channels").eq("dsc_id", owner_id).execute()
 
     if not response_dsc_id.data:
         return[False, full_count, "-"]
@@ -221,7 +222,7 @@ async def deleteAccount(guild, owner):
             if channel:
                 await channel.delete()
 
-        delete_account_request = supabase.rpc("delete_account", {"client_id": owner_id}).execute()
+        delete_account_request = db_rpc("delete_account", {"client_id": owner_id}).execute()
         for del_account in delete_account_request.data:
             type = del_account['type']
             number = del_account['number']
@@ -252,14 +253,14 @@ async def deleteAccount(guild, owner):
         cards_output = "\n".join(cards_info) if cards_info else "-"
 
         if full_count > 0:
-            supabase.rpc("add_balance", {"card_number": "00000", "amount": full_count}).execute()
+            db_rpc("add_balance", {"card_number": "00000", "amount": full_count}).execute()
 
             ceo_message_text = f"**Удаление аккаута**\n💳 Общее пополнение с удаленных карт `{full_count}`\n📤 Подробности:\n📤 {cards_output}"
             ceo_owner_transaction_channel = guild.get_channel(bank_card_transaction)
             await ceo_owner_transaction_channel.send(ceo_message_text)
 
 
-        request_cards_member = supabase.rpc("find_user_in_members", {"user_id": owner_id}).execute()
+        request_cards_member = db_rpc("find_user_in_members", {"user_id": owner_id}).execute()
 
         # Обновить все карты где клиент был добавлен как пользователь, удаляя его.
         for request_card_member in request_cards_member.data:
@@ -291,12 +292,7 @@ async def deleteAccount(guild, owner):
                     await message_users.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
                 # Обновляем данные в базе данных
-                supabase.table("cards").update({"members": members_users}).eq("select_menu_id", messege_owner_id).execute()
-
-        #Аудит действия
-        member_audit = guild.get_channel(bank_audit_channel)
-        embed_aud_create_client = emb_aud_create_client(banker_id, member_id, invoice_count)
-        await member_audit.send(embed=embed_aud_create_client)
+                db_cursor("cards").update({"members": members_users}).eq("select_menu_id", messege_owner_id).execute()
 
         return[True, full_count, cards_output]
     
@@ -314,7 +310,7 @@ async def del_img_in_channel(client, full_number):
 
 #! Проверяет сколько времени аккаунт недействительный и при превышении лимита удаляет его.
 async def scheduled_task(bot):
-    check_status_clients = supabase.table("clients").select("dsc_id, freeze_date").eq("status", "freeze").execute()
+    check_status_clients = db_cursor("clients").select("dsc_id, freeze_date").eq("status", "freeze").execute()
 
     for client in check_status_clients.data:
         freeze_date = client["freeze_date"]

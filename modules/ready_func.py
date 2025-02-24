@@ -5,6 +5,7 @@ from .select_menu import CardSelectView
 from .invoice_button import MyInvoiceView, BankerInvoiceView
 from .log_functions import *
 from .services import *
+from db import *
 
 async def start_persistent_view(bot):
     # Регистрируем View, чтобы оно работало после перезапуска
@@ -20,7 +21,7 @@ async def start_persistent_view(bot):
             await guild.leave()
 
     # Получаем все карты
-    cards_data = supabase.table("cards").select("type, number, select_menu_id, owner, members, clients(channels, nickname)").execute()
+    cards_data = db_cursor("cards").select("type, number, select_menu_id, owner, members, clients.channels, clients.nickname").execute()
 
     for card in cards_data.data:
         own_guild = bot.get_guild(server_id[0])
@@ -46,7 +47,7 @@ async def start_persistent_view(bot):
                 try:
                     message_owner = await channel.fetch_message(select_menu_id)  # Проверяем, что карта существует
                 except nxc.NotFound:
-                    supabase.table("cards").delete().eq("select_menu_id", select_menu_id).execute()
+                    db_cursor("cards").delete().eq("select_menu_id", select_menu_id).execute()
                     for user_id, data in members.items():
                         msg_id = data.get("id_message")
                         channel_member_id = data.get("id_channel")
@@ -105,5 +106,5 @@ async def start_persistent_view(bot):
                             pass
 
                 # Обновляем базу данных
-                supabase.table("cards").update({"members": members}).eq("select_menu_id", select_menu_id).execute()
+                db_cursor("cards").update({"members": members}).eq("select_menu_id", select_menu_id).execute()
                 print(f"Обновлена карта {select_menu_id}: удалены отсутствующие пользователи")

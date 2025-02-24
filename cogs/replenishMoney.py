@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/Пополнить"
 
@@ -32,7 +33,7 @@ class ReplenishMoney(commands.Cog):
         # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
-        card_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
+        card_data = db_cursor("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
 
         # Проверяем, существует ли карта получателя
         if not await verify_found_card(inter, card_data):
@@ -48,7 +49,7 @@ class ReplenishMoney(commands.Cog):
         if not isinstance(card_members, dict):  # Проверяем, если это не словарь (jsonb)
             card_members = {}
         
-        banker_data = supabase.rpc("get_banker_card", {"user_id": banker_id}).execute()
+        banker_data = db_rpc("get_banker_card", {"user_id": banker_id}).execute()
 
         # Проверяет, есть ли карта у банкира
         if not await verify_found_banker_card(inter, banker_data):
@@ -101,9 +102,9 @@ class ReplenishMoney(commands.Cog):
             await channel_transactions_card.send(embed=embed_replenish_user)
 
         # Обновляем баланс в базе данных
-        supabase.rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
-        supabase.table("cards").update({"balance": banker_card_balance + salary}).eq("number", banker_card_number).execute()
-        supabase.table("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
+        db_rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
+        db_cursor("cards").update({"balance": banker_card_balance + salary}).eq("number", banker_card_number).execute()
+        db_cursor("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)

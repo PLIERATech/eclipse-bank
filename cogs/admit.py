@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/принять"
 
@@ -44,7 +45,7 @@ class Admit(commands.Cog):
         # Создается клиент
         await createAccount(guild, member)
         if not member_id in ignore_members:
-            supabase.table("clients").update({"count_cards": 4}).eq("dsc_id", member_id).execute()
+            db_cursor("clients").update({"count_cards": 4}).eq("dsc_id", member_id).execute()
 
 
         #=Создание карты банкира

@@ -3,6 +3,7 @@ import nextcord as nxc
 from datetime import datetime
 from const import *
 from modules import *
+from db import *
 
 class Events(commands.Cog):
     def __init__(self, client):
@@ -18,11 +19,11 @@ class Events(commands.Cog):
     # Игрок присоединился на сервер
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        client_info = supabase.table("clients").select("account, channels").eq("dsc_id", member.id).execute()
+        client_info = db_cursor("clients").select("account, channels").eq("dsc_id", member.id).execute()
 
         if client_info.data:
             prdx_nick = get_prdx_nickname(member.id)
-            supabase.table("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
+            db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
             guild = member.guild
             role = guild.get_role(client_role_id)
             await member.add_roles(role)
@@ -36,7 +37,7 @@ class Events(commands.Cog):
             await channel_transactions.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False))
             await channel_card.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False))
             print(f"Клиент {member.display_name} вернулся на сервер и вернул роль {role.name} с правами на каналы.")
-            supabase.table("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
+            db_cursor("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
 
             #Аудит действия
             member_audit = guild.get_channel(bank_audit_channel)
@@ -48,13 +49,13 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         guild = member.guild
-        client_info = supabase.table("clients").select("account, nickname, status").eq("dsc_id", member.id).execute()
+        client_info = db_cursor("clients").select("account, nickname, status").eq("dsc_id", member.id).execute()
 
         if client_info.data:
             client_nick = client_info.data[0]['account']
             today_date = datetime.now().strftime("%Y-%m-%d")
             print(f"Клиент {member.name} вышел из сервера, его ник {client_nick} и его аккаунт заморожен с {today_date}")
-            supabase.table("clients").update({"status": "freeze","freeze_date": today_date}).eq("dsc_id", member.id).execute()
+            db_cursor("clients").update({"status": "freeze","freeze_date": today_date}).eq("dsc_id", member.id).execute()
 
             #Аудит действия
             member_audit = guild.get_channel(bank_audit_channel)
@@ -66,10 +67,10 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.display_name != after.display_name:
-            client_info = supabase.table("clients").select("account, channels").eq("dsc_id", after.id).execute()
+            client_info = db_cursor("clients").select("account, channels").eq("dsc_id", after.id).execute()
             if client_info.data:
                 prdx_nick = get_prdx_nickname(after.id)
-                supabase.table("clients").update({"nickname": prdx_nick}).eq("dsc_id", after.id).execute()
+                db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", after.id).execute()
 
 
     # Было удалено сообщение в категориях игроков
@@ -93,13 +94,13 @@ class Events(commands.Cog):
 
         print(f"Удаление сообщения {message_id} зафиксировано!")
 
-        request_card_member = supabase.rpc("find_message_in_members", {"msg_id": message_id}).execute()
+        request_card_member = db_rpc("find_message_in_members", {"msg_id": message_id}).execute()
 
         if request_card_member.data:
             # Проверяем, из какого запроса пришли данные
             query_type = request_card_member.data[0].get('query_type')
             if query_type == 'select_menu_id':
-                supabase.table("cards").delete().eq("select_menu_id", message_id).execute()
+                db_cursor("cards").delete().eq("select_menu_id", message_id).execute()
                 type = request_card_member.data[0]['type']
                 number = request_card_member.data[0]['number']
                 full_number = f"{suffixes.get(type, type)}{number}"
@@ -150,7 +151,7 @@ class Events(commands.Cog):
                         await message_users.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
                     # Обновляем данные в базе данных
-                    supabase.table("cards").update({"members": members}).eq("select_menu_id", messege_owner_id).execute()
+                    db_cursor("cards").update({"members": members}).eq("select_menu_id", messege_owner_id).execute()
 
                     print("Карта от пользователя успешно удалена")
 

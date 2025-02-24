@@ -2,6 +2,7 @@ from nextcord.ui import View, Select
 import nextcord as nxc
 from const import *
 from .verify import *
+from db import *
 
 class MyInvoiceView(View):
     def __init__(self):
@@ -39,7 +40,7 @@ class MyInvoiceView(View):
                 if not await verify_card_int(inter, user_card):
                     return
 
-                invoice_data = supabase.table("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, balance, members, clients(channels))").eq("memb_message_id", message.id).execute()
+                invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, balance, members, clients(channels))").eq("memb_message_id", message.id).execute()
 
 
                 # Проверка является ли карта с выставленного счёта действительной
@@ -48,7 +49,7 @@ class MyInvoiceView(View):
 
                 member_id = invoice_data.data[0]["memb_dsc_id"]
 
-                check_card = supabase.rpc("check_user_card", {"user_id": member_id, "number_value": user_card}).execute()
+                check_card = db_rpc("check_user_card", {"user_id": member_id, "number_value": user_card}).execute()
 
                 # Проверка нашло ли карту (не правильная, либо не владелец данной карты)
                 if not await verify_select_pay_button(inter, check_card):
@@ -110,8 +111,8 @@ class MyInvoiceView(View):
                         await channel_transactions_invoicer.send(embed=embed_invoice_pay_button)
 
                     # Обновляем баланс в базе данных
-                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
-                    supabase.table("cards").update({"balance": invoice_card_balance + invoice_count}).eq("number", invoice_card_number).execute()
+                    db_cursor("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
+                    db_cursor("cards").update({"balance": invoice_card_balance + invoice_count}).eq("number", invoice_card_number).execute()
 
                     embed_aud_invoice_pay = emb_aud_invoice_pay_member(member_id, invoice_card_own_id, member_full_number, invoice_full_number, invoice_count, self.comment.value)
 
@@ -132,14 +133,14 @@ class MyInvoiceView(View):
                         await channel_transactions_member.send(embed=embed_member_pay_button_banker)
 
                      # Обновляем баланс в базе данных
-                    supabase.table("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
+                    db_cursor("cards").update({"balance": member_card_balance - invoice_count}).eq("number", member_card_number).execute()
 
                     embed_banker_invoice_message = emb_banker_invoice_message(member_id, invoice_count, invoice_card_own_id)
                     await banker_invoice_message.edit(embed=embed_banker_invoice_message, view=None)
 
                     embed_aud_invoice_pay = emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_number, invoice_count, self.comment.value)
 
-                supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
+                db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
                 await message.edit("✅ Счёт подтверждён!", view=None)
 
                 #Аудит действия
@@ -162,7 +163,7 @@ class MyInvoiceView(View):
         message = inter.message
         channel = inter.channel
 
-        invoice_data = supabase.table("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, members, clients(channels))").eq("memb_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, members, clients(channels))").eq("memb_message_id", message.id).execute()
 
         # Проверка является ли карта с выставленного счёта действительной
         if not await verify_invoice_card(inter, invoice_data, message):
@@ -213,7 +214,7 @@ class MyInvoiceView(View):
 
             embed_aud_invoice_decline = emb_aud_invoice_decline_banker(member_id, invoice_card_own_id, invoice_count)
 
-        supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
+        db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
         await message.edit(embed=embed_comp_decline_button, view=None)
 
         #Аудит действия
@@ -246,7 +247,7 @@ class BankerInvoiceView(View):
         banker = inter.user
         banker_id = banker.id
 
-        invoice_data = supabase.table("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
 
         # Не найдены данные
         if not await verify_found_data(inter, invoice_data):
@@ -273,7 +274,7 @@ class BankerInvoiceView(View):
         embed_edit_member_cancel_button = emb_edit_member_cancel_button(banker_id, invoice_count)
         await member_message.edit(embed=embed_edit_member_cancel_button, view=None)
 
-        supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
+        db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
         embed_edit_bancer_cancel_button = emb_edit_bancer_cancel_button(banker_id)
         await message.edit(embed=embed_edit_bancer_cancel_button, view=None)
 

@@ -2,7 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
-import asyncio
+from db import *
 
 command = "/admCreateCard"
 

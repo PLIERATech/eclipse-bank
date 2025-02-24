@@ -1,5 +1,6 @@
 import requests
 from const import *
+from db import *
 
 #@ API для взаимодействия с prdx.so
 

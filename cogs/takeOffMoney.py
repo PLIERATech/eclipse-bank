@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/Изъять-деньги"
 
@@ -30,7 +31,7 @@ class TakeOffMoney(commands.Cog):
         # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
-        card_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
+        card_data = db_cursor("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
 
         # Проверяем, существует ли карта получателя
         if not await verify_found_card(inter, card_data):
@@ -51,7 +52,7 @@ class TakeOffMoney(commands.Cog):
             card_members = {}
 
         # 🔹 Обновляем баланс в базе данных
-        supabase.table("cards").update({"balance": card_balance - count}).eq("number", number).execute()
+        db_cursor("cards").update({"balance": card_balance - count}).eq("number", number).execute()
 
         # Отправка сообщений в каналы транзакций
         embed_take_off_money = emb_take_off_money(admin_id, card_full_number, count, description)

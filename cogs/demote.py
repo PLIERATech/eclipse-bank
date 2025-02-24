@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/разжаловать"
 
@@ -40,7 +41,7 @@ class Demote(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         if not member_id in ignore_members:
-            supabase.table("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
+            db_cursor("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
 
         # Использование:
         get_card_info = get_card_info_demote(member_id)
@@ -74,7 +75,7 @@ class Demote(commands.Cog):
                 member_type = get_card_info["non_banker_type"]
                 member_number = get_card_info["non_banker_number"]
                 member_full_number = f"{suffixes.get(member_type, member_type)}{member_number}"
-                supabase.table("cards").update({"balance": int(get_card_info['banker_balance'])}).eq("number", member_number).execute()
+                db_cursor("cards").update({"balance": int(get_card_info['banker_balance'])}).eq("number", member_number).execute()
                 embed = emb_demoteBankerWithCar()
                 await inter.followup.send(embed=embed, ephemeral=True)
 

@@ -7,6 +7,7 @@ from .verify import *
 from card_gen import *
 from .invoice_button import *
 import asyncio
+from db import *
 
 class CardSelectView(View):
     def __init__(self):
@@ -86,7 +87,7 @@ class CardSelectView(View):
 
 async def sm_check_balance(inter, user, message, channel):
     await inter.response.defer(ephemeral=True)
-    response_card = supabase.rpc("find_balance", {"msg_id": message.id}).execute()
+    response_card = db_rpc("find_balance", {"msg_id": message.id}).execute()
 
     # Проверка на имеются ли данные
     if not await verify_found_data(inter, response_card):
@@ -141,7 +142,7 @@ async def sm_transfer(inter, user, message, channel):
             amount = int(amount_text)
             
 
-            receiver_data = supabase.table("cards").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
+            receiver_data = db_cursor("cards").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
 
             # Проверяем, существует ли карта получателя   
             if not await verify_found_card(inter, receiver_data):
@@ -159,7 +160,7 @@ async def sm_transfer(inter, user, message, channel):
 
             # 🔹 Определяем карту отправителя через message.id
 
-            sender_data = supabase.rpc("find_card_in_message", {"msg_id": message.id}).execute()
+            sender_data = db_rpc("find_card_in_message", {"msg_id": message.id}).execute()
             sender_type = sender_data.data[0]["type"]
             sender_card = sender_data.data[0]["number"]
             sender_balance = sender_data.data[0]["balance"]
@@ -205,8 +206,8 @@ async def sm_transfer(inter, user, message, channel):
                 await channel_transactions_receiver.send(embed=embed_receimer)
 
             # 🔹 Обновляем баланс в базе данных
-            supabase.table("cards").update({"balance": sender_balance - amount}).eq("number", sender_card).execute()
-            supabase.table("cards").update({"balance": receiver_balance + amount}).eq("number", receiver_card).execute()
+            db_cursor("cards").update({"balance": sender_balance - amount}).eq("number", sender_card).execute()
+            db_cursor("cards").update({"balance": receiver_balance + amount}).eq("number", receiver_card).execute()
 
 
     # 🔹 Показываем форму пользователю
@@ -246,7 +247,7 @@ async def sm_invoice(inter, user, message, channel):
                 return
             amount = int(amount_text)
             
-            nick_table = supabase.table("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -254,7 +255,7 @@ async def sm_invoice(inter, user, message, channel):
             nick_dsc_id = nick_table.data[0]["dsc_id"]
             nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
 
-            sender_data = supabase.rpc("find_card_in_message", {"msg_id": message.id}).execute()
+            sender_data = db_rpc("find_card_in_message", {"msg_id": message.id}).execute()
             sender_type = sender_data.data[0]["type"]
             sender_card = sender_data.data[0]["number"]
             sender_members = sender_data.data[0]["members"]
@@ -280,7 +281,7 @@ async def sm_invoice(inter, user, message, channel):
                 channel_transactions_sender = inter.client.get_channel(channel_id_transactions_sender)
                 await channel_transactions_sender.send(embed=embed_sender)
 
-            supabase.table("invoice").insert({
+            db_cursor("invoice").insert({
                 "own_dsc_id":user.id,
                 "own_number":sender_card,
                 "memb_dsc_id":nick_dsc_id,
@@ -312,7 +313,7 @@ async def sm_invoice(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_change_name(inter, user, message, channel):
-    cards_table = supabase.table("cards").select("type, name, number, members").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, name, number, members").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -368,7 +369,7 @@ async def sm_change_name(inter, user, message, channel):
                     message_users = await channel.fetch_message(msg_id)
                     await message_users.edit(embeds=[new_card_embed, existing_embeds[1], existing_embeds[2]], attachments=[])
 
-            supabase.table("cards").update({"name": cardname}).eq("select_menu_id", message.id).execute()
+            db_cursor("cards").update({"name": cardname}).eq("select_menu_id", message.id).execute()
 
     modal = ChangeNameCardModal()
     await inter.response.send_modal(modal)
@@ -380,7 +381,7 @@ async def sm_change_name(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_add_user(inter, user, message, channel):
-    cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -412,7 +413,7 @@ async def sm_add_user(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
             
-            nick_table = supabase.table("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -461,7 +462,7 @@ async def sm_add_user(inter, user, message, channel):
                 message_users = await channel.fetch_message(msg_id)
                 await message_users.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
 
-            supabase.table("cards").update({"members": members}).eq("select_menu_id", message.id).execute()
+            db_cursor("cards").update({"members": members}).eq("select_menu_id", message.id).execute()
 
     modal = AddUserModal()
     await inter.response.send_modal(modal)
@@ -473,7 +474,7 @@ async def sm_add_user(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_del_user(inter, user, message, channel):
-    cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -506,7 +507,7 @@ async def sm_del_user(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
         
-            nick_table = supabase.table("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -553,7 +554,7 @@ async def sm_del_user(inter, user, message, channel):
 
 
             # Обновляем данные в базе данных
-            supabase.table("cards").update({"members": members}).eq("select_menu_id", message.id).execute()  # Используем members как jsonb
+            db_cursor("cards").update({"members": members}).eq("select_menu_id", message.id).execute()  # Используем members как jsonb
 
     modal = RemoveUserModal()
     await inter.response.send_modal(modal)
@@ -565,7 +566,7 @@ async def sm_del_user(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_transfer_owner(inter, user, message, channel):
-    cards_table = supabase.table("cards").select("type, number, members, owner, clients(nickname, channels)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname, channels)").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -600,7 +601,7 @@ async def sm_transfer_owner(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
             
-            nick_table = supabase.table("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -669,7 +670,7 @@ async def sm_transfer_owner(inter, user, message, channel):
                 await message_users.edit(embeds=[existing_embeds[0], card_embed_image, card_embed_user], attachments=[])
 
             # Обновляем данные в базе данных
-            supabase.table("cards").update({"owner": member_id,"members": members, "select_menu_id": new_owner_message_id}).eq("select_menu_id", message.id).execute()
+            db_cursor("cards").update({"owner": member_id,"members": members, "select_menu_id": new_owner_message_id}).eq("select_menu_id", message.id).execute()
 
     modal = TransferOwner()
     await inter.response.send_modal(modal)
@@ -681,7 +682,7 @@ async def sm_transfer_owner(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_delete_card(inter, user, message, channel):
-    cards_table = supabase.table("cards").select("type, number, balance").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, balance").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):

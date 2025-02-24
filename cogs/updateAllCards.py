@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/updateAllCards"
 
@@ -18,7 +19,7 @@ class UpdateAllCards(commands.Cog):
         await inter.response.defer(ephemeral=True)
         self.client.add_view(CardSelectView())
 
-        cards_data = supabase.table("cards").select("select_menu_id, owner, number, members, type, name, clients(channels, nickname)").execute()
+        cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients(channels, nickname)").execute()
         total = len(cards_data.data)
 
         # Проверка есть ли карты в бд
@@ -77,7 +78,7 @@ class UpdateAllCards(commands.Cog):
 
             except nxc.NotFound:
                 print(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")
-                supabase.table("cards").delete().eq("select_menu_id", select_menu_id).execute()
+                db_cursor("cards").delete().eq("select_menu_id", select_menu_id).execute()
             except nxc.HTTPException as e:
                 print(f"❌ Ошибка при обновлении {select_menu_id}: {e}")
 

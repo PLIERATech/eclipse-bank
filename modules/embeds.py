@@ -1,5 +1,6 @@
 import nextcord as nxc
 from const import *
+from db import *
 
 #! Эмбед для карт №1 (номер, тип, название)
 def emb_cards(color,full_number,type_rus,name):

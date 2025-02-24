@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/Обналичить"
 
@@ -33,7 +34,7 @@ class WithdrawMoney(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        nick_table = supabase.table("clients").select("channels").eq("nickname", member_nick).execute()
+        nick_table = db_cursor("clients").select("channels").eq("nickname", member_nick).execute()
         
         nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
 
@@ -50,7 +51,7 @@ class WithdrawMoney(commands.Cog):
         view_banker=BankerInvoiceView() # Кнопочки
         banker_message = await banker_invoice_channel.send(embed=embed_withdram_request, view = view_banker)
 
-        supabase.table("invoice").insert({
+        db_cursor("invoice").insert({
             "own_dsc_id":banker_id,
             "own_number":"00000",
             "memb_dsc_id":member_id,

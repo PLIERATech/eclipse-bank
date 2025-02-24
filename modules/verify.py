@@ -1,6 +1,7 @@
 from const import *
 from .embeds import *
 from .log_functions import *
+from db import *
 
 
 #! Проверка на staff роль
@@ -58,7 +59,7 @@ async def verify_deleteAccount(inter, check):
 
 #! Проверка занятости номера карты
 async def verify_num_is_claimed(inter, number):
-    response = supabase.table("cards").select("number").execute()
+    response = db_cursor("cards").select("number").execute()
     numbers_list = [item["number"] for item in response.data]
     if number in numbers_list:
         embed = emb_num_isClaimed()
@@ -70,7 +71,7 @@ async def verify_num_is_claimed(inter, number):
 
 #! Проверка на исчерпание лимита создания карт
 async def verify_count_cards(inter, member_id, command):
-    response = supabase.rpc("get_card_info", {"user_id": int(member_id)}).execute()
+    response = db_rpc("get_card_info", {"user_id": int(member_id)}).execute()
     if not response.data:
         print("❗ Ошибка: не удалось получить данные о картах.")
         return(False)
@@ -168,7 +169,7 @@ async def verify_invoice_card(inter, check_data, message):
     if not check_data.data[0].get("cards"):
         embed = verify_dont_invoice_card()
         await inter.send(embed=embed, ephemeral=True) 
-        supabase.table("invoice").delete().eq("memb_message_id", message.id).execute()
+        db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
         await message.delete()
         return(False)
     return(True)

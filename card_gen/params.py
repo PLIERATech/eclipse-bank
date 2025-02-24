@@ -1,15 +1,9 @@
 import os
-from supabase import Client
-from supabase import *
 from dotenv import load_dotenv
 from PIL import Image
 from const import *
 
 load_dotenv()
-
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = Client(url, key)
 
 font = './card_gen/assets/font.ttf'
 card_dir = './card_gen/cards/'

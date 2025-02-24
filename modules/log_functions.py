@@ -1,4 +1,5 @@
 from const import *
+from db import *
 
 logging.basicConfig(
     level=logging.INFO,

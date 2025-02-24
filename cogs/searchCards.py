@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/Поиск-карт"
 
@@ -35,7 +36,7 @@ class SearchCards(commands.Cog):
         
         await inter.response.defer(ephemeral=True)
 
-        search_cards_response = supabase.rpc("find_all_cards_user", {"user_id": member_id}).execute()
+        search_cards_response = db_rpc("find_all_cards_user", {"user_id": member_id}).execute()
 
         if not search_cards_response.data:
             embed_no_cards_search = emb_no_cards_search(member_id, ephemeral=True)

@@ -2,6 +2,7 @@ import nextcord as nxc
 from nextcord.ext import commands
 from const import *
 from modules import *
+from db import *
 
 command = "/Total-balance"
 
@@ -24,7 +25,7 @@ class TotalBalance(commands.Cog):
         
         await inter.response.defer(ephemeral=True)
         
-        total_balance = supabase.rpc("get_total_balance").execute()
+        total_balance = db_rpc("get_total_balance").execute()
 
         embed=emb_total_balance(total_balance.data)
         await inter.send(embed=embed, ephemeral=True)

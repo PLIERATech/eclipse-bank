@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from supabase.lib.client_options import ClientOptions
 import logging
 import nextcord as nxc
+import psycopg2
 
 n = "0123456789"
 
@@ -16,9 +17,9 @@ wh_alary_audit = "https://ptb.discord.com/api/webhooks/1338931100315029615/-bGfu
 wh_stats = "https://ptb.discord.com/api/webhooks/1338931477873954876/rDgZPJxvRPu4gNlfd70JX654vkJv-JLJuNhduHolRel6qMPd8HaWlcwDlgaXvH-wcMur"
 
 #?Поключение к базе данных Supabase
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_timeout = 5, storage_client_timeout = 30))
+#url: str = os.environ.get("SUPABASE_URL")
+#key: str = os.environ.get("SUPABASE_KEY")
+#supabase: Client = Client(url, key, options = ClientOptions(postgrest_client_timeout = 5, storage_client_timeout = 30))
 
 #? Работа c API prdx.so
 cookie = os.getenv("MY_COOKIE")
