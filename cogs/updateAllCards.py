@@ -19,7 +19,7 @@ class UpdateAllCards(commands.Cog):
         await inter.response.defer(ephemeral=True)
         self.client.add_view(CardSelectView())
 
-        cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients(channels, nickname)").execute()
+        cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients.channels, clients.nickname").execute()
         total = len(cards_data.data)
 
         # Проверка есть ли карты в бд
@@ -44,9 +44,8 @@ class UpdateAllCards(commands.Cog):
             if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
                 members = {}
 
-            client_data = card.get("clients")
-            owner_name = client_data["nickname"]
-            channels_list = list(map(int, client_data["channels"].strip("[]").split(",")))
+            owner_name = card["nickname"]
+            channels_list = list(map(int, card["channels"].strip("[]").split(",")))
             channel_id = channels_list[1]
             channel = self.client.get_channel(channel_id)
 

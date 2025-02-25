@@ -33,7 +33,7 @@ class ReplenishMoney(commands.Cog):
         # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
-        card_data = db_cursor("cards").select("type, balance, members, clients(channels)").eq("number", number).execute()
+        card_data = db_cursor("cards").select("type, balance, members, clients.channels").eq("number", number).execute()
 
         # Проверяем, существует ли карта получателя
         if not await verify_found_card(inter, card_data):
@@ -42,8 +42,7 @@ class ReplenishMoney(commands.Cog):
         card_type = card_data.data[0]["type"]
         card_balance = card_data.data[0]["balance"]
         card_members = card_data.data[0]["members"]
-        card_client_data = card_data.data[0].get("clients")
-        card_owner_transaction_channel_id = list(map(int, card_client_data["channels"].strip("[]").split(",")))[0]
+        card_owner_transaction_channel_id = list(map(int, card_data.data[0]["channels"].strip("[]").split(",")))[0]
         card_full_number = f"{suffixes.get(card_type, card_type)}{number}"
 
         if not isinstance(card_members, dict):  # Проверяем, если это не словарь (jsonb)

@@ -121,9 +121,8 @@ class Events(commands.Cog):
 
             elif query_type == 'members':
                 members = request_card_member.data[0]['members']
-                client_data = request_card_member.data[0].get("clients")
-                owner_name = client_data["nickname"]
-                channels_list = list(map(int, client_data["channels"].strip("[]").split(",")))
+                owner_name = request_card_member.data[0]["nickname"]
+                channels_list = list(map(int, request_card_member.data[0]["channels"].strip("[]").split(",")))
                 channel_id = channels_list[1]
                 channel_owner = self.client.get_channel(channel_id)
                 messege_owner_id = request_card_member.data[0]['select_menu_id']

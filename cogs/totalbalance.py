@@ -25,9 +25,9 @@ class TotalBalance(commands.Cog):
         
         await inter.response.defer(ephemeral=True)
         
-        total_balance = db_rpc("get_total_balance").execute()
+        total_balance = db_rpc("get_total_balance", {}).execute()
 
-        embed=emb_total_balance(total_balance.data)
+        embed=emb_total_balance(total_balance.data[0]["get_total_balance"])
         await inter.send(embed=embed, ephemeral=True)
 
 def setup(client):

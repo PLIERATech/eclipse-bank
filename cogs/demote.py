@@ -95,7 +95,6 @@ class Demote(commands.Cog):
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_admitBanker = emb_aud_admitBanker(member_id, full_number, admin_id)
         await member_audit.send(embed=embed_aud_admitBanker)       
 
 

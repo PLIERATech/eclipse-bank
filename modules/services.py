@@ -77,6 +77,7 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     # Получаем канал для отправки карточек
     response = db_cursor("clients").select("channels").eq("dsc_id", member.id).execute()
+    print (response)
     channels = list(map(int, response.data[0]["channels"].strip("[]").split(",")))
     cards_channel_id = channels[1]
     cards_channel = inter.guild.get_channel(cards_channel_id)
@@ -182,7 +183,7 @@ async def createAccount(guild, member):
             "dsc_id": member_id,
             "prdx_id": prdx_id,
             "account": category.id,
-            "channels": channels
+            "channels": str(channels)
         }).execute()
 
         client_role_add = guild.get_role(client_role_id)
@@ -265,9 +266,8 @@ async def deleteAccount(guild, owner):
         # Обновить все карты где клиент был добавлен как пользователь, удаляя его.
         for request_card_member in request_cards_member.data:
             members_users = request_card_member['members']
-            client_data = request_card_member.get("clients")
-            owner_name = client_data["nickname"]
-            channels_list = list(map(int, client_data["channels"].strip("[]").split(",")))
+            owner_name = request_card_member[0]["nickname"]
+            channels_list = list(map(int, request_card_member[0]["channels"].strip("[]").split(",")))
             channel_owner = guild.get_channel(channels_list[1])
             messege_owner_id = request_card_member['select_menu_id']
             if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)

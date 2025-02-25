@@ -32,16 +32,16 @@ async def start_persistent_view(bot):
         number = card['number']
         full_number = f"{suffixes.get(type, type)}{number}"
 
+        channels = card["channels"]
+        owner_name = card["nickname"]
+
         if not isinstance(members, dict):
             members = {}
 
-        client_data = card.get("clients")
-        if client_data:
-            channels = client_data["channels"]
+        if channels:
             channels_list = list(map(int, channels.strip("[]").split(",")))
             channel_id = channels_list[1]
             channel = bot.get_channel(channel_id)
-            owner_name = client_data["nickname"]
 
             if channel:
                 try:

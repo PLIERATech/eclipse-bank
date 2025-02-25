@@ -40,7 +40,7 @@ class MyInvoiceView(View):
                 if not await verify_card_int(inter, user_card):
                     return
 
-                invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, balance, members, clients(channels))").eq("memb_message_id", message.id).execute()
+                invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.balance, cards.members, clients.channels").eq("memb_message_id", message.id).execute()
 
 
                 # Проверка является ли карта с выставленного счёта действительной
@@ -67,13 +67,11 @@ class MyInvoiceView(View):
 
                 invoice_card_own_id = invoice_data.data[0]["own_dsc_id"]
                 invoice_count = invoice_data.data[0]["count"]
-                invoice_type = invoice_data.data[0]["type"]
-                invoice_cards_data = invoice_data.data[0].get("cards")
-                invoice_card_type = invoice_cards_data["type"]
-                invoice_card_balance = invoice_cards_data["balance"]
-                invoice_card_members = invoice_cards_data["members"]
-                invoice_clients_data = invoice_cards_data.get("clients")
-                invoice_owner_transaction_channel_id = list(map(int, invoice_clients_data["channels"].strip("[]").split(",")))[0]
+                invoice_type = invoice_data.data[0]["type_invoice"]
+                invoice_card_type = invoice_data.data[0]["type"]
+                invoice_card_balance = invoice_data.data[0]["balance"]
+                invoice_card_members = invoice_data.data[0]["members"]
+                invoice_owner_transaction_channel_id = list(map(int, invoice_data.data[0]["channels"].strip("[]").split(",")))[0]
 
                 if not isinstance(invoice_card_members, dict):
                     invoice_card_members = {}
@@ -163,7 +161,7 @@ class MyInvoiceView(View):
         message = inter.message
         channel = inter.channel
 
-        invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type, cards(type, members, clients(channels))").eq("memb_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.members, clients.channels").eq("memb_message_id", message.id).execute()
 
         # Проверка является ли карта с выставленного счёта действительной
         if not await verify_invoice_card(inter, invoice_data, message):
@@ -174,12 +172,10 @@ class MyInvoiceView(View):
         invoice_card_own_id = invoice_data.data[0]["own_dsc_id"]
         invoice_card_number = invoice_data.data[0]["own_number"]
         invoice_count = invoice_data.data[0]["count"]
-        invoice_type = invoice_data.data[0]["type"]
-        invoice_cards_data = invoice_data.data[0].get("cards")
-        invoice_card_type = invoice_cards_data["type"]
-        invoice_card_members = invoice_cards_data["members"]
-        invoice_clients_data = invoice_cards_data.get("clients")
-        invoice_owner_transaction_channel_id = list(map(int, invoice_clients_data["channels"].strip("[]").split(",")))[0]
+        invoice_type = invoice_data.data[0]["type_invoice"]
+        invoice_card_type = invoice_data.data[0]["type"]
+        invoice_card_members = invoice_data.data[0]["members"]
+        invoice_owner_transaction_channel_id = list(map(int, invoice_data.data[0]["channels"].strip("[]").split(",")))[0]
         invoice_full_number = f"{suffixes.get(invoice_card_type, invoice_card_type)}{invoice_card_number}"
 
         if not isinstance(invoice_card_members, dict):
@@ -247,7 +243,7 @@ class BankerInvoiceView(View):
         banker = inter.user
         banker_id = banker.id
 
-        invoice_data = db_cursor("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count, type").eq("banker_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count").eq("banker_message_id", message.id).execute()
 
         # Не найдены данные
         if not await verify_found_data(inter, invoice_data):
@@ -265,7 +261,6 @@ class BankerInvoiceView(View):
         member_channel = inter.client.get_channel(member_channel_id)
         member_message = await member_channel.fetch_message(member_message_id)
         invoice_count = invoice_data.data[0]["count"]
-        invoice_type = invoice_data.data[0]["type"]
 
         embed_comp_cancel_button = emb_comp_cancel_button()
         await inter.send(embed=embed_comp_cancel_button, ephemeral=True)

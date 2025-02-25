@@ -142,7 +142,7 @@ async def sm_transfer(inter, user, message, channel):
             amount = int(amount_text)
             
 
-            receiver_data = db_cursor("cards").select("type, balance, members, clients(channels)").eq("number", receiver_card).execute()
+            receiver_data = db_cursor("cards").select("type, balance, members, clients.channels").eq("number", receiver_card).execute()
 
             # Проверяем, существует ли карта получателя   
             if not await verify_found_card(inter, receiver_data):
@@ -151,8 +151,7 @@ async def sm_transfer(inter, user, message, channel):
             receiver_type = receiver_data.data[0]["type"]
             receiver_balance = receiver_data.data[0]["balance"]
             receiver_members = receiver_data.data[0]["members"]
-            receiver_client_data = receiver_data.data[0].get("clients")
-            receiver_owner_transaction_channel_id = list(map(int, receiver_client_data["channels"].strip("[]").split(",")))[0]
+            receiver_owner_transaction_channel_id = list(map(int, receiver_data.data[0]["channels"].strip("[]").split(",")))[0]
             receiver_full_number = f"{suffixes.get(receiver_type, receiver_type)}{receiver_card}"
 
             if not isinstance(receiver_members, dict):  # Проверяем, если это не словарь (jsonb)
@@ -288,7 +287,7 @@ async def sm_invoice(inter, user, message, channel):
                 "memb_message_id":nick_message.id,
                 "memb_channel_id":nick_transaction_channel_id,
                 "count":amount,
-                "type":"member"
+                "type_invoice":"member"
             }).execute()
 
     # 🔹 Показываем форму пользователю
@@ -381,7 +380,7 @@ async def sm_change_name(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_add_user(inter, user, message, channel):
-    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients.nickname").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -391,8 +390,7 @@ async def sm_add_user(inter, user, message, channel):
     number = cards_table.data[0]['number']
     members = cards_table.data[0]['members']
     full_number = f"{suffixes.get(type, type)}{number}"
-    client_data = cards_table.data[0].get("clients")
-    owner_name = client_data["nickname"]
+    owner_name = cards_table.data[0]["nickname"]
     owner_id = cards_table.data[0]['owner'] 
 
     # Проверка является ли карта банковской
@@ -419,11 +417,10 @@ async def sm_add_user(inter, user, message, channel):
                 return
 
             member_id = nick_table.data[0]['dsc_id']
-            if not any(role.id in (staff_role) for role in user.roles):
-                if member_id == owner_id:
-                    embed_self_add_card = emb_self_add_card()
-                    await inter.send(embed=embed_self_add_card, ephemeral=True)
-                    return
+            if member_id == owner_id:
+                embed_self_add_card = emb_self_add_card()
+                await inter.send(embed=embed_self_add_card, ephemeral=True)
+                return
 
             # Проверка, добавлен ли пользователь уже
             if str(member_id) in members:
@@ -474,7 +471,7 @@ async def sm_add_user(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_del_user(inter, user, message, channel):
-    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients.nickname").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -484,8 +481,7 @@ async def sm_del_user(inter, user, message, channel):
     number = cards_table.data[0]['number']
     members = cards_table.data[0]['members']  # Это уже jsonb
     full_number = f"{suffixes.get(type, type)}{number}"
-    client_data = cards_table.data[0].get("clients")
-    owner_name = client_data["nickname"]
+    owner_name = cards_table.data[0]["nickname"]
     owner_id = cards_table.data[0]['owner'] 
 
     # Проверка является ли карта банковской
@@ -513,11 +509,10 @@ async def sm_del_user(inter, user, message, channel):
                 return
 
             member_id = nick_table.data[0]['dsc_id']
-            if not any(role.id in (staff_role) for role in user.roles):
-                if member_id == owner_id:
-                    embed_self_del_card = emb_self_del_card()
-                    await inter.send(embed=embed_self_del_card, ephemeral=True)
-                    return
+            if member_id == owner_id:
+                embed_self_del_card = emb_self_del_card()
+                await inter.send(embed=embed_self_del_card, ephemeral=True)
+                return
 
             # Проверка, есть ли пользователь в списке
             if str(member_id) not in members:
@@ -566,7 +561,7 @@ async def sm_del_user(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_transfer_owner(inter, user, message, channel):
-    cards_table = db_cursor("cards").select("type, number, members, owner, clients(nickname, channels)").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients.nickname, clients.channels").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -576,11 +571,10 @@ async def sm_transfer_owner(inter, user, message, channel):
     number = cards_table.data[0]['number']
     members = cards_table.data[0]['members']
     full_number = f"{suffixes.get(type, type)}{number}"
-    client_data = cards_table.data[0].get("clients")
-    old_owner_name = client_data["nickname"]
+    old_owner_name = cards_table.data[0]["nickname"]
     old_owner_id = cards_table.data[0]['owner'] 
-    old_owner_transaction_channel_id = list(map(int, client_data["channels"].strip("[]").split(",")))[0]
-    old_owner_card_channel_id = list(map(int, client_data["channels"].strip("[]").split(",")))[1]
+    old_owner_transaction_channel_id = list(map(int, cards_table.data[0]["channels"].strip("[]").split(",")))[0]
+    old_owner_card_channel_id = list(map(int, cards_table.data[0]["channels"].strip("[]").split(",")))[1]
 
     # Проверка является ли карта банковской
     if not await verify_not_banker_card(inter, type):
@@ -678,19 +672,16 @@ async def sm_transfer_owner(inter, user, message, channel):
 
 
 #@ ---------------------------------------------------------------------------------------------------------------------------------
-#@                                                        Удалить карту                                                             
+#@                                                         Удалить карту                                                            
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_delete_card(inter, user, message, channel):
-    cards_table = db_cursor("cards").select("type, number, balance").eq("select_menu_id", message.id).execute()
-
-    # Проверка является ли владельцем карты
-    if not await verify_select_menu_owner(inter, cards_table):
-        return
+    cards_table = db_rpc("find_card_in_message", {"msg_id": message.id}).execute()
 
     type = cards_table.data[0]['type']
     number = cards_table.data[0]['number']
     balance = cards_table.data[0]['balance']
+    memb_type = cards_table.data[0].get('memb_type')
     full_number = f"{suffixes.get(type, type)}{number}"
     card_type_rus = type_translate.get(type, type)
     
@@ -698,10 +689,10 @@ async def sm_delete_card(inter, user, message, channel):
     if not await verify_not_banker_card(inter, type):
         return
     
-    print(balance)
     # Проверка имеется ли средства на карте
-    if not await verify_delete_card_balance(inter, balance):
-        return
+    if memb_type == 'owner':
+        if not await verify_delete_card_balance(inter, balance):
+            return
 
     class DeleteCardModal(nxc.ui.Modal):
         def __init__(self):

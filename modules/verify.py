@@ -166,7 +166,7 @@ async def verify_image_upload(inter, url):
 
 #! Проверка является ли карта с выставленного счёта действительной
 async def verify_invoice_card(inter, check_data, message):
-    if not check_data.data[0].get("cards"):
+    if not check_data.data[0]["type"]:
         embed = verify_dont_invoice_card()
         await inter.send(embed=embed, ephemeral=True) 
         db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
@@ -250,7 +250,7 @@ async def verify_select_menu_owner(inter, check_data):
 async def verify_select_pay_button(inter, check_data):
     if not check_data.data:
         embed = emb_no_card_pay_button()
-        await inter.response.send_message(embed=embed, ephemeral=True)
+        await inter.send(embed=embed, ephemeral=True)
         return(False)
     return(True)
 

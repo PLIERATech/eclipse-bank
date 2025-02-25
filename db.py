@@ -1,6 +1,12 @@
 import os
 import psycopg2
+import logging
+import json
 from psycopg2.extras import RealDictCursor
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(message)s')
+logger = logging.getLogger()
 
 # Подключение к локальной БД PostgreSQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -25,83 +31,156 @@ class DBQuery:
         self.columns = "*"
         self.conditions = []
         self.joins = []
-        self.data = {}
+        self.data = []
+        self.error = None
+        self.values = None  # Для хранения значений в update и insert
 
-        # Определение связей между таблицами
+        # Список всех возможных связей между таблицами
         self.foreign_keys = {
-            "cards": {"owner": ("clients", "dsc_id")},
             "invoice": {"own_number": ("cards", "number")},
+            "cards": {"owner": ("clients", "dsc_id")},
         }
 
-    def select(self, *columns):
-        expanded_columns = set()  # Используем `set`, чтобы убрать дубликаты
+        self._build_joins()
 
-        # Если columns передан как одна строка, разбиваем её по запятым
+    def _build_joins(self):
+        # Построение всех необходимых JOIN'ов для текущей таблицы
+        if self.table == "invoice":
+            self.joins.append("JOIN cards ON invoice.own_number = cards.number")
+            self.joins.append("JOIN clients ON cards.owner = clients.dsc_id")
+        elif self.table == "cards":
+            self.joins.append("JOIN clients ON cards.owner = clients.dsc_id")
+
+    def select(self, *columns):
+        expanded_columns = set()
+
         if len(columns) == 1 and isinstance(columns[0], str):
             columns = [col.strip() for col in columns[0].split(",")]
 
-        print(f"test1   columns: {columns}")  # Проверяем входные данные после обработки
-
         for col in columns:
             col = col.strip()
-            
-            # Если колонка относится к clients, добавляем её в expanded_columns и добавляем JOIN
-            if col.startswith("clients."):
+
+            if col.startswith("clients.") or col.startswith("cards."):
                 expanded_columns.add(col)
-
-                # Автоматически добавляем JOIN на основе foreign_keys, если связь с clients существует
-                if "cards" in self.foreign_keys and "owner" in self.foreign_keys["cards"]:
-                    fk_table, fk_column = self.foreign_keys["cards"]["owner"]
-                    join_condition = f"cards.owner = {fk_table}.{fk_column}"
-                    join_statement = f"JOIN {fk_table} ON {join_condition}"
-                    if join_statement not in self.joins:  # Добавляем JOIN только один раз
-                        self.joins.append(join_statement)
             else:
-                expanded_columns.add(f"{self.table}.{col}")  # Добавляем таблицу к колонке, если это не сложное поле
+                expanded_columns.add(f"{self.table}.{col}")
 
-        # Собираем итоговые колонки для запроса
         self.columns = ", ".join(expanded_columns) if expanded_columns else "*"
-        
-        print(f"test5   final_columns: {self.columns}")  # Проверяем итоговый список колонок
-        print(f"test6   final_joins: {self.joins}")  # Проверяем итоговые JOIN'ы
-        
-        # Формируем SQL запрос
-        joins_clause = " ".join(self.joins)
-        where_clause = " AND ".join([f"{col} = %s" for col, _ in self.conditions])
-        sql = f"SELECT {self.columns} FROM {self.table} {joins_clause} " + (f"WHERE {where_clause}" if where_clause else "")
-        
-        print(f"Executing SQL: {sql}")  # Выводим итоговый запрос
-        cursor.execute(sql, tuple(val for _, val in self.conditions))
-        self.data = cursor.fetchall()
+        self.action = "select"
         return self
 
+    def update(self, values):
+        self.values = self._convert_jsonb(values)
+        self.action = "update"
+        return self
+
+    def insert(self, values):
+        self.values = self._convert_jsonb(values)
+        self.action = "insert"
+        return self
+
+    def delete(self):
+        self.action = "delete"
+        return self
 
     def eq(self, column, value):
         self.conditions.append((column, value))
         return self
 
+    def _convert_jsonb(self, values):
+        """Преобразует `dict` в JSON-строку для PostgreSQL JSONB."""
+        return {k: json.dumps(v) if isinstance(v, dict) else v for k, v in values.items()}
+
     def execute(self):
-        where_clause = " AND ".join([f"{col} = %s" for col, _ in self.conditions])
-        joins_clause = " ".join(self.joins)
-        sql = f"SELECT {self.columns} FROM {self.table} {joins_clause} " + (f"WHERE {where_clause}" if where_clause else "")
-        print(f"Executing SQL: {sql}")  # <-- Добавь это перед cursor.execute()
-        cursor.execute(sql, tuple(val for _, val in self.conditions))
-        self.data = cursor.fetchall()
+        if self.action == "select":
+            # Формируем SQL для SELECT
+            where_clause = " AND ".join([f"{col} = %s" for col, _ in self.conditions])
+            joins_clause = " ".join(self.joins)
+            sql = f"SELECT {self.columns} FROM {self.table} {joins_clause} " + (f"WHERE {where_clause}" if where_clause else "")
+            params = tuple(val for _, val in self.conditions)
+
+            cursor.execute(sql, params)
+            self.data = [dict(row) for row in cursor.fetchall()]
+        
+        elif self.action == "update":
+            # Формируем SQL для UPDATE
+            set_clause = ", ".join([f"{col} = %s" for col in self.values.keys()])
+            where_clause = " AND ".join([f"{col} = %s" for col, _ in self.conditions])
+            sql = f"UPDATE {self.table} SET {set_clause} WHERE {where_clause}"
+
+            params = list(self.values.values()) + [val for _, val in self.conditions]
+            cursor.execute(sql, params)
+            conn.commit()
+        
+        elif self.action == "insert":
+            # Формируем SQL для INSERT
+            columns = ", ".join(self.values.keys())
+            placeholders = ", ".join(["%s"] * len(self.values))
+            sql = f"INSERT INTO {self.table} ({columns}) VALUES ({placeholders}) RETURNING *"
+
+            cursor.execute(sql, tuple(self.values.values()))
+            conn.commit()
+            self.data = [dict(cursor.fetchone())]  # Сохраняем вставленные данные
+
+
+        elif self.action == "delete":
+            # Формируем SQL для DELETE
+            where_clause = " AND ".join([f"{col} = %s" for col, _ in self.conditions])
+            sql = f"DELETE FROM {self.table} WHERE {where_clause}" if where_clause else f"DELETE FROM {self.table}"
+
+            params = tuple(val for _, val in self.conditions)
+            cursor.execute(sql, params)
+            conn.commit()
+
+        # Логируем запрос
+        logger.info(f"📋 DB Request - {sql} | Params: {params if 'params' in locals() else 'N/A'}")
+
         return self
 
+    def __str__(self):
+        return f"{{'data': {self.data}, 'error': {self.error}}}"
 
 
 class DBRPC:
     def __init__(self, function_name, params):
         self.function_name = function_name
         self.params = params
-        self.data = self.execute()
+        self.data = []
+        self.error = None
 
     def execute(self):
-        placeholders = ", ".join(["%s"] * len(self.params))
-        sql = f"SELECT * FROM {self.function_name}({placeholders})"
-        cursor.execute(sql, tuple(self.params.values()))
-        return cursor.fetchall()
+        # Формируем строку с параметрами, которые будут переданы в SQL
+        if self.params:
+            placeholders = ", ".join(["%s"] * len(self.params))
+            sql = f"SELECT * FROM {self.function_name}({placeholders})"
+        else:
+            # Если params пуст, просто вызываем функцию без параметров
+            sql = f"SELECT * FROM {self.function_name}()"
+
+        try:
+            # Выполнение запроса
+            cursor.execute(sql, tuple(self.params.values()))
+
+            logger.info(f"📋 DB Request - SQL: {sql} | Params: {self.params}")
+
+            # Если возвращаемое значение - это список
+            if isinstance(cursor, list):
+                self.data = [cursor]
+            else:
+                self.data = cursor.fetchall()
+            
+        except Exception as e:
+            # В случае ошибки логируем информацию об ошибке
+            self.error = str(e)
+            logger.error(f"❌ DB Error - SQL: {sql} | Error: {self.error}")
+
+        return self
+
+    def __str__(self):
+        # Форматируем вывод в нужный вид
+        return f"{{'data': {self.data}, 'error': {self.error}}}"
+
+
 
 def db_cursor(table_name):
     return DBQuery(table_name)
