@@ -1,5 +1,4 @@
 import os
-from supabase import Client
 from dotenv import load_dotenv
 import logging
 import nextcord as nxc
