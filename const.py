@@ -77,6 +77,13 @@ type_translate = {
     "💎 CEO": "💎 CEO"
 }
 
+message_title = {
+    "Success": "✅ Успех!",
+    "Warning": "⚠️ Предупреждение",
+    "Error": "🚫 Ошибка"
+}
+
+
 #. Словари для команд
 admCardTypes = ["👤 Personal", "🏰 Team", "💸 Banker", "💎 CEO"]
 bankerCardType = ["👤 Personal", "🏰 Team"]
@@ -94,7 +101,11 @@ embed_colors = {
         "⚫ Black": nxc.Colour.from_rgb(41, 41, 41),
         "⚪ White": nxc.Colour.from_rgb(245, 245, 245),
         "💎 CEO": nxc.Colour.from_rgb(5, 170, 156),
-        "💸 Banker": nxc.Colour.from_rgb(23, 181, 181)
+        "💸 Banker": nxc.Colour.from_rgb(23, 181, 181),
+        "Success": nxc.Colour.from_rgb(146, 182, 79),
+        "Warning": nxc.Colour.from_rgb(220, 130, 82),
+        "Error": nxc.Colour.from_rgb(182, 79, 81),
+        "Other": nxc.Colour.from_rgb(79, 139, 182)
     }
 reverse_embed_colors = {v: k for k, v in embed_colors.items()}
 

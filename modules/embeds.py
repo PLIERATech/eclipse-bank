@@ -2,6 +2,40 @@ import nextcord as nxc
 from const import *
 from db import *
 
+#! Функция на вызов сообщений из бд 
+def get_message_with_title(message_id, title_args=(), description_args=()):
+    """Получает title и template из Supabase и форматирует их разными аргументами"""
+    response = db_cursor("embeds-text").select("title_emb, description_emb, color_emb").eq("id", message_id).single().execute()
+    
+    if not response.data:
+        return None, None, None
+
+    title = response.data[0]["title_emb"]
+    title = message_title.get(title,title)
+    description = response.data[0]["template_emb"]
+    color = response.data[0]["template_emb"]
+    color = embed_colors.get(color, embed_colors["Other"])
+
+    try:
+        formatted_title = title % title_args if "%s" in title else title
+        formatted_template = description % description_args if "%s" in description else description
+    except TypeError:
+        return None, None, None
+
+    return formatted_title, formatted_template, color
+
+
+#! Автоэмбед
+def emb_auto(color_emb, title_emb, description_emb):
+    embed = nxc.Embed(
+        title=title_emb, 
+        color=color_emb, 
+        description=(f"{description_emb} \n\n"
+                    f"{bank_sign}")
+        )
+    return embed
+
+
 #! Эмбед для карт №1 (номер, тип, название)
 def emb_cards(color,full_number,type_rus,name):
     embed_color = embed_colors.get(color, color)
@@ -10,7 +44,7 @@ def emb_cards(color,full_number,type_rus,name):
     embed.add_field(name="💳 Карта:⠀⠀⠀⠀⠀", value=full_number, inline=True)
     embed.add_field(name="🗂️ Тип:⠀⠀⠀⠀⠀⠀", value=type_rus, inline=True)
     embed.add_field(name="💬 Название⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀", value=name, inline=True)
-    return(embed)
+    return embed
 
 
 #! Эмбед для карт №2 (картинка)
@@ -19,7 +53,7 @@ def emb_cards_image(color, filename):
 
     embed = nxc.Embed(color=embed_color)
     embed.set_image(url=filename) 
-    return(embed)
+    return embed
 
 
 #! Эмбед для карт №3 (владлелец и пользователи карты)
@@ -59,7 +93,7 @@ def emb_comp_withdram_invoice(member_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выставленный счёт от банкира для получателя и банкира
@@ -72,7 +106,7 @@ def emb_withdram_request(banker_id, member_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #= Обновить все карты (Update All Cards) 
@@ -83,7 +117,7 @@ def emb_updateAllCards_processbar(progress_bar, percent):
         description=(f"🔄 Обновление карт: `[{progress_bar}] {percent}%` \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Глобальное обновление карт
@@ -94,7 +128,7 @@ def emb_updateAllCards():
         description=("Обновление карт завершено. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Деньги хранящиеся в банке (Total Balance) 
@@ -106,7 +140,7 @@ def emb_total_balance(total):
             description=(f"В банке хранится {total} алм.! ({total // 9} аб + {total - (total // 9 * 9)} алм.) \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #= Изъять деньги (Take Off Money) 
@@ -119,7 +153,7 @@ def emb_comp_take_off_money(full_number, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Сообщение об изъятии денег
@@ -132,7 +166,7 @@ def emb_take_off_money(admin_id, full_number, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #= Посмотреть информацию об картах владельца (Search Cards) 
@@ -144,7 +178,7 @@ def emb_comp_search_cards(member_id, cards):
         description=("\n".join(card[2] for card in cards)+"\n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! У клиента нет карт
@@ -155,7 +189,7 @@ def emb_no_cards_search(member_id):
         description=(f"У клиента <@{member_id}> нет карт. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Пополнить (Replenish Money) 
@@ -171,7 +205,7 @@ def emb_comp_replenish(full_number, count, commission, salary, total_amount, des
     embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполнено пополнение, комиссия CEO 
@@ -185,7 +219,7 @@ def emb_replenish_ceo(full_number, count, commission, salary, total_amount, desc
     embed.add_field(name="💰 Итого к пополнению CEO-00000", value=f"{commission}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполнено пополнение для пользователей карты получателя 
@@ -200,7 +234,7 @@ def emb_replenish_user(full_number, count, commission, salary, total_amount, des
     embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполнено пополнение, комиссия банкира 
@@ -212,7 +246,7 @@ def emb_replenish_banker(full_number, salary):
     embed.add_field(name="💰 Сумма", value=f"{salary}", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"Комиссия с пополнение чужой карты", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Карта банкира не найдена 
@@ -223,7 +257,7 @@ def emb_no_found_banker_card():
         description=(f"Для данного действия у вас должна быть карта банкира! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Уволить банкира (Demote) 
@@ -237,7 +271,7 @@ def emb_demotedBanker(card_type_rus, full_number):
                         f"Карта типа {card_type_rus} с номером {full_number} успешно создана! \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Банкир разжалован
@@ -249,7 +283,7 @@ def emb_demoteBankerWithCar():
                         "Карта банкира удалена. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #= Удалить клиента (Delete Account) 
@@ -261,7 +295,7 @@ def emb_account_wasDeleted():
             description=(f"Банковский счёт был успешно удалён. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #@ select_menu                                                                            
@@ -275,7 +309,7 @@ def emb_check_balance(full_number, balance):
             description=(f"На карте {full_number} хранится {balance} алм. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #= Перевод средств 
@@ -289,7 +323,7 @@ def emb_comp_transfer(sender_full_number, receiver_full_number, amount, comment)
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполненый перевод для пользователей карты отправителя
@@ -302,7 +336,7 @@ def emb_transfer_sender(sender_full_number, receiver_full_number, amount, commen
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполненый перевод для пользователей карты получателя
@@ -315,7 +349,7 @@ def emb_transfer_receimer(sender_full_number, receiver_full_number, amount, comm
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #= Выставить счёт 
@@ -328,7 +362,7 @@ def emb_comp_invoice(nick_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Сообщение о выставленном счёте для пользователей карты отправителя
@@ -341,7 +375,7 @@ def emb_invoice_sender(sender_nick, nick_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Сообщение о выставленном счёте для получившего
@@ -354,7 +388,7 @@ def emb_invoice_nick(sender_id, sender_full_number, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #= Поменять название 
@@ -366,7 +400,7 @@ def emb_comp_change_name(full_number, cardname):
         description=(f"Название карты {full_number} изменено на {cardname}. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя ставить одинаковые названия карты
@@ -377,7 +411,7 @@ def emb_same_name():
         description=(f"Название уже используется этой картой. Введите другое название! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Добавить пользователя к карте 
@@ -389,7 +423,7 @@ def emb_comp_add_user(nick_id, full_number):
         description=(f"Пользователь <@{nick_id}> успешно добавлен к карте {full_number}! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя добавить самого себя
@@ -400,7 +434,7 @@ def emb_self_add_card():
         description=(f"Ты не можешь добавить к карте самого себя! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя добавлять тех кто уже добавлен к карте
@@ -411,7 +445,7 @@ def emb_no_replay_add(nick):
         description=(f"Клиент {nick} уже добавлен к карте! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Удалить пользователя из карты 
@@ -423,7 +457,7 @@ def emb_comp_del_user_in_card(nick_id, full_number):
         description=(f"Пользователь <@{nick_id}> успешно удалён из карты {full_number}! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя удалять себя из карты
@@ -434,7 +468,7 @@ def emb_self_del_card():
         description=(f"Ты не можешь удалить из карты самого себя! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя удалять тех кто не добавлен к карте
@@ -445,7 +479,7 @@ def emb_no_added_in_card(member_id):
         description=(f"Клиент <@{member_id}> не добавлен к карте. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Передать владение картой
@@ -457,7 +491,7 @@ def emb_comp_transfer_owner(member_id, full_number):
         description=(f"Пользователь <@{member_id}> успешно стал владельцем карты {full_number}! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя передать карту самому себе
@@ -468,7 +502,7 @@ def emb_self_transfer_owner():
         description=(f"Ты не можешь передать карту самому себе! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нельзя передать владение если клиент не добавлен в пользователи
@@ -480,7 +514,7 @@ def emb_no_added_in_card_transfer(member_id):
                      f"Перед передачей карты, добавьте его в пользователи \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #= Удалить карту 
@@ -492,7 +526,7 @@ def emb_comp_delete_card(full_number):
         description=(f"Карта {full_number} успешно удалена! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Карта банкира не найдена 
@@ -503,7 +537,7 @@ def emb_no_delete_card_balance():
         description=(f"Для удаления карты, на ней не должно быть средств! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Карта неправильно введена 
@@ -514,7 +548,7 @@ def emb_no_delete_card_wrong_number():
         description=(f"Для данной операции вы должны правильно написать название карты! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 
@@ -530,7 +564,7 @@ def emb_comp_pay_button():
             description=(f"\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Недостаточно средств
@@ -541,7 +575,7 @@ def emb_no_card_pay_button():
         description=(f"Указанный номер карты не существует или вы не являетесь её владельцем/пользователем! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 #! Выполненый перевод для пользователей карты отправителя
 def emb_member_pay_button(member_id, member_full_number, invoice_full_number, amount, comment, invoice_own_id):
@@ -555,7 +589,7 @@ def emb_member_pay_button(member_id, member_full_number, invoice_full_number, am
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="🤑 Запросивший", value=f"<@{invoice_own_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполненый перевод для пользователей карты получателя
@@ -570,7 +604,7 @@ def emb_invoice_pay_button(member_id, member_full_number, invoice_full_number, a
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="🤑 Запросивший", value=f"<@{invoice_own_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Выполненый перевод для пользователей карты отправителя от банкира
@@ -585,7 +619,7 @@ def emb_member_pay_button_banker(member_id, member_full_number, amount, comment,
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{invoice_own_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Отредактированное сообщение банкира для проверки счёта
@@ -598,7 +632,7 @@ def emb_banker_invoice_message(member_id, amount, invoice_own_id):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="👤 Банкир", value=f"<@{invoice_own_id}>", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #= Отмена 
@@ -610,7 +644,7 @@ def emb_comp_decline_button():
             description=(f"\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Сообщение для банкира или пользователей 
@@ -621,7 +655,7 @@ def emb_msg_decline_button(member_id, amount):
             description=(f"<@{member_id}> отменил выставленный счён на сумму {amount} алм. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #= Отмена банкиром 
@@ -633,7 +667,7 @@ def emb_comp_cancel_button():
             description=(f"\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Сообщение для пользователя 
@@ -644,7 +678,7 @@ def emb_edit_member_cancel_button(member_id, amount):
             description=(f"Счёт выставленный банкиром <@{member_id}> на сумму `{amount} алм.` отменён \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Сообщение для банкира или пользователей 
@@ -655,7 +689,7 @@ def emb_edit_bancer_cancel_button(member_id):
             description=(f"Счёт отменён банкиром <@{member_id}> \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #= Выставить счёт 
@@ -668,7 +702,7 @@ def emb_comp_invoice(nick_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Сообщение о выставленном счёте для пользователей карты отправителя
@@ -681,7 +715,7 @@ def emb_invoice_sender(sender_nick, nick_id, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Сообщение о выставленном счёте для получившего
@@ -694,7 +728,7 @@ def emb_invoice_nick(sender_id, sender_full_number, amount, comment):
     embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 
@@ -712,7 +746,7 @@ def emb_no_self_transfer():
         description=(f"Перевод на ту же карту невозможен! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Недостаточно средств
@@ -723,7 +757,7 @@ def emb_insufficient_funds():
         description=(f"На карте недостаточно средств! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Не хватает прав для пользования командой
@@ -734,7 +768,7 @@ def emb_e_noPerms():
         description=(f"У вас недостаточно прав для использования данной команды! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Не хватает прав для взаимодействия с картой
@@ -745,7 +779,7 @@ def emb_e_noPerms00000():
         description=(f"У вас недостаточно прав для взаимодействия с картой CEO-00000! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Номер карты уже занят
@@ -756,7 +790,7 @@ def emb_num_isClaimed():
         description=(f"Данный номер карты уже занят. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Лимит карт
@@ -767,7 +801,7 @@ def emb_user_cardLimit():
             description=(f"У пользователя максимальное количество карт. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Является банкиром
@@ -778,7 +812,7 @@ def emb_user_isBanker():
             description=(f"Данный пользователь уже является банкиром. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Не банкир
@@ -789,7 +823,7 @@ def emb_user_isNotBanker():
             description=(f"Данный пользователь не является банкиром. \n\n"
                         f"{bank_sign}")
             )
-    return(embed)
+    return embed
 
 
 #! Пользователя нет на сервере
@@ -800,7 +834,7 @@ def emb_user_in_server():
         description=(f"Данного пользователя нет на сервере дискорд! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Пользователь не клиент
@@ -811,7 +845,7 @@ def emb_user_is_client():
         description=(f"Данный пользователь не является клиентом! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Не целое положительно число (0+)
@@ -822,7 +856,7 @@ def emb_count_an_integer():
         description=(f"Сумма должна быть целым положительным числом! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Ввод должен быть числом
@@ -833,7 +867,7 @@ def emb_card_int():
         description=(f"Номер карты должен состоять из чисел! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Ошибка загрузки картинки
@@ -844,7 +878,7 @@ def emb_e_image_upload():
         description=(f"Изображение не загрузилось! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Карта со счёта больше не действительна
@@ -855,7 +889,7 @@ def verify_dont_invoice_card():
         description=(f"Карта с которой выставлен счёт больше не действительна! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Данные не найдены
@@ -866,7 +900,7 @@ def emb_e_no_found_data():
         description=(f"Данные не найдены! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Банкир пытается отметить не свой счёт
@@ -877,7 +911,7 @@ def emb_e_invoice_banker_cansel():
         description=(f"У вас нет прав на отмену данного счёта! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нет карт в бд для глобального обновления карт
@@ -888,7 +922,7 @@ def emb_no_global_card_update():
         description=(f"Нет карт для обновления! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Карта не найдена
@@ -899,7 +933,7 @@ def emb_no_found_card():
         description=(f"Карта не найдена! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! С зарплатной картой взаимодействоватьнельзя
@@ -910,7 +944,7 @@ def emb_is_banker_card():
         description=(f"Данные действия с зарплатной картой запрещены! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Не является владельцем для операции с картой
@@ -921,7 +955,7 @@ def emb_no_owner_select_menu():
         description=(f"Не хватает прав для этого действия! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Клиента не существует в select menu
@@ -932,7 +966,7 @@ def emb_no_client_select_menu(nickname):
         description=(f"Клиент с никнеймом {nickname} не найден, проверьте правильно ли написан никнейм и является ли он клиентом.! \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Ошибка неизвестный выбор select menu
@@ -944,7 +978,7 @@ def emb_sb_e_select_menu():
                     "Пожалуйста, обратитесь к администрации. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Ошибка при создании карты
@@ -956,7 +990,7 @@ def emb_sb_cardNotCreated():
                     "Пожалуйста, обратитесь к администрации. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 
@@ -978,7 +1012,7 @@ def emb_aud_createCustomCard(full_number, member_id, admin_id):
                     f"Администратор: <@{admin_id}>. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Создание карты банкиром 
@@ -990,7 +1024,7 @@ def emb_aud_createCard(full_number, member_id, banker_id):
                     f"Банкир: <@{banker_id}>. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Нанимание банкира 
@@ -1002,7 +1036,7 @@ def emb_aud_admitBanker(member_id, full_number, admin_id):
                     f"Назначил администратор: <@{admin_id}>.\n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Разжалование банкира + создание карты с балансом 
@@ -1014,7 +1048,7 @@ def emb_aud_demoteBanker_create_card(full_number, member_id, balance, admin_id):
                     f"Разжаловал администратор: <@{admin_id}>.\n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Разжалование банкира + перевод средств на первую карту 
@@ -1026,7 +1060,7 @@ def emb_aud_demoteBanker_send_balance(full_number, member_id, balance, admin_id)
                     f"Разжаловал администратор: <@{admin_id}>.\n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Разжалование банкира 
@@ -1038,7 +1072,7 @@ def emb_aud_demoteBanker(member_id, admin_id):
                     f"Разжаловал администратор: <@{admin_id}>.\n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Удаление карты 
@@ -1049,7 +1083,7 @@ def emb_aud_deleteAccount(member_id, admin_id):
         description=(f"Клиент <@{member_id}> был удалён администратором <@{admin_id}>. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Автоматическое удаление карты 
@@ -1060,7 +1094,7 @@ def emb_aud_autoDeleteAccount(member_id):
         description=(f"Клиент <@{member_id}> был заморожен и был удален за незаход на сервер {days_freeze_delete} дней. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Клиент вернулся на сервер 
@@ -1071,7 +1105,7 @@ def emb_aud_member_join(member_id):
         description=(f"Клиент <@{member_id}> вернулся на сервер и его аккаунт был разморожен. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Клиент вышел с сервера 
@@ -1082,7 +1116,7 @@ def emb_aud_member_remove(member_id):
         description=(f"Клиент <@{member_id}> вышел с сервера и его аккаунт был заморожен. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Пополнение баланса 
@@ -1096,7 +1130,7 @@ def emb_aud_replenishMoney(banker_id, member_full_number, banker_full_number, co
     embed.add_field(name="ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Обновил все карты 
@@ -1107,7 +1141,7 @@ def emb_aud_updateAllCards(member_id):
         description=(f"Администратор <@{member_id}> обновил все карты банка. \n\n"
                     f"{bank_sign}")
         )
-    return(embed)
+    return embed
 
 
 #! Изъятие средств 
@@ -1118,7 +1152,7 @@ def emb_aud_takeOffMoney(admin_id, full_number, amount, comment):
         description=(f"Администратор <@{admin_id}> изъял с карты {full_number} - {amount} алм. \n"
                      f"Комментарий: {comment}\n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
 
 
 #! Обналичивание средств 
@@ -1129,7 +1163,7 @@ def emb_aud_withdrawMoney(banker_id, member_id, count, comment):
         description=(f"Банкир <@{banker_id}> выставил счёт клиенту <@{member_id}> на снятие {count} алм. \n"
                      f"Комментарий: {comment}\n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
 
 
 #! Подтверждён выставленный счёт игрока 
@@ -1143,7 +1177,7 @@ def emb_aud_invoice_pay_member(member_id, invoice_card_own_id, member_full_numbe
     embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Подтверждён выставленный счёт банкира 
@@ -1156,7 +1190,7 @@ def emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_numbe
     embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
-    return(embed)
+    return embed
 
 
 #! Отказ на выставленный счёт игрока 
@@ -1166,7 +1200,7 @@ def emb_aud_invoice_decline_member(member_id, invoice_member_id, count):
         color=nxc.Color.brand_green(), 
         description=(f"Клиент <@{member_id}> отказался от счёта выставленный <@{invoice_member_id}> на снятие {count} алм. \n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
 
 
 #! Отказ на выставленный счёт банкира 
@@ -1176,7 +1210,7 @@ def emb_aud_invoice_decline_banker(member_id, banker_id, count):
         color=nxc.Color.brand_green(), 
         description=(f"Клиент <@{member_id}> отказался от счёта выставленный банкиром <@{banker_id}> на снятие {count} алм. \n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
 
 
 #! Банкир отменил высталвенный счёт 
@@ -1186,7 +1220,7 @@ def emb_aud_invoice_cancel_banker(banker_id, member_id, count):
         color=nxc.Color.brand_green(), 
         description=(f"Банкир <@{banker_id}> отменил счёта выставленный клиенту <@{member_id}> на снятие {count} алм. \n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
 
 
 #! Создан клиент 
@@ -1196,14 +1230,100 @@ def emb_aud_create_client(member_id):
         color=nxc.Color.brand_green(), 
         description=(f"<@{member_id}> стал клиентом Eclipse Bank. \n\n"
                     f"{bank_sign}"))
-    return(embed)
+    return embed
+
+
+#! Перевод средств 
+def emb_aud_transfer(member_id, sender_full_number, receiver_full_number, amount, comment):
+    embed = nxc.Embed(
+        title="Выполнил перевод средств", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> перевёл средства."))
+    embed.add_field(name="Снятие из", value=f"{sender_full_number}", inline=True)
+    embed.add_field(name="Начисление в", value=f"{receiver_full_number}", inline=True)
+    embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
+    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="\u200b", value=f"{bank_sign}", inline=False)
+    return embed
+
+
+#! Выставил счёт 
+def emb_aud_invoice(sender_id, receiver_id, count, comment):
+    embed = nxc.Embed(
+        title="Выставлен счёт на перевод", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{sender_id}> выставил счёт клиенту <@{receiver_id}> на снятие {count} алм. \n"
+                     f"Комментарий: {comment}\n\n"
+                    f"{bank_sign}"))
+    return embed
+
+
+#! Смена названия карты 
+def emb_aud_change_name(member_id, full_number, old_card_name, card_name):
+    embed = nxc.Embed(
+        title="Смена названия карты", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> поменял название карты {full_number} с '{old_card_name}' на '{card_name}'. \n\n"
+                    f"{bank_sign}"))
+    return embed
+
+
+#! Добавлен пользователь к карте 
+def emb_aud_add_user_card(owner_id, member_id, full_number):
+    embed = nxc.Embed(
+        title="Добавлен пользователь к карте", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{owner_id}> добавил пользователя <@{member_id}> к карте {full_number}. \n\n"
+                    f"{bank_sign}"))
+    return embed
+
+#! Удалён пользователь к карте 
+def emb_aud_del_user_card(owner_id, member_id, full_number):
+    embed = nxc.Embed(
+        title="Удалён пользователь с карты", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{owner_id}> удалил пользователя <@{member_id}> с карты {full_number}. \n\n"
+                    f"{bank_sign}"))
+    return embed
+
+
+#! Передана карта 
+def emb_aud_transfer_owner(owner_id, member_id, full_number):
+    embed = nxc.Embed(
+        title="Смена владельца карты", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{owner_id}> передал права на карту <@{full_number}> пользователю <@{member_id}>. \n\n"
+                    f"{bank_sign}"))
+    return embed
+
+
+#! Карта удалена владельцем 
+def emb_aud_delete_card_own(member_id, full_number):
+    embed = nxc.Embed(
+        title="Владелец удалил карту", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> удалил карту <@{full_number}> как её владелец. \n\n"
+                    f"{bank_sign}"))
+    return embed
+
+
+#! Карта удалена пользователем 
+def emb_aud_delete_card_memb(member_id, full_number):
+    embed = nxc.Embed(
+        title="Пользователь удалил карту", 
+        color=nxc.Color.brand_green(), 
+        description=(f"Клиент <@{member_id}> удалил карту <@{full_number}> как её пользователь. \n\n"
+                    f"{bank_sign}"))
+    return embed
 
 
 
-
-
-
-
-
-
-
+#! Ошибка неизвестный выбор select menu
+def emb_aud_e_select_menu(member_id):
+    embed = nxc.Embed(
+        title="🚫 Ошибка", 
+        color=nxc.Color.red(), 
+        description=(f"Клиент <@{member_id}> вызвал несуществующую кнопку. \n\n"
+                    f"{bank_sign}")
+        )
+    return embed

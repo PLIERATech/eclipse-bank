@@ -21,7 +21,10 @@ async def create_card(banker, name, nickname, type, owner_id, color, do_random: 
     numbers_list = [item["number"] for item in response.data]
     if do_random == True:
         while True:
-            number =  f"{int(''.join(random.choices(n, k=5))):05}"
+            short_number = int(''.join(random.choices(n, k=5)))
+            if short_number <=20:
+                break
+            number =  f"{short_number:05}"
             if number not in numbers_list:
                 break
     else:

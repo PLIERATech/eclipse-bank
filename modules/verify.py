@@ -7,6 +7,12 @@ from db import *
 #! Проверка на staff роль
 async def verify_staff(inter, userUsage, command):
     if not any(role.id in (staff_role) for role in userUsage.roles):
+        # Пример использования
+        title_emb, message_emb, color_emb = get_message_with_title(
+            1,  
+            title_args=("Офицер Иван",),  
+            template_args=("Иван", "алмазный меч", "офицера")
+        )
         status="No Permissions"
         embed = emb_e_noPerms()
         await inter.response.send_message(embed=embed, ephemeral=True) 

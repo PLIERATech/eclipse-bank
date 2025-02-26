@@ -157,7 +157,7 @@ async def sm_transfer(inter, user, message, channel):
             if not isinstance(receiver_members, dict):  # Проверяем, если это не словарь (jsonb)
                 receiver_members = {}
 
-            # 🔹 Определяем карту отправителя через message.id
+            # Определяем карту отправителя через message.id
 
             sender_data = db_rpc("find_card_in_message", {"msg_id": message.id}).execute()
             sender_type = sender_data.data[0]["type"]
@@ -208,6 +208,10 @@ async def sm_transfer(inter, user, message, channel):
             db_cursor("cards").update({"balance": sender_balance - amount}).eq("number", sender_card).execute()
             db_cursor("cards").update({"balance": receiver_balance + amount}).eq("number", receiver_card).execute()
 
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_transfer = emb_aud_transfer(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
+            await member_audit.send(embed=embed_aud_transfer)
 
     # 🔹 Показываем форму пользователю
     model = TransferModal()
@@ -290,6 +294,12 @@ async def sm_invoice(inter, user, message, channel):
                 "type_invoice":"member"
             }).execute()
 
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_invoice = emb_aud_invoice(user.id, nick_dsc_id, amount, self.comment.value)
+            await member_audit.send(embed=embed_aud_invoice)
+
+
     # 🔹 Показываем форму пользователю
     model = InvoiceModal()
     await inter.response.send_modal(model)
@@ -369,6 +379,11 @@ async def sm_change_name(inter, user, message, channel):
                     await message_users.edit(embeds=[new_card_embed, existing_embeds[1], existing_embeds[2]], attachments=[])
 
             db_cursor("cards").update({"name": cardname}).eq("select_menu_id", message.id).execute()
+
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_change_name = emb_aud_change_name(user.id, full_number, bdcardname, cardname)
+            await member_audit.send(embed=embed_aud_change_name)
 
     modal = ChangeNameCardModal()
     await inter.response.send_modal(modal)
@@ -461,6 +476,11 @@ async def sm_add_user(inter, user, message, channel):
 
             db_cursor("cards").update({"members": members}).eq("select_menu_id", message.id).execute()
 
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_add_user_card = emb_aud_add_user_card(user.id, member_id, full_number)
+            await member_audit.send(embed=embed_aud_add_user_card)
+
     modal = AddUserModal()
     await inter.response.send_modal(modal)
 
@@ -550,6 +570,12 @@ async def sm_del_user(inter, user, message, channel):
 
             # Обновляем данные в базе данных
             db_cursor("cards").update({"members": members}).eq("select_menu_id", message.id).execute()  # Используем members как jsonb
+
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_del_user_card = emb_aud_del_user_card(user.id, member_id, full_number)
+            await member_audit.send(embed=embed_aud_del_user_card)
+
 
     modal = RemoveUserModal()
     await inter.response.send_modal(modal)
@@ -666,6 +692,12 @@ async def sm_transfer_owner(inter, user, message, channel):
             # Обновляем данные в базе данных
             db_cursor("cards").update({"owner": member_id,"members": members, "select_menu_id": new_owner_message_id}).eq("select_menu_id", message.id).execute()
 
+            #Аудит действия
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            embed_aud_transfer_owner = emb_aud_transfer_owner(user.id, member_id, full_number)
+            await member_audit.send(embed=embed_aud_transfer_owner)
+
+
     modal = TransferOwner()
     await inter.response.send_modal(modal)
 
@@ -719,6 +751,14 @@ async def sm_delete_card(inter, user, message, channel):
             #Удаление карты
             await message.delete()
 
+            #Аудит действия
+            if memb_type== 'owner':
+
+                embed_aud_delete_card = emb_aud_delete_card_own(user.id, full_number)
+            else:
+                embed_aud_delete_card = emb_aud_delete_card_memb(user.id, full_number)
+            member_audit = inter.guild.get_channel(bank_audit_channel)
+            await member_audit.send(embed=embed_aud_delete_card)        
 
     modal = DeleteCardModal()
     await inter.response.send_modal(modal)

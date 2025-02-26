@@ -59,7 +59,7 @@ class WithdrawMoney(commands.Cog):
             "memb_channel_id":nick_transaction_channel_id,
             "banker_message_id": banker_message.id,
             "count":count,
-            "type_type":"banker"
+            "type_invoice":"banker"
         }).execute()
 
         #Аудит действия
