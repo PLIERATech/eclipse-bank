@@ -98,8 +98,9 @@ async def sm_check_balance(inter, user, message, channel):
     number = response_card.data[0]['number']
     full_number = f"{suffixes.get(type, type)}{number}"
 
-
-    embed = emb_check_balance(full_number, balance)
+    title_emb, message_emb, color_emb = get_message_with_title(
+        8, (), (full_number, balance))
+    embed = emb_auto(title_emb, message_emb, color_emb)
     await inter.send(embed=embed, ephemeral=True) 
 
 
@@ -171,13 +172,17 @@ async def sm_transfer(inter, user, message, channel):
                 sender_members = {}
 
             if sender_card == receiver_card:
-                embed_no_self_transfer = emb_no_self_transfer()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    29, (), ())
+                embed_no_self_transfer = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_no_self_transfer, ephemeral=True)
                 return
 
             # Проверяем, хватает ли денег
             if sender_balance < amount:
-                embed_insufficient_funds = emb_insufficient_funds()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    30, (), ())
+                embed_insufficient_funds = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_insufficient_funds, ephemeral=True)
                 return
 
@@ -276,7 +281,7 @@ async def sm_invoice(inter, user, message, channel):
             nick_transaction_channel = inter.client.get_channel(nick_transaction_channel_id)
             await sender_owner_transaction_channel.send(embed=embed_sender)
             view=MyInvoiceView() # Кнопочки
-            nick_message = await nick_transaction_channel.send(embed=embed_nick, view = view)
+            nick_message = await nick_transaction_channel.send(f"<@{nick_dsc_id}>",embed=embed_nick, view = view)
 
             # Отправка сообщений в каналы транзакций пользователей
             for user_id, data in sender_members.items():
@@ -296,7 +301,9 @@ async def sm_invoice(inter, user, message, channel):
 
             #Аудит действия
             member_audit = inter.guild.get_channel(bank_audit_channel)
-            embed_aud_invoice = emb_aud_invoice(user.id, nick_dsc_id, amount, self.comment.value)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                68, (), (user.id, nick_dsc_id, amount, self.comment.value))
+            embed_aud_invoice = emb_auto(title_emb, message_emb, color_emb)           
             await member_audit.send(embed=embed_aud_invoice)
 
 
@@ -357,11 +364,15 @@ async def sm_change_name(inter, user, message, channel):
             cardname = self.cardname_input.value.strip()
 
             if cardname == bdcardname:
-                embed=emb_same_name()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    10, (), ())
+                embed = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed, ephemeral=True)
                 return
 
-            embed_complete=emb_comp_change_name(full_number, cardname)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                9, (), (full_number, cardname))
+            embed_complete = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_complete, ephemeral=True)
 
             existing_embeds = message.embeds
@@ -382,7 +393,10 @@ async def sm_change_name(inter, user, message, channel):
 
             #Аудит действия
             member_audit = inter.guild.get_channel(bank_audit_channel)
-            embed_aud_change_name = emb_aud_change_name(user.id, full_number, bdcardname, cardname)
+
+            title_emb, message_emb, color_emb = get_message_with_title(
+                69, (), (user.id, full_number, bdcardname, cardname))
+            embed_aud_change_name = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_change_name)
 
     modal = ChangeNameCardModal()
@@ -433,13 +447,17 @@ async def sm_add_user(inter, user, message, channel):
 
             member_id = nick_table.data[0]['dsc_id']
             if member_id == owner_id:
-                embed_self_add_card = emb_self_add_card()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    12, (), ())
+                embed_self_add_card = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_self_add_card, ephemeral=True)
                 return
 
             # Проверка, добавлен ли пользователь уже
             if str(member_id) in members:
-                embed_no_replay_add = emb_no_replay_add(nickname)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    13, (), (nickname))
+                embed_no_replay_add = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed = embed_no_replay_add, ephemeral=True)
                 return
 
@@ -461,7 +479,9 @@ async def sm_add_user(inter, user, message, channel):
             card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
 
 
-            embed_complete_add_user = emb_comp_add_user(member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                11, (), (member_id, full_number))
+            embed_complete_add_user = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_complete_add_user, ephemeral=True)
 
             await message.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
@@ -478,7 +498,9 @@ async def sm_add_user(inter, user, message, channel):
 
             #Аудит действия
             member_audit = inter.guild.get_channel(bank_audit_channel)
-            embed_aud_add_user_card = emb_aud_add_user_card(user.id, member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                70, (), (user.id, member_id, full_number))
+            embed_aud_add_user_card = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_add_user_card)
 
     modal = AddUserModal()
@@ -530,13 +552,17 @@ async def sm_del_user(inter, user, message, channel):
 
             member_id = nick_table.data[0]['dsc_id']
             if member_id == owner_id:
-                embed_self_del_card = emb_self_del_card()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    15, (), ())
+                embed_self_del_card = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_self_del_card, ephemeral=True)
                 return
 
             # Проверка, есть ли пользователь в списке
             if str(member_id) not in members:
-                embed_no_added_in_card = emb_no_added_in_card(member_id)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    16, (), (member_id))
+                embed_no_added_in_card = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_no_added_in_card, ephemeral=True)
                 return
 
@@ -554,7 +580,9 @@ async def sm_del_user(inter, user, message, channel):
             color = existing_embeds[1].color
             card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
 
-            embed_complete_del_user_in_card = emb_comp_del_user_in_card(member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                14, (), (member_id, full_number))
+            embed_complete_del_user_in_card = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_complete_del_user_in_card, ephemeral=True)
 
             await message.edit(embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], attachments=[])
@@ -573,7 +601,9 @@ async def sm_del_user(inter, user, message, channel):
 
             #Аудит действия
             member_audit = inter.guild.get_channel(bank_audit_channel)
-            embed_aud_del_user_card = emb_aud_del_user_card(user.id, member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                71, (), (user.id, member_id, full_number))
+            embed_aud_del_user_card = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_del_user_card)
 
 
@@ -628,12 +658,16 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             member_id = nick_table.data[0]['dsc_id']
             if member_id == old_owner_id:
-                embed_self_transfer_owner = emb_self_transfer_owner()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    18, (), ())
+                embed_self_transfer_owner = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_self_transfer_owner, ephemeral=True)
                 return
 
             if str(member_id) not in members:
-                embed_no_added_in_card_transfer = emb_no_added_in_card_transfer(member_id)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    19, (), (member_id))
+                embed_no_added_in_card_transfer = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_no_added_in_card_transfer, ephemeral=True)
                 return
             
@@ -664,7 +698,9 @@ async def sm_transfer_owner(inter, user, message, channel):
                 if full_number in msg.content:
                     await msg.delete()
 
-            embed_comp_transfer_owner = emb_comp_transfer_owner(member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                17, (), (member_id, full_number))
+            embed_comp_transfer_owner = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_comp_transfer_owner, ephemeral=True)
 
             #вставка новой картинки в embed
@@ -694,7 +730,9 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             #Аудит действия
             member_audit = inter.guild.get_channel(bank_audit_channel)
-            embed_aud_transfer_owner = emb_aud_transfer_owner(user.id, member_id, full_number)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                32, (), (user.id, full_number, member_id))
+            embed_aud_transfer_owner = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_transfer_owner)
 
 
@@ -741,11 +779,16 @@ async def sm_delete_card(inter, user, message, channel):
             cardname = self.cardname_input.value.strip()
 
             if cardname != full_number:
-                embed=emb_no_delete_card_wrong_number()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    22, (), ())
+                embed = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed, ephemeral=True)
                 return
 
-            embed_complete=emb_comp_delete_card(full_number)
+
+            title_emb, message_emb, color_emb = get_message_with_title(
+                20, (), (full_number))
+            embed_complete = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_complete, ephemeral=True)
 
             #Удаление карты
@@ -753,10 +796,13 @@ async def sm_delete_card(inter, user, message, channel):
 
             #Аудит действия
             if memb_type== 'owner':
-
-                embed_aud_delete_card = emb_aud_delete_card_own(user.id, full_number)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    73, (), (user.id, full_number))
             else:
-                embed_aud_delete_card = emb_aud_delete_card_memb(user.id, full_number)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    34, (), (user.id, full_number))
+
+            embed_aud_delete_card = emb_auto(title_emb, message_emb, color_emb)    
             member_audit = inter.guild.get_channel(bank_audit_channel)
             await member_audit.send(embed=embed_aud_delete_card)        
 
@@ -772,6 +818,8 @@ async def sm_delete_card(inter, user, message, channel):
 #- =================================================================================================================================
 
 async def sm_unknown(inter, user, message, channel):
-    embed = emb_sb_e_select_menu()
+    title_emb, message_emb, color_emb = get_message_with_title(
+        50, (), ())
+    embed = emb_auto(title_emb, message_emb, color_emb)
     await inter.response.send_message(embed= embed, ephemeral=True)
     return 

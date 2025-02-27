@@ -78,11 +78,16 @@ class MyInvoiceView(View):
 
                 # Проверяем, хватает ли денег
                 if member_card_balance < invoice_count:
-                    embed_insufficient_funds = emb_insufficient_funds()
+                    title_emb, message_emb, color_emb = get_message_with_title(
+                        30, (), ())
+                    embed_insufficient_funds = emb_auto(title_emb, message_emb, color_emb)
                     await inter.send(embed=embed_insufficient_funds, ephemeral=True)
                     return
 
-                embed_comp_pay_button = emb_comp_pay_button()
+
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    77, (), ())
+                embed_comp_pay_button = emb_auto(title_emb, message_emb, color_emb)
                 await inter.send(embed=embed_comp_pay_button, ephemeral=True)
 
                 if invoice_type == "member":
@@ -181,13 +186,17 @@ class MyInvoiceView(View):
         if not isinstance(invoice_card_members, dict):
             invoice_card_members = {}
 
-        embed_comp_decline_button = emb_comp_decline_button()
+        title_emb, message_emb, color_emb = get_message_with_title(
+            24, (), ())
+        embed_comp_decline_button = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed_comp_decline_button, ephemeral=True)
 
         if invoice_type == "member":
             # Отправка сообщений в каналы транзакций
 
-            embed_msg_decline_button = emb_msg_decline_button(member_id, invoice_count)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                25, (), (member_id, invoice_count))
+            embed_msg_decline_button = emb_auto(title_emb, message_emb, color_emb)
             invoice_owner_transaction_channel = inter.client.get_channel(invoice_owner_transaction_channel_id)
             await invoice_owner_transaction_channel.send(embed=embed_msg_decline_button)
 
@@ -197,8 +206,9 @@ class MyInvoiceView(View):
                 channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
                 await channel_transactions_invoicer.send(embed=embed_msg_decline_button)
                 
-            embed_aud_invoice_decline = emb_aud_invoice_decline_member(member_id, invoice_card_own_id, invoice_count)
-
+            title_emb, message_emb, color_emb = get_message_with_title(
+                64, (), (member_id, invoice_card_own_id, invoice_count))
+            embed_aud_invoice_decline = emb_auto(title_emb, message_emb, color_emb)
 
         elif invoice_type == "banker":
             banker_message_id = invoice_data.data[0]["banker_message_id"]
@@ -206,9 +216,14 @@ class MyInvoiceView(View):
             banker_invoice_message = await banker_invoice_channel.fetch_message(banker_message_id)
 
             # Отправка сообщений в каналы транзакций
+            title_emb, message_emb, color_emb = get_message_with_title(
+                25, (), (member_id, invoice_count))
+            embed_msg_decline_button = emb_auto(title_emb, message_emb, color_emb)
             await banker_invoice_message.edit(embed=embed_msg_decline_button, view=None)
 
-            embed_aud_invoice_decline = emb_aud_invoice_decline_banker(member_id, invoice_card_own_id, invoice_count)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                65, (), (member_id, invoice_card_own_id, invoice_count))
+            embed_aud_invoice_decline = emb_auto(title_emb, message_emb, color_emb)
 
         db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
         await message.edit(embed=embed_comp_decline_button, view=None)
@@ -262,18 +277,27 @@ class BankerInvoiceView(View):
         member_message = await member_channel.fetch_message(member_message_id)
         invoice_count = invoice_data.data[0]["count"]
 
-        embed_comp_cancel_button = emb_comp_cancel_button()
+        title_emb, message_emb, color_emb = get_message_with_title(
+            26, (), ())
+        embed_comp_cancel_button = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed_comp_cancel_button, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        embed_edit_member_cancel_button = emb_edit_member_cancel_button(banker_id, invoice_count)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            27, (), (banker_id, invoice_count))
+        embed_edit_member_cancel_button = emb_auto(title_emb, message_emb, color_emb)
         await member_message.edit(embed=embed_edit_member_cancel_button, view=None)
 
         db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
-        embed_edit_bancer_cancel_button = emb_edit_bancer_cancel_button(banker_id)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            28, (), (banker_id))
+        embed_edit_bancer_cancel_button = emb_auto(title_emb, message_emb, color_emb)
         await message.edit(embed=embed_edit_bancer_cancel_button, view=None)
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_invoice_cancel_banker = emb_aud_invoice_cancel_banker(banker_id, member_id, invoice_count)
+
+        title_emb, message_emb, color_emb = get_message_with_title(
+            66, (), (banker_id, member_id, invoice_count))
+        embed_aud_invoice_cancel_banker = emb_auto(title_emb, message_emb, color_emb)    
         await member_audit.send(embed=embed_aud_invoice_cancel_banker)

@@ -17,7 +17,6 @@ class UpdateAllCards(commands.Cog):
             return
 
         await inter.response.defer(ephemeral=True)
-        self.client.add_view(CardSelectView())
 
         cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients.channels, clients.nickname").execute()
         total = len(cards_data.data)
@@ -73,7 +72,7 @@ class UpdateAllCards(commands.Cog):
                         channel_id = data.get("id_channel")
                         channel = inter.client.get_channel(channel_id) 
                         message_users = await channel.fetch_message(msg_id)
-                        await message_users.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[])
+                        await message_users.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[], view=CardSelectView())
 
             except nxc.NotFound:
                 print(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")
@@ -86,12 +85,17 @@ class UpdateAllCards(commands.Cog):
             embed_progress = emb_updateAllCards_processbar(progress_bar, percent)
             await progress_message.edit(embed=embed_progress)
 
-        embed_finish = emb_updateAllCards()
+        title_emb, message_emb, color_emb = get_message_with_title(
+            1, (), ())
+        embed_finish = emb_auto(title_emb, message_emb, color_emb)
         await progress_message.edit(embed=embed_finish)
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_updateAllCards = emb_aud_updateAllCards(admin.id)
+
+        title_emb, message_emb, color_emb = get_message_with_title(
+            62, (), (admin.id))
+        embed_aud_updateAllCards = emb_auto(title_emb, message_emb, color_emb)   
         await member_audit.send(embed=embed_aud_updateAllCards)
 
 def setup(client):

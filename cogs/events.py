@@ -41,7 +41,10 @@ class Events(commands.Cog):
 
             #Аудит действия
             member_audit = guild.get_channel(bank_audit_channel)
-            embed_aud_member_join = emb_aud_member_join(member.id)
+
+            title_emb, message_emb, color_emb = get_message_with_title(
+                60, (), (member.id))
+            embed_aud_member_join = emb_auto(title_emb, message_emb, color_emb)
             await member_audit.send(embed=embed_aud_member_join)    
 
 
@@ -59,7 +62,10 @@ class Events(commands.Cog):
 
             #Аудит действия
             member_audit = guild.get_channel(bank_audit_channel)
-            embed_aud_member_remove = emb_aud_member_remove(member.id)
+
+            title_emb, message_emb, color_emb = get_message_with_title(
+                61, (), (member.id))
+            embed_aud_member_remove = emb_auto(title_emb, message_emb, color_emb)
             await member_audit.send(embed=embed_aud_member_remove)    
 
 

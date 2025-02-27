@@ -66,26 +66,35 @@ class Demote(commands.Cog):
                 full_number = check_create_card[0]
                 await next_create_card(inter, member, full_number, card_type_rus, color, member_nick)
                 await delete_card(channel_card_id, int(get_card_info["banker_select_menu_id"]), inter.client)
-                embed = emb_demotedBanker(card_type_rus, full_number)
-                await inter.followup.send(embed=embed, ephemeral=True)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    5, (), (card_type_rus, full_number))
+                embed = emb_auto(title_emb, message_emb, color_emb)
 
-                embed_aud_admitBanker = emb_aud_demoteBanker_create_card(full_number, member_id, int(get_card_info['banker_balance']), admin_id)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    55, (), (member_id, full_number, int(get_card_info['banker_balance']), admin_id))
+                embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
             else:
                 await delete_card(channel_card_id, int(get_card_info["banker_select_menu_id"]), inter.client)
                 member_type = get_card_info["non_banker_type"]
                 member_number = get_card_info["non_banker_number"]
                 member_full_number = f"{suffixes.get(member_type, member_type)}{member_number}"
-                db_cursor("cards").update({"balance": int(get_card_info['banker_balance'])}).eq("number", member_number).execute()
-                embed = emb_demoteBankerWithCar()
-                await inter.followup.send(embed=embed, ephemeral=True)
+                db_rpc("add_balance", {"card_number": member_number, "amount": int(get_card_info['banker_balance'])}).execute()
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    6, (), ())
+                embed = emb_auto(title_emb, message_emb, color_emb)
 
-                embed_aud_admitBanker = emb_aud_demoteBanker_send_balance(member_full_number, member_id, int(get_card_info['banker_balance']), admin_id)
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    56, (), (member_id, int(get_card_info['banker_balance']), member_full_number, admin_id))
+                embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
         else:
             await delete_card(channel_card_id, int(get_card_info["banker_select_menu_id"]), inter.client)
-            embed = emb_demoteBankerWithCar()
-            await inter.followup.send(embed=embed, ephemeral=True)
-
-            embed_aud_admitBanker = emb_aud_demoteBanker(member_id, admin_id)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                6, (), ())
+            embed = emb_auto(title_emb, message_emb, color_emb)
+            
+            title_emb, message_emb, color_emb = get_message_with_title(
+                57, (), (member_id, admin_id))
+            embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
         
         # Снятие роли
         banker_role_remove = inter.guild.get_role(banker_role_id)
@@ -93,6 +102,7 @@ class Demote(commands.Cog):
 
         kick_team(member_id)
 
+        await inter.followup.send(embed=embed, ephemeral=True)
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
         await member_audit.send(embed=embed_aud_admitBanker)       

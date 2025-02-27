@@ -39,7 +39,9 @@ class SearchCards(commands.Cog):
         search_cards_response = db_rpc("find_all_cards_user", {"user_id": member_id}).execute()
 
         if not search_cards_response.data:
-            embed_no_cards_search = emb_no_cards_search(member_id, ephemeral=True)
+            title_emb, message_emb, color_emb = get_message_with_title(
+                3, (), (member_id))
+            embed_no_cards_search = emb_auto(title_emb, message_emb, color_emb)
             await inter.send(embed=embed_no_cards_search, )
         else:
             cards = []

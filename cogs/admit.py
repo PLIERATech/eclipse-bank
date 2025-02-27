@@ -43,7 +43,7 @@ class Admit(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         # Создается клиент
-        await createAccount(guild, member)
+        await createAccount(guild, member, admin_id)
         if not member_id in ignore_members:
             db_cursor("clients").update({"count_cards": 4}).eq("dsc_id", member_id).execute()
 
@@ -71,7 +71,9 @@ class Admit(commands.Cog):
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_admitBanker = emb_aud_admitBanker(member_id, full_number, admin_id)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            54, (), (member_id, full_number, admin_id))
+        embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_admitBanker)        
 
 

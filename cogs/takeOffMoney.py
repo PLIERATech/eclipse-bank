@@ -65,7 +65,9 @@ class TakeOffMoney(commands.Cog):
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_takeOffMoney = emb_aud_takeOffMoney(admin_id, card_full_number, count, description)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            63, (), (admin_id, card_full_number, count, description))
+        embed_aud_takeOffMoney = emb_auto(title_emb, message_emb, color_emb)       
         await member_audit.send(embed=embed_aud_takeOffMoney)
 
 def setup(client):

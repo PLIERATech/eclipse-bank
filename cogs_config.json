@@ -10,5 +10,6 @@
     "searchCards": true,
     "withdrawMoney": true,
     "takeOffMoney": true,
-    "totalbalance": true
+    "totalbalance": true,
+    "giveClient": true
 }

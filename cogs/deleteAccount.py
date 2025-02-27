@@ -32,12 +32,17 @@ class DelClient(commands.Cog):
         if not await verify_deleteAccount(inter, Check_delete[0]):
             return
         
-        embed=emb_account_wasDeleted()
+        title_emb, message_emb, color_emb = get_message_with_title(
+            7, (), ())
+        embed = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed, ephemeral=True)
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_deleteAccount = emb_aud_deleteAccount(member_id, admin_id)
+
+        title_emb, message_emb, color_emb = get_message_with_title(
+            58, (), (member_id, admin_id))
+        embed_aud_deleteAccount = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_deleteAccount)       
 
 def setup(client):

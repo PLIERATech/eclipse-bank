@@ -27,7 +27,10 @@ class TotalBalance(commands.Cog):
         
         total_balance = db_rpc("get_total_balance", {}).execute()
 
-        embed=emb_total_balance(total_balance.data[0]["get_total_balance"])
+        total = total_balance.data[0]["get_total_balance"]
+        title_emb, message_emb, color_emb = get_message_with_title(
+            2, (), (total, total // 9, total - (total // 9 * 9)))
+        embed = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed, ephemeral=True)
 
 def setup(client):

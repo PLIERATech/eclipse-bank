@@ -148,7 +148,7 @@ def get_card_info_demote(member_id):
 
 
 #! Создать аккаунт
-async def createAccount(guild, member):
+async def createAccount(guild, member, banker_id):
 
     member_name = member.display_name
     member_id = member.id
@@ -194,11 +194,15 @@ async def createAccount(guild, member):
 
         #Аудит действия
         member_audit = guild.get_channel(bank_audit_channel)
-        embed_aud_create_client = emb_aud_create_client(member_id)
+
+        title_emb, message_emb, color_emb = get_message_with_title(
+            67, (), (member_id, banker_id))
+        embed_aud_create_client = emb_auto(title_emb, message_emb, color_emb)        
         await member_audit.send(embed=embed_aud_create_client)      
 
         clientCreateLog(member_name)
-    return
+        return True
+    return False
 
 
 
@@ -259,9 +263,12 @@ async def deleteAccount(guild, owner):
         if full_count > 0:
             db_rpc("add_balance", {"card_number": "00000", "amount": full_count}).execute()
 
-            ceo_message_text = f"**Удаление аккаута**\n💳 Общее пополнение с удаленных карт `{full_count}`\n📤 Подробности:\n📤 {cards_output}"
+            title_emb, message_emb, color_emb = get_message_with_title(
+                81, (), ())
+            embed_del = emb_auto(title_emb, message_emb, color_emb)
+
             ceo_owner_transaction_channel = guild.get_channel(bank_card_transaction)
-            await ceo_owner_transaction_channel.send(ceo_message_text)
+            await ceo_owner_transaction_channel.send(embed=embed_del)
 
 
         request_cards_member = db_rpc("find_user_in_members", {"user_id": owner_id}).execute()
@@ -269,8 +276,8 @@ async def deleteAccount(guild, owner):
         # Обновить все карты где клиент был добавлен как пользователь, удаляя его.
         for request_card_member in request_cards_member.data:
             members_users = request_card_member['members']
-            owner_name = request_card_member[0]["nickname"]
-            channels_list = list(map(int, request_card_member[0]["channels"].strip("[]").split(",")))
+            owner_name = request_card_member["nickname"]
+            channels_list = list(map(int, request_card_member["channels"].strip("[]").split(",")))
             channel_owner = guild.get_channel(channels_list[1])
             messege_owner_id = request_card_member['select_menu_id']
             if not isinstance(members, dict):  # Проверяем, если это не словарь (jsonb)
@@ -335,7 +342,10 @@ async def scheduled_task(bot):
 
                 #Аудит действия
                 on_audit = guild.get_channel(bank_audit_channel)
-                embed_aud_autoDeleteAccount = emb_aud_autoDeleteAccount(member_id)
+
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    59, (), (member_id, days_freeze_delete))
+                embed_aud_autoDeleteAccount = emb_auto(title_emb, message_emb, color_emb)     
                 await on_audit.send(embed=embed_aud_autoDeleteAccount)
 
 

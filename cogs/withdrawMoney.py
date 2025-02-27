@@ -38,14 +38,14 @@ class WithdrawMoney(commands.Cog):
         
         nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
 
-        embed_comp_withdram_invoice = emb_comp_withdram_invoice(member_id, count, description)    
+        embed_comp_withdram_invoice = emb_comp_withdraw_invoice(member_id, count, description)    
         await inter.send(embed=embed_comp_withdram_invoice, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        embed_withdram_request = emb_withdram_request(banker_id, member_id, count, description)
+        embed_withdram_request = emb_withdraw_request(banker_id, member_id, count, description)
         nick_transaction_channel = inter.client.get_channel(nick_transaction_channel_id)
         view_member=MyInvoiceView() # Кнопочки
-        nick_message = await nick_transaction_channel.send(embed=embed_withdram_request, view = view_member)
+        nick_message = await nick_transaction_channel.send(f"<@{member_id}>",embed=embed_withdram_request, view = view_member)
 
         banker_invoice_channel = inter.client.get_channel(banker_invoice_channel_id)
         view_banker=BankerInvoiceView() # Кнопочки
@@ -64,7 +64,9 @@ class WithdrawMoney(commands.Cog):
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_withdrawMoney = emb_aud_withdrawMoney(banker_id, member_id, count, description)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            78, (), (banker_id, member_id, count, description))
+        embed_aud_withdrawMoney = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_withdrawMoney)
 
 def setup(client):

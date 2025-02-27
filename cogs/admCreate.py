@@ -52,7 +52,7 @@ class AdmCreate(commands.Cog):
         await inter.response.defer(ephemeral=True)
 
         #=Создание клиента
-        await createAccount(inter.guild, member)
+        await createAccount(inter.guild, member, admin_id)
 
         # Проверка на исчерпание лимита создания карт
         if not await verify_count_cards(inter, member_id, command):
@@ -72,7 +72,9 @@ class AdmCreate(commands.Cog):
 
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
-        embed_aud_createCustomCard = emb_aud_createCustomCard(full_number, member_id, admin_id)
+        title_emb, message_emb, color_emb = get_message_with_title(
+            52, (), (full_number, member_id, admin_id))
+        embed_aud_createCustomCard = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_createCustomCard)
 
 

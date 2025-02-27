@@ -83,7 +83,7 @@ class ReplenishMoney(commands.Cog):
         await inter.send(embed=embed_comp_replenish, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
-        embed_replenish_ceo = emb_replenish_ceo(card_full_number, count, commission, salary, total_amount, description, banker_id)
+        embed_replenish_ceo = emb_replenish_ceo(card_full_number, count, commission, salary, banker_id)
         ceo_owner_transaction_channel = inter.client.get_channel(bank_card_transaction)
         await ceo_owner_transaction_channel.send(embed=embed_replenish_ceo)
 
