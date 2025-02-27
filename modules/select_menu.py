@@ -191,8 +191,8 @@ async def sm_transfer(inter, user, message, channel):
             await inter.send(embed=embed_complete_transfer, ephemeral=True)
 
             # Отправка сообщений в каналы транзакций
-            embed_sender = emb_transfer_sender(sender_full_number, receiver_full_number, amount, self.comment.value)
-            embed_receimer = emb_transfer_receimer(sender_full_number, receiver_full_number, amount, self.comment.value)
+            embed_sender = emb_transfer_sender(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
+            embed_receimer = emb_transfer_receimer(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
             sender_owner_transaction_channel = inter.client.get_channel(sender_owner_transaction_channel_id)
             receiver_owner_transaction_channel = inter.client.get_channel(receiver_owner_transaction_channel_id)
             await sender_owner_transaction_channel.send(embed=embed_sender)

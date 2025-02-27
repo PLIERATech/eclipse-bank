@@ -259,11 +259,12 @@ def emb_comp_transfer(sender_full_number, receiver_full_number, amount, comment)
 
 
 #! Выполненый перевод для пользователей карты отправителя
-def emb_transfer_sender(sender_full_number, receiver_full_number, amount, comment):
+def emb_transfer_sender(member_id, sender_full_number, receiver_full_number, amount, comment):
     embed = nxc.Embed(
         title="🚀 Средства переведены", 
         color=emb_color_set
     )
+    embed.add_field(name="💼 Кем", value=f"<@{member_id}>", inline=True)
     embed.add_field(name="💳 Откуда", value=f"**{sender_full_number}**", inline=True)
     embed.add_field(name="📤 Кому", value=f"**{receiver_full_number}**", inline=True)
     embed.add_field(name="💰 Сумма", value=f"**{amount} алм**", inline=False)
@@ -275,12 +276,13 @@ def emb_transfer_sender(sender_full_number, receiver_full_number, amount, commen
 
 
 #! Выполненый перевод для пользователей карты получателя
-def emb_transfer_receimer(sender_full_number, receimer_full_number, amount, comment):
+def emb_transfer_receimer(member_id, sender_full_number, receimer_full_number, amount, comment):
     embed = nxc.Embed(
         title="💵 Поступили средства", 
         color=emb_color_set
     )
-    embed.add_field(name="💳 От", value=f"**{sender_full_number}**", inline=True)
+    embed.add_field(name="💼 Кем", value=f"<@{member_id}>", inline=True)
+    embed.add_field(name="💳 Откуда", value=f"**{sender_full_number}**", inline=True)
     embed.add_field(name="📤 Куда", value=f"**{receimer_full_number}**", inline=True)
     embed.add_field(name="💰 Сумма", value=f"**{amount} алм**", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
