@@ -5,16 +5,15 @@ from db import *
 #! Функция на вызов сообщений из бд 
 def get_message_with_title(message_id, title_args=(), description_args=()):
     """Получает title и template из Supabase и форматирует их разными аргументами"""
-    response = db_cursor("embeds-text").select("title_emb, description_emb, color_emb").eq("id", message_id).single().execute()
+    response = db_cursor("embeds_text").select("title_emb, description_emb").eq("id", message_id).execute()
     
     if not response.data:
         return None, None, None
 
     title = response.data[0]["title_emb"]
+    color = embed_colors.get(title, embed_colors["Other"])
     title = message_title.get(title,title)
-    description = response.data[0]["template_emb"]
-    color = response.data[0]["template_emb"]
-    color = embed_colors.get(color, embed_colors["Other"])
+    description = response.data[0]["description_emb"]
 
     try:
         formatted_title = title % title_args if "%s" in title else title
@@ -24,9 +23,12 @@ def get_message_with_title(message_id, title_args=(), description_args=()):
 
     return formatted_title, formatted_template, color
 
+# title_emb, message_emb, color_emb = get_message_with_title(
+#             31, ("Офицер Иван",), ("Иван", "алмазный меч", "офицера"))
+
 
 #! Автоэмбед
-def emb_auto(color_emb, title_emb, description_emb):
+def emb_auto(title_emb, description_emb, color_emb):
     embed = nxc.Embed(
         title=title_emb, 
         color=color_emb, 
