@@ -40,7 +40,7 @@ class MyInvoiceView(View):
                 if not await verify_card_int(inter, user_card):
                     return
 
-                invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.balance, cards.members, clients.channels").eq("memb_message_id", message.id).execute()
+                invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.balance, cards.members, clients.account, clients.transactions").eq("memb_message_id", message.id).execute()
 
 
                 # Проверка является ли карта с выставленного счёта действительной
@@ -59,6 +59,7 @@ class MyInvoiceView(View):
                 member_card_number = check_card.data[0]["number"]
                 member_card_balance = check_card.data[0]["balance"]
                 member_card_members = check_card.data[0]["members"]
+                member_card_owner_card_channel_id = check_card.data[0]["owner_account"]
                 member_card_owner_transaction_channel_id = check_card.data[0]["owner_transactions"]
                 member_full_number = f"{suffixes.get(member_card_type, member_card_type)}{member_card_number}"
 
@@ -71,7 +72,8 @@ class MyInvoiceView(View):
                 invoice_card_type = invoice_data.data[0]["type"]
                 invoice_card_balance = invoice_data.data[0]["balance"]
                 invoice_card_members = invoice_data.data[0]["members"]
-                invoice_owner_transaction_channel_id = list(map(int, invoice_data.data[0]["channels"].strip("[]").split(",")))[0]
+                invoice_owner_card_channel_id = invoice_data.data[0]["account"]
+                invoice_owner_transaction_channel_id = invoice_data.data[0]["transactions"]
 
                 if not isinstance(invoice_card_members, dict):
                     invoice_card_members = {}
@@ -84,33 +86,41 @@ class MyInvoiceView(View):
                     await inter.send(embed=embed_insufficient_funds, ephemeral=True)
                     return
 
-
-                title_emb, message_emb, color_emb = get_message_with_title(
-                    77, (), ())
-                embed_comp_pay_button = emb_auto(title_emb, message_emb, color_emb)
-                await inter.send(embed=embed_comp_pay_button, ephemeral=True)
-
                 if invoice_type == "member":
                     invoice_card_number = invoice_data.data[0]["own_number"]
                     invoice_full_number = f"{suffixes.get(invoice_card_type, invoice_card_type)}{invoice_card_number}"
 
+                    if invoice_full_number == member_full_number:
+                        title_emb, message_emb, color_emb = get_message_with_title(
+                            29, (), ())
+                        embed_no_self_transfer = emb_auto(title_emb, message_emb, color_emb)
+                        await inter.send(embed=embed_no_self_transfer, ephemeral=True)
+                        return
+
                     # Отправка сообщений в каналы транзакций
                     embed_member_pay_button = emb_member_pay_button(member_id, member_full_number, invoice_full_number, invoice_count, self.comment.value, invoice_card_own_id)
-                    embed_invoice_pay_button = emb_invoice_pay_button(member_id, member_full_number, invoice_full_number, invoice_count, self.comment.value, invoice_card_own_id)
-                    member_owner_transaction_channel = inter.client.get_channel(member_card_owner_transaction_channel_id)
-                    invoice_owner_transaction_channel = inter.client.get_channel(invoice_owner_transaction_channel_id)
+                    member_card_owner_card_channel = inter.client.get_channel(member_card_owner_card_channel_id)
+                    member_owner_transaction_channel = member_card_owner_card_channel.get_thread(member_card_owner_transaction_channel_id)
                     await member_owner_transaction_channel.send(embed=embed_member_pay_button)
+
+                    embed_invoice_pay_button = emb_invoice_pay_button(member_id, member_full_number, invoice_full_number, invoice_count, self.comment.value, invoice_card_own_id)
+                    invoice_owner_card_channel = inter.client.get_channel(invoice_owner_card_channel_id)
+                    invoice_owner_transaction_channel = invoice_owner_card_channel.get_thread(invoice_owner_transaction_channel_id)
                     await invoice_owner_transaction_channel.send(embed=embed_invoice_pay_button)
 
                     # Отправка сообщений в каналы транзакций пользователей
                     for user_id, data in member_card_members.items():
+                        channel_id_card_member = data.get("id_channel")
                         channel_id_transactions_member = data.get("id_transactions_channel")
-                        channel_transactions_member = inter.client.get_channel(channel_id_transactions_member)
+                        channel_card_member = inter.client.get_channel(channel_id_card_member)
+                        channel_transactions_member = channel_card_member.get_thread(channel_id_transactions_member)
                         await channel_transactions_member.send(embed=embed_member_pay_button)
 
                     for user_id, data in invoice_card_members.items():
+                        channel_id_card_invoice = data.get("id_channel")
                         channel_id_transactions_invoice = data.get("id_transactions_channel")
-                        channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
+                        channel_card_invoice = inter.client.get_channel(channel_id_card_invoice)
+                        channel_transactions_invoicer = channel_card_invoice.get_thread(channel_id_transactions_invoice)
                         await channel_transactions_invoicer.send(embed=embed_invoice_pay_button)
 
                     # Обновляем баланс в базе данных
@@ -131,8 +141,10 @@ class MyInvoiceView(View):
 
                     # Отправка сообщений в каналы транзакций пользователей
                     for user_id, data in member_card_members.items():
+                        channel_id_card_member = data.get("id_channel")
                         channel_id_transactions_member = data.get("id_transactions_channel")
-                        channel_transactions_member = inter.client.get_channel(channel_id_transactions_member)
+                        channel_card_member = inter.client.get_channel(channel_id_card_member)
+                        channel_transactions_member = channel_card_member.get_thread(channel_id_transactions_member)
                         await channel_transactions_member.send(embed=embed_member_pay_button_banker)
 
                      # Обновляем баланс в базе данных
@@ -142,6 +154,12 @@ class MyInvoiceView(View):
                     await banker_invoice_message.edit(embed=embed_banker_invoice_message, view=None)
 
                     embed_aud_invoice_pay = emb_aud_invoice_pay_banker(member_id, invoice_card_own_id, member_full_number, invoice_count, self.comment.value)
+
+
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    77, (), ())
+                embed_comp_pay_button = emb_auto(title_emb, message_emb, color_emb)
+                await inter.send(embed=embed_comp_pay_button, ephemeral=True)
 
                 db_cursor("invoice").delete().eq("memb_message_id", message.id).execute()
                 await message.edit("✅ Счёт подтверждён!", view=None)
@@ -166,7 +184,7 @@ class MyInvoiceView(View):
         message = inter.message
         channel = inter.channel
 
-        invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.members, clients.channels").eq("memb_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, own_number, memb_dsc_id, banker_message_id, count, type_invoice, cards.type, cards.members, clients.account, clients.transactions").eq("memb_message_id", message.id).execute()
 
         # Проверка является ли карта с выставленного счёта действительной
         if not await verify_invoice_card(inter, invoice_data, message):
@@ -180,7 +198,8 @@ class MyInvoiceView(View):
         invoice_type = invoice_data.data[0]["type_invoice"]
         invoice_card_type = invoice_data.data[0]["type"]
         invoice_card_members = invoice_data.data[0]["members"]
-        invoice_owner_transaction_channel_id = list(map(int, invoice_data.data[0]["channels"].strip("[]").split(",")))[0]
+        invoice_owner_card_channel_id = invoice_data.data[0]["account"]
+        invoice_owner_transaction_channel_id = invoice_data.data[0]["transactions"]
         invoice_full_number = f"{suffixes.get(invoice_card_type, invoice_card_type)}{invoice_card_number}"
 
         if not isinstance(invoice_card_members, dict):
@@ -197,13 +216,16 @@ class MyInvoiceView(View):
             title_emb, message_emb, color_emb = get_message_with_title(
                 25, (), (member_id, invoice_count))
             embed_msg_decline_button = emb_auto(title_emb, message_emb, color_emb)
-            invoice_owner_transaction_channel = inter.client.get_channel(invoice_owner_transaction_channel_id)
+            invoice_owner_card_channel = inter.client.get_channel(invoice_owner_card_channel_id)
+            invoice_owner_transaction_channel = invoice_owner_card_channel.get_thread(invoice_owner_transaction_channel_id)
             await invoice_owner_transaction_channel.send(embed=embed_msg_decline_button)
 
             # Отправка сообщений в каналы транзакций пользователей
             for user_id, data in invoice_card_members.items():
+                channel_id_card_invoice = data.get("id_channel")
                 channel_id_transactions_invoice = data.get("id_transactions_channel")
-                channel_transactions_invoicer = inter.client.get_channel(channel_id_transactions_invoice)
+                channel_card_invoice = inter.client.get_channel(channel_id_card_invoice)
+                channel_transactions_invoicer = channel_card_invoice.get_thread(channel_id_transactions_invoice)
                 await channel_transactions_invoicer.send(embed=embed_msg_decline_button)
                 
             title_emb, message_emb, color_emb = get_message_with_title(
@@ -258,7 +280,7 @@ class BankerInvoiceView(View):
         banker = inter.user
         banker_id = banker.id
 
-        invoice_data = db_cursor("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_channel_id, count").eq("banker_message_id", message.id).execute()
+        invoice_data = db_cursor("invoice").select("own_dsc_id, memb_dsc_id, memb_message_id, memb_card_channel_id, memb_transaction_channel_id, count").eq("banker_message_id", message.id).execute()
 
         # Не найдены данные
         if not await verify_found_data(inter, invoice_data):
@@ -272,9 +294,11 @@ class BankerInvoiceView(View):
             return
 
         member_message_id = invoice_data.data[0]["memb_message_id"]
-        member_channel_id = invoice_data.data[0]["memb_channel_id"]
-        member_channel = inter.client.get_channel(member_channel_id)
-        member_message = await member_channel.fetch_message(member_message_id)
+        member_card_channel_id = invoice_data.data[0]["memb_card_channel_id"]
+        member_transaction_channel_id = invoice_data.data[0]["memb_transaction_channel_id"]
+        member_card_channel = inter.client.get_channel(member_card_channel_id)
+        member_transaction_channel = member_card_channel.get_thread(member_transaction_channel_id)
+        member_message = await member_transaction_channel.fetch_message(member_message_id)
         invoice_count = invoice_data.data[0]["count"]
 
         title_emb, message_emb, color_emb = get_message_with_title(

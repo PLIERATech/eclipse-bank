@@ -50,16 +50,12 @@ bank_audit_channel = 1338888321400700928
 salary_channel = 1338884884441206825
 stats_channel = 1338886067025084426
 image_saver_channel = 1341363839542755399
-bank_card_transaction = 1341758044408647762
+
+ceo_card_channel = 1345111427329036481
+ceo_transaction_channel = 1345111428411031755
 banker_invoice_channel_id = 1342500616584433776
 
-ignored_categories = {
-    1338888139493605496,    # Admin
-    1338891936731496531,    # Тикеты
-    1338868052573294634,    # Инфо
-    1338889615922434118,    # Поддержка
-    1338884270034518047     # Банкиры
-    }
+cleints_category = 1345044652759187517
 
 
 #- Дополнительные значения
@@ -102,10 +98,10 @@ embed_colors = {
         "⚪ White": nxc.Colour.from_rgb(245, 245, 245),
         "💎 CEO": nxc.Colour.from_rgb(5, 170, 156),
         "💸 Banker": nxc.Colour.from_rgb(23, 181, 181),
-        "Success": nxc.Colour.from_rgb(146, 182, 79),
-        "Warning": nxc.Colour.from_rgb(220, 130, 82),
-        "Error": nxc.Colour.from_rgb(182, 79, 81),
-        "Other": nxc.Colour.from_rgb(79, 139, 182)
+        "Success": nxc.Colour.from_rgb(20, 196, 4),
+        "Warning": nxc.Colour.from_rgb(255, 123, 0),
+        "Error": nxc.Colour.from_rgb(186, 13, 13),
+        "Other": nxc.Colour.from_rgb(20, 41, 227)
     }
 reverse_embed_colors = {v: k for k, v in embed_colors.items()}
 
@@ -118,6 +114,6 @@ commission_replenish = {
 }
 
 
-TARGET_HOURS = {6, 12, 18, 0} # Времена, когда нужно запускать скрипт (по системному времени)
+TARGET_HOURS = {6, 12, 0} # Времена, когда нужно запускать скрипт (по системному времени)
 
 days_freeze_delete = 30 # Сколько дней для удаления аккаунта

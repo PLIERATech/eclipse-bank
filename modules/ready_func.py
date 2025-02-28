@@ -21,7 +21,7 @@ async def start_persistent_view(bot):
             await guild.leave()
 
     # Получаем все карты
-    cards_data = db_cursor("cards").select("type, number, select_menu_id, owner, members, clients.channels, clients.nickname").execute()
+    cards_data = db_cursor("cards").select("type, number, select_menu_id, owner, members, clients.account, clients.nickname").execute()
 
     for card in cards_data.data:
         own_guild = bot.get_guild(server_id[0])
@@ -32,15 +32,13 @@ async def start_persistent_view(bot):
         number = card['number']
         full_number = f"{suffixes.get(type, type)}{number}"
 
-        channels = card["channels"]
+        channel_id = card["account"]
         owner_name = card["nickname"]
 
         if not isinstance(members, dict):
             members = {}
 
-        if channels:
-            channels_list = list(map(int, channels.strip("[]").split(",")))
-            channel_id = channels_list[1]
+        if channel_id:
             channel = bot.get_channel(channel_id)
 
             if channel:

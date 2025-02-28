@@ -31,7 +31,7 @@ class TakeOffMoney(commands.Cog):
         # дописывает 0 в начало если длина числа < 5
         number = f"{number:05}"
 
-        card_data = db_cursor("cards").select("type, balance, members, clients.channels").eq("number", number).execute()
+        card_data = db_cursor("cards").select("type, balance, members, clients.account, clients.transactions").eq("number", number).execute()
 
         # Проверяем, существует ли карта получателя
         if not await verify_found_card(inter, card_data):
@@ -40,7 +40,8 @@ class TakeOffMoney(commands.Cog):
         card_type = card_data.data[0]["type"]
         card_balance = card_data.data[0]["balance"]
         card_members = card_data.data[0]["members"]
-        card_owner_transaction_channel_id = list(map(int, card_data.data[0]["channels"].strip("[]").split(",")))[0]
+        card_owner_card_channel_id = card_data.data[0]["account"]
+        card_owner_transaction_channel_id = card_data.data[0]["transactions"]
         card_full_number = f"{suffixes.get(card_type, card_type)}{number}"
 
 
@@ -55,12 +56,15 @@ class TakeOffMoney(commands.Cog):
 
         # Отправка сообщений в каналы транзакций
         embed_take_off_money = emb_take_off_money(admin_id, card_full_number, count, description)
-        card_owner_transaction_channel = inter.client.get_channel(card_owner_transaction_channel_id)
+        card_owner_card_channel = inter.client.get_channel(card_owner_card_channel_id)
+        card_owner_transaction_channel = card_owner_card_channel.get_thread(card_owner_transaction_channel_id)
         await card_owner_transaction_channel.send(embed=embed_take_off_money)
 
         for user_id, data in card_members.items():
+            channel_id_card_card = data.get("id_channel")
             channel_id_transactions_card = data.get("id_transactions_channel")
-            channel_transactions_card = inter.client.get_channel(channel_id_transactions_card)
+            channel_card_card = inter.client.get_channel(channel_id_card_card)
+            channel_transactions_card = channel_card_card.get_thread(channel_id_transactions_card)
             await channel_transactions_card.send(embed=embed_take_off_money)
 
         #Аудит действия

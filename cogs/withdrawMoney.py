@@ -34,16 +34,17 @@ class WithdrawMoney(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        nick_table = db_cursor("clients").select("channels").eq("nickname", member_nick).execute()
+        nick_table = db_cursor("clients").select("account, transactions").eq("nickname", member_nick).execute()
         
-        nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
-
+        nick_card_channel_id = nick_table.data[0]["account"]
+        nick_transaction_channel_id = nick_table.data[0]["transactions"]
         embed_comp_withdram_invoice = emb_comp_withdraw_invoice(member_id, count, description)    
         await inter.send(embed=embed_comp_withdram_invoice, ephemeral=True)
 
         # Отправка сообщений в каналы транзакций
         embed_withdram_request = emb_withdraw_request(banker_id, member_id, count, description)
-        nick_transaction_channel = inter.client.get_channel(nick_transaction_channel_id)
+        nick_card_channel = inter.client.get_channel(nick_card_channel_id)
+        nick_transaction_channel = nick_card_channel.get_thread(nick_transaction_channel_id)
         view_member=MyInvoiceView() # Кнопочки
         nick_message = await nick_transaction_channel.send(f"<@{member_id}>",embed=embed_withdram_request, view = view_member)
 
@@ -56,7 +57,8 @@ class WithdrawMoney(commands.Cog):
             "own_number":"00000",
             "memb_dsc_id":member_id,
             "memb_message_id":nick_message.id,
-            "memb_channel_id":nick_transaction_channel_id,
+            "memb_card_channel_id": nick_card_channel_id,
+            "memb_transaction_channel_id":nick_transaction_channel_id,
             "banker_message_id": banker_message.id,
             "count":count,
             "type_invoice":"banker"

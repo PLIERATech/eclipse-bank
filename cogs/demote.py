@@ -45,9 +45,7 @@ class Demote(commands.Cog):
 
         # Использование:
         get_card_info = get_card_info_demote(member_id)
-        channels_response = get_card_info["channels_user"]
-        channels = list(map(int, channels_response.strip("[]").split(",")))
-        channel_card_id = channels[1]
+        channel_card_id =  get_card_info["account"]
         banker_card_number = get_card_info['banker_number']
         banker_card_type = get_card_info['banker_type']
         banker_card_full_number = f"{suffixes.get(banker_card_type, banker_card_type)}{banker_card_number}"

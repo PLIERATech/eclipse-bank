@@ -18,7 +18,7 @@ class UpdateAllCards(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients.channels, clients.nickname").execute()
+        cards_data = db_cursor("cards").select("select_menu_id, owner, number, members, type, name, clients.account, clients.nickname").execute()
         total = len(cards_data.data)
 
         # Проверка есть ли карты в бд
@@ -44,8 +44,7 @@ class UpdateAllCards(commands.Cog):
                 members = {}
 
             owner_name = card["nickname"]
-            channels_list = list(map(int, card["channels"].strip("[]").split(",")))
-            channel_id = channels_list[1]
+            channel_id = card["account"]
             channel = self.client.get_channel(channel_id)
 
             try:

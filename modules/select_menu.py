@@ -143,7 +143,7 @@ async def sm_transfer(inter, user, message, channel):
             amount = int(amount_text)
             
 
-            receiver_data = db_cursor("cards").select("type, balance, members, clients.channels").eq("number", receiver_card).execute()
+            receiver_data = db_cursor("cards").select("type, balance, members, clients.account, clients.transactions").eq("number", receiver_card).execute()
 
             # Проверяем, существует ли карта получателя   
             if not await verify_found_card(inter, receiver_data):
@@ -152,7 +152,8 @@ async def sm_transfer(inter, user, message, channel):
             receiver_type = receiver_data.data[0]["type"]
             receiver_balance = receiver_data.data[0]["balance"]
             receiver_members = receiver_data.data[0]["members"]
-            receiver_owner_transaction_channel_id = list(map(int, receiver_data.data[0]["channels"].strip("[]").split(",")))[0]
+            receiver_owner_card_channel_id = receiver_data.data[0]["account"]
+            receiver_owner_transaction_channel_id = receiver_data.data[0]["transactions"]
             receiver_full_number = f"{suffixes.get(receiver_type, receiver_type)}{receiver_card}"
 
             if not isinstance(receiver_members, dict):  # Проверяем, если это не словарь (jsonb)
@@ -165,6 +166,7 @@ async def sm_transfer(inter, user, message, channel):
             sender_card = sender_data.data[0]["number"]
             sender_balance = sender_data.data[0]["balance"]
             sender_members = sender_data.data[0]["members"]
+            sender_owner_card_channel_id = sender_data.data[0]["owner_account"]
             sender_owner_transaction_channel_id = sender_data.data[0]["owner_transactions"]
             sender_full_number = f"{suffixes.get(sender_type, sender_type)}{sender_card}"
 
@@ -192,21 +194,28 @@ async def sm_transfer(inter, user, message, channel):
 
             # Отправка сообщений в каналы транзакций
             embed_sender = emb_transfer_sender(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
-            embed_receimer = emb_transfer_receimer(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
-            sender_owner_transaction_channel = inter.client.get_channel(sender_owner_transaction_channel_id)
-            receiver_owner_transaction_channel = inter.client.get_channel(receiver_owner_transaction_channel_id)
+            sender_owner_card_channel = inter.client.get_channel(sender_owner_card_channel_id)
+            sender_owner_transaction_channel = sender_owner_card_channel.get_thread(sender_owner_transaction_channel_id)
             await sender_owner_transaction_channel.send(embed=embed_sender)
+
+            embed_receimer = emb_transfer_receimer(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
+            receiver_owner_card_channel = inter.client.get_channel(receiver_owner_card_channel_id)
+            receiver_owner_transaction_channel = receiver_owner_card_channel.get_thread(receiver_owner_transaction_channel_id)
             await receiver_owner_transaction_channel.send(embed=embed_receimer)
 
             # Отправка сообщений в каналы транзакций пользователей
             for user_id, data in sender_members.items():
+                channel_id_card_sender = data.get("id_channel")
                 channel_id_transactions_sender = data.get("id_transactions_channel")
-                channel_transactions_sender = inter.client.get_channel(channel_id_transactions_sender)
+                channel_card_sender = inter.client.get_channel(channel_id_card_sender)
+                channel_transactions_sender = channel_card_sender.get_thread(channel_id_transactions_sender)
                 await channel_transactions_sender.send(embed=embed_sender)
 
             for user_id, data in receiver_members.items():
+                channel_id_card_receiver = data.get("id_channel")
                 channel_id_transactions_receiver = data.get("id_transactions_channel")
-                channel_transactions_receiver = inter.client.get_channel(channel_id_transactions_receiver)
+                channel_card_receiver = inter.client.get_channel(channel_id_card_receiver)
+                channel_transactions_receiver = channel_card_receiver.get_thread(channel_id_transactions_receiver)
                 await channel_transactions_receiver.send(embed=embed_receimer)
 
             # 🔹 Обновляем баланс в базе данных
@@ -255,18 +264,20 @@ async def sm_invoice(inter, user, message, channel):
                 return
             amount = int(amount_text)
             
-            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, account, transactions").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
             
             nick_dsc_id = nick_table.data[0]["dsc_id"]
-            nick_transaction_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
+            nick_card_channel_id = nick_table.data[0]["account"]
+            nick_transaction_channel_id = nick_table.data[0]["transactions"]
 
             sender_data = db_rpc("find_card_in_message", {"msg_id": message.id}).execute()
             sender_type = sender_data.data[0]["type"]
             sender_card = sender_data.data[0]["number"]
             sender_members = sender_data.data[0]["members"]
+            sender_owner_card_channel_id = sender_data.data[0]["owner_account"]
             sender_owner_transaction_channel_id = sender_data.data[0]["owner_transactions"]
             sender_full_number = f"{suffixes.get(sender_type, sender_type)}{sender_card}"
 
@@ -275,18 +286,23 @@ async def sm_invoice(inter, user, message, channel):
             await inter.send(embed=embed_complete_invoice, ephemeral=True)
 
             # Отправка сообщений в каналы транзакций
-            embed_sender = emb_invoice_sender(user.display_name, nickname, amount, self.comment.value)
-            embed_nick = emb_invoice_nick(user.id, sender_full_number, amount, self.comment.value)
-            sender_owner_transaction_channel = inter.client.get_channel(sender_owner_transaction_channel_id)
-            nick_transaction_channel = inter.client.get_channel(nick_transaction_channel_id)
+            embed_sender = emb_invoice_sender(user.id, nick_dsc_id, amount, self.comment.value)
+            sender_owner_card_channel = inter.client.get_channel(sender_owner_card_channel_id)
+            sender_owner_transaction_channel = sender_owner_card_channel.get_thread(sender_owner_transaction_channel_id)
             await sender_owner_transaction_channel.send(embed=embed_sender)
+
+            embed_nick = emb_invoice_nick(user.id, sender_full_number, amount, self.comment.value)
+            nick_card_channel = inter.client.get_channel(nick_card_channel_id)
+            nick_transaction_channel = nick_card_channel.get_thread(nick_transaction_channel_id)
             view=MyInvoiceView() # Кнопочки
             nick_message = await nick_transaction_channel.send(f"<@{nick_dsc_id}>",embed=embed_nick, view = view)
 
             # Отправка сообщений в каналы транзакций пользователей
             for user_id, data in sender_members.items():
+                channel_id_card_sender = data.get("id_channel")
                 channel_id_transactions_sender = data.get("id_transactions_channel")
-                channel_transactions_sender = inter.client.get_channel(channel_id_transactions_sender)
+                channel_card_sender = inter.client.get_channel(channel_id_card_sender)
+                channel_transactions_sender = channel_card_sender.get_thread(channel_id_transactions_sender)
                 await channel_transactions_sender.send(embed=embed_sender)
 
             db_cursor("invoice").insert({
@@ -294,7 +310,8 @@ async def sm_invoice(inter, user, message, channel):
                 "own_number":sender_card,
                 "memb_dsc_id":nick_dsc_id,
                 "memb_message_id":nick_message.id,
-                "memb_channel_id":nick_transaction_channel_id,
+                "memb_card_channel_id": nick_card_channel_id,
+                "memb_transaction_channel_id":nick_transaction_channel_id,
                 "count":amount,
                 "type_invoice":"member"
             }).execute()
@@ -440,7 +457,7 @@ async def sm_add_user(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
             
-            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id, account, transactions").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -462,8 +479,8 @@ async def sm_add_user(inter, user, message, channel):
                 return
 
             # Получаем канал пользователя и его ID
-            member_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[1]
-            member_transactions_channel_id = list(map(int, nick_table.data[0]["channels"].strip("[]").split(",")))[0]
+            member_channel_id = nick_table.data[0]['account']
+            member_transactions_channel_id = nick_table.data[0]['transactions']
             member_channel = inter.guild.get_channel(member_channel_id)
 
             existing_embeds = message.embeds
@@ -474,7 +491,11 @@ async def sm_add_user(inter, user, message, channel):
             message_member_card = await member_channel.send(content=f"<@{member_id}>", embeds=[existing_embeds[0], existing_embeds[1], card_embed_user], view=view)
 
             # Добавляем нового пользователя в список
-            members[str(member_id)] = {"id_transactions_channel": member_transactions_channel_id, "id_channel": member_channel_id, "id_message": message_member_card.id}
+            members[str(member_id)] = {
+                "id_channel": member_channel_id, 
+                "id_transactions_channel": member_transactions_channel_id, 
+                "id_message": message_member_card.id
+                }
 
             card_embed_user = emb_cards_users(inter.guild, color, owner_name, members)
 
@@ -545,7 +566,7 @@ async def sm_del_user(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
         
-            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -617,7 +638,7 @@ async def sm_del_user(inter, user, message, channel):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_transfer_owner(inter, user, message, channel):
-    cards_table = db_cursor("cards").select("type, number, members, owner, clients.nickname, clients.channels").eq("select_menu_id", message.id).execute()
+    cards_table = db_cursor("cards").select("type, number, members, owner, clients.nickname, clients.account, clients.transactions").eq("select_menu_id", message.id).execute()
 
     # Проверка является ли владельцем карты
     if not await verify_select_menu_owner(inter, cards_table):
@@ -629,8 +650,8 @@ async def sm_transfer_owner(inter, user, message, channel):
     full_number = f"{suffixes.get(type, type)}{number}"
     old_owner_name = cards_table.data[0]["nickname"]
     old_owner_id = cards_table.data[0]['owner'] 
-    old_owner_transaction_channel_id = list(map(int, cards_table.data[0]["channels"].strip("[]").split(",")))[0]
-    old_owner_card_channel_id = list(map(int, cards_table.data[0]["channels"].strip("[]").split(",")))[1]
+    old_owner_card_channel_id = cards_table.data[0]['account']
+    old_owner_transaction_channel_id = cards_table.data[0]['transactions']
 
     # Проверка является ли карта банковской
     if not await verify_not_banker_card(inter, type):
@@ -651,7 +672,7 @@ async def sm_transfer_owner(inter, user, message, channel):
             await inter.response.defer(ephemeral=True)
             nickname = self.nickname_input.value.strip()
             
-            nick_table = db_cursor("clients").select("dsc_id, channels").eq("nickname", nickname).execute()
+            nick_table = db_cursor("clients").select("dsc_id").eq("nickname", nickname).execute()
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
@@ -677,7 +698,11 @@ async def sm_transfer_owner(inter, user, message, channel):
                 return
             
             # Добавляем прошлого владельца в список пользователей
-            members[str(old_owner_id)] = {"id_transactions_channel": old_owner_transaction_channel_id, "id_channel": old_owner_card_channel_id, "id_message": message.id}
+            members[str(old_owner_id)] = {
+                "id_channel": old_owner_card_channel_id, 
+                "id_transactions_channel": old_owner_transaction_channel_id, 
+                "id_message": message.id
+                }
 
             new_owner_message_id = members.get(str(member_id)).get("id_message")
             new_owner_channel_id = members.get(str(member_id)).get("id_channel")

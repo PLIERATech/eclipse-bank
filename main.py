@@ -115,6 +115,7 @@ async def on_ready():
 
     bot_ready(bot)
     await start_persistent_view(bot)
+    await check_and_refresh_threads(bot)
     await asyncio.gather(deleteCardImages(60), scheduler(bot))
 
 #// ==============================

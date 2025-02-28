@@ -16,26 +16,32 @@ class Events(commands.Cog):
             print(f"Выход из {guild.name} ({guild.id}) — сервер не в списке разрешённых!")
             await guild.leave()
 
+
+
+
     # Игрок присоединился на сервер
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        client_info = db_cursor("clients").select("account, channels").eq("dsc_id", member.id).execute()
+        client_info = db_cursor("clients").select("account").eq("dsc_id", member.id).execute()
 
         if client_info.data:
-            prdx_nick = get_prdx_nickname(member.id)
-            db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
             guild = member.guild
             role = guild.get_role(client_role_id)
+            channel_id = client_info.data[0]["account"]
+            channel = guild.get_channel(channel_id)
+
+            prdx_nick = get_prdx_nickname(member.id)
+            try:
+                await channel.edit(name=f"💳ㆍ{prdx_nick}")
+            except nxc.HTTPException as e:
+                print(f"Ошибка при переименовании канала: {e}")
+
+            db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
+
             await member.add_roles(role)
-            category_id = client_info.data[0]['account']
-            category = self.client.get_channel(category_id)
-            channel_transactions_id = list(map(int, client_info.data[0]["channels"].strip("[]").split(",")))[0]
-            channel_transactions = self.client.get_channel(channel_transactions_id)
-            channel_card_id = list(map(int, client_info.data[0]["channels"].strip("[]").split(",")))[1]
+            channel_card_id = client_info.data[0]['account']
             channel_card = self.client.get_channel(channel_card_id)
-            await category.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_messages=True, read_message_history=True))
-            await channel_transactions.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False))
-            await channel_card.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False))
+            await channel_card.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False, send_messages_in_threads=False))
             print(f"Клиент {member.display_name} вернулся на сервер и вернул роль {role.name} с правами на каналы.")
             db_cursor("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
 
@@ -46,6 +52,8 @@ class Events(commands.Cog):
                 60, (), (member.id))
             embed_aud_member_join = emb_auto(title_emb, message_emb, color_emb)
             await member_audit.send(embed=embed_aud_member_join)    
+
+
 
 
     # Игрок вышел с сервера
@@ -69,14 +77,27 @@ class Events(commands.Cog):
             await member_audit.send(embed=embed_aud_member_remove)    
 
 
+
+
     # Игрок обновил про себя информацию (поменял ник)
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.display_name != after.display_name:
-            client_info = db_cursor("clients").select("account, channels").eq("dsc_id", after.id).execute()
+            client_info = db_cursor("clients").select("account").eq("dsc_id", after.id).execute()
             if client_info.data:
+                guild = after.guild
+                channel_id = client_info.data[0]["account"]
+                channel = guild.get_channel(channel_id)
+
                 prdx_nick = get_prdx_nickname(after.id)
+                try:
+                    await channel.edit(name=f"💳ㆍ{prdx_nick}")
+                except nxc.HTTPException as e:
+                    print(f"Ошибка при переименовании канала: {e}")
+
                 db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", after.id).execute()
+
+
 
 
     # Было удалено сообщение в категориях игроков
@@ -89,14 +110,13 @@ class Events(commands.Cog):
         if not channel or not channel.guild or channel.guild.id not in server_id:
             return
 
-        # Проверяем, есть ли у канала категория и не нужно ли его игнорировать
-        # if channel.category and channel.category.id in ignored_categories:
-        #     return
+        # Проверяем, находится ли канал в нужной категории
+        if channel.category_id != cleints_category:
+            return 
 
-        # Проверка на канал с названием "транзакции"
-        if not "💳ㆍкарты" in channel.name.lower():  # Игнорируем каналы с этим словом в имени
+        # Если канал является веткой, игнорируем его
+        if channel.type in [nxc.ChannelType.public_thread, nxc.ChannelType.private_thread]:
             return
-
 
         print(f"Удаление сообщения {message_id} зафиксировано!")
 
@@ -128,8 +148,7 @@ class Events(commands.Cog):
             elif query_type == 'members':
                 members = request_card_member.data[0]['members']
                 owner_name = request_card_member.data[0]["nickname"]
-                channels_list = list(map(int, request_card_member.data[0]["channels"].strip("[]").split(",")))
-                channel_id = channels_list[1]
+                channel_id = request_card_member.data[0]["account"]
                 channel_owner = self.client.get_channel(channel_id)
                 messege_owner_id = request_card_member.data[0]['select_menu_id']
 

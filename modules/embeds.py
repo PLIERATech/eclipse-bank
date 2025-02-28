@@ -309,12 +309,12 @@ def emb_comp_invoice(nick_id, amount, comment):
 
 
 #! Сообщение о выставленном счёте для пользователей карты отправителя
-def emb_invoice_sender(sender_nick, nick_id, amount, comment):
+def emb_invoice_sender(sender_id, nick_id, amount, comment):
     embed = nxc.Embed(
             title="🚀 Выставлен счёт", 
             color=emb_color_set
     )
-    embed.add_field(name="💼 От кого", value=f"**{sender_nick}**", inline=True)
+    embed.add_field(name="💼 От кого", value=f"**<@{sender_id}>**", inline=True)
     embed.add_field(name="👨‍💼 Кому", value=f"<@{nick_id}>", inline=True)
     embed.add_field(name="💰 Сумма", value=f"**{amount} алм**", inline=False)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
@@ -402,47 +402,6 @@ def emb_banker_invoice_message(member_id, amount, invoice_own_id):
     embed.add_field(name="👤 Банкир", value=f"<@{invoice_own_id}>", inline=False)
     embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
     return embed
-
-
-#= Выставить счёт 
-#! Успех в выставлении счёта
-def emb_comp_invoice(nick_id, amount, comment):
-    embed = nxc.Embed(
-            title="✅ Выставлен счёт", 
-            color=emb_color_set)
-    embed.add_field(name="👨‍💼 Кому", value=f"<@{nick_id}>", inline=True)
-    embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=True)
-    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
-    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
-    return embed
-
-
-#! Сообщение о выставленном счёте для пользователей карты отправителя
-def emb_invoice_sender(sender_nick, nick_id, amount, comment):
-    embed = nxc.Embed(
-            title="🚀 Выставлен счёт", 
-            color=emb_color_set)
-    embed.add_field(name="💼 Кем", value=f"{sender_nick}", inline=True)
-    embed.add_field(name="👨‍💼 Кому", value=f"<@{nick_id}>", inline=True)
-    embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
-    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
-    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
-    return embed
-
-
-#! Сообщение о выставленном счёте для получившего
-def emb_invoice_nick(sender_id, sender_full_number, amount, comment):
-    embed = nxc.Embed(
-            title="❗💵 Запрос средств", 
-            color=emb_color_set)
-    embed.add_field(name="💼 От", value=f"<@{sender_id}>", inline=True)
-    embed.add_field(name="💳 На карту", value=f"{sender_full_number}", inline=True)
-    embed.add_field(name="💰 Сумма", value=f"{amount} алм", inline=False)
-    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
-    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
-    return embed
-
-
 
 
 
