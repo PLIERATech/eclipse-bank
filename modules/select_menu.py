@@ -786,6 +786,13 @@ async def sm_delete_card(inter, user, message, channel):
     
     # Проверка имеется ли средства на карте
     if memb_type == 'owner':
+        if int(number) <= 20:
+            title_emb, message_emb, color_emb = get_message_with_title(
+                83, (), ())
+            embed_number = emb_auto(title_emb, message_emb, color_emb)
+            await inter.send(embed=embed_number, ephemeral=True)
+            return
+
         if not await verify_delete_card_balance(inter, balance):
             return
 
