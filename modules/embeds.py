@@ -246,7 +246,7 @@ def emb_banker_chat(banker_id, member_full_number, banker_full_number, commissio
         color=emb_color_set, 
         description=(f"👤 Банкир <@{banker_id}> пополнил баланс карты {member_full_number}."))
     embed.add_field(name="👨‍💼 Получатель", value=f"{member_full_number} ({total_amount} алм.)", inline=True)
-    embed.add_field(name="📤 Комисия", value=f"CEO-00000 ({commission} алм.)", inline=True)
+    embed.add_field(name="📤 Комисия", value=f"({commission + salary} алм.)", inline=True)
     embed.add_field(name="💰 ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
@@ -431,7 +431,7 @@ def emb_aud_replenishMoney(banker_id, member_full_number, banker_full_number, co
         color=emb_color_set, 
         description=(f"Банкир <@{banker_id}> пополнил баланс карты {member_full_number}."))
     embed.add_field(name="Получатель", value=f"{member_full_number} ({total_amount} алм.)", inline=True)
-    embed.add_field(name="Комисия", value=f"CEO-00000 ({commission} алм.)", inline=True)
+    embed.add_field(name="Комисия", value=f"({commission + salary} алм.)", inline=True)
     embed.add_field(name="ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
