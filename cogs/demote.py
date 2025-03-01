@@ -20,6 +20,8 @@ class Demote(commands.Cog):
         member: nxc.Member
     ):
 
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         admin = inter.user
         admin_id = inter.user.id
         admin_nick = inter.user.display_name
@@ -104,6 +106,8 @@ class Demote(commands.Cog):
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
         await member_audit.send(embed=embed_aud_admitBanker)       
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
 
 
 def setup(client):

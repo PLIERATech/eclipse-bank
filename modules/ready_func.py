@@ -12,12 +12,12 @@ async def start_persistent_view(bot):
     bot.add_view(CardSelectView()) 
     bot.add_view(MyInvoiceView())
     bot.add_view(BankerInvoiceView())   
-    print("Persistent View зарегистрирован.")
+    oneLog("Persistent View зарегистрирован.")
 
     # Выход из сервера, если бот добавлен на неразрешённый сервер
     for guild in bot.guilds:
         if guild.id not in server_id:
-            print(f"Выход из {guild.name} ({guild.id}) — сервер не в списке разрешённых!")
+            oneLog(f"Выход из {guild.name} ({guild.id}) — сервер не в списке разрешённых!")
             await guild.leave()
 
     # Получаем все карты
@@ -54,10 +54,10 @@ async def start_persistent_view(bot):
                         await message_member.delete()
 
                     await del_img_in_channel(bot, full_number)
-                    print(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
+                    oneLog(f"Основная карта удалена `{select_menu_id}` (сообщение отсутствует)")
                     continue
             else:
-                print(f"Канал с ID {channel_id} не найден.")
+                oneLog(f"Канал с ID {channel_id} не найден.")
                 continue
 
             # Проверяем, есть ли сообщения участников и удаляем отсутствующих
@@ -105,4 +105,4 @@ async def start_persistent_view(bot):
 
                 # Обновляем базу данных
                 db_cursor("cards").update({"members": members}).eq("select_menu_id", select_menu_id).execute()
-                print(f"Обновлена карта {select_menu_id}: удалены отсутствующие пользователи")
+                oneLog(f"Обновлена карта {select_menu_id}: удалены отсутствующие пользователи")

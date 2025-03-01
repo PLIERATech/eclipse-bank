@@ -12,6 +12,9 @@ class UpdateAllCards(commands.Cog):
 
     @nxc.slash_command(guild_ids=server_id, name="updateallcards", description="Update information about all created maps", default_member_permissions=nxc.Permissions(administrator=True))
     async def updateAllCards(self, inter: nxc.Interaction):
+
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         admin = inter.user
         if not await verify_staff(inter, admin, command):
             return
@@ -50,12 +53,12 @@ class UpdateAllCards(commands.Cog):
             try:
                 message = await channel.fetch_message(select_menu_id)
                 if not message:
-                    print(f"⚠ Сообщение {select_menu_id} не найдено.")
+                    oneLog(f"⚠ Сообщение {select_menu_id} не найдено.")
                     continue
 
                 existing_embeds = message.embeds
                 if len(existing_embeds) < 3:
-                    print(f"⚠ У сообщения {select_menu_id} нет 3 эмбедов.")
+                    oneLog(f"⚠ У сообщения {select_menu_id} нет 3 эмбедов.")
                     continue
                 
                 second_embed = existing_embeds[1]
@@ -74,10 +77,10 @@ class UpdateAllCards(commands.Cog):
                         await message_users.edit(embeds=[new_card_embed, second_embed, card_embed_user], attachments=[], view=CardSelectView())
 
             except nxc.NotFound:
-                print(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")
+                oneLog(f"❌ Сообщение {select_menu_id} не найдено в {channel.name}, удаляем из базы.")
                 db_cursor("cards").delete().eq("select_menu_id", select_menu_id).execute()
             except nxc.HTTPException as e:
-                print(f"❌ Ошибка при обновлении {select_menu_id}: {e}")
+                oneLog(f"❌ Ошибка при обновлении {select_menu_id}: {e}")
 
             percent = int((index / total) * 100)
             progress_bar = "▓" * (percent // 5) + "░" * (20 - (percent // 5))
@@ -96,6 +99,9 @@ class UpdateAllCards(commands.Cog):
             62, (), (admin.id))
         embed_aud_updateAllCards = emb_auto(title_emb, message_emb, color_emb)   
         await member_audit.send(embed=embed_aud_updateAllCards)
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+
 
 def setup(client):
     client.add_cog(UpdateAllCards(client))

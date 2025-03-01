@@ -80,7 +80,6 @@ async def next_create_card(inter, member, full_number, card_type_rus, color, nam
 
     # Получаем канал для отправки карточек
     response = db_cursor("clients").select("account").eq("dsc_id", member.id).execute()
-    print (response)
     cards_channel_id = response.data[0]["account"]
     cards_channel = inter.guild.get_channel(cards_channel_id)
 
@@ -121,7 +120,7 @@ async def deleteCardImages(interval):
                     if file_age > 30:  # Файл старше 30 секунд
                         os.remove(file_path)
         except Exception as e:
-            print(f"Ошибка при удалении файлов: {e}")
+            oneLog(f"Ошибка при удалении файлов: {e}")
 
         await asyncio.sleep(interval)  # Асинхронная пауза
 
@@ -333,7 +332,7 @@ async def scheduled_task(bot):
             check_delete_acc = await deleteAccount(guild, member)
 
             if check_delete_acc[0] == True:
-                print(f"Клиент {member.name} удален за незаход 30 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
+                oneLog(f"Клиент {member.name} удален за незаход 30 день его discord_id - {client['dsc_id']}, карта банка пополнена на {check_delete_acc[1]}")  
 
                 #Аудит действия
                 on_audit = guild.get_channel(bank_audit_channel)
@@ -371,11 +370,11 @@ async def check_and_refresh_threads(bot):
                     # Закрываем и открываем ветку
                     await thread.edit(archived=True)
                     await thread.edit(archived=False)
-                    print(f"Таймер ветки {thread.id} обновлен.")
+                    oneLog(f"Таймер ветки {thread.id} обновлен.")
                     await asyncio.sleep(2)
 
             except nxc.HTTPException as e:
-                print(f"Ошибка при обработке ветки {thread.id}: {e}")
+                oneLog(f"Ошибка при обработке ветки {thread.id}: {e}")
 
 #! Тоже самое что сверху
 async def scheduler(bot):

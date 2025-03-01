@@ -16,6 +16,9 @@ class DelClient(commands.Cog):
         inter: nxc.Interaction, 
         member: nxc.Member
     ):
+        
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         admin = inter.user
         admin_nick = inter.user.display_name
         admin_id = inter.user.id
@@ -44,6 +47,9 @@ class DelClient(commands.Cog):
             58, (), (member_id, admin_id))
         embed_aud_deleteAccount = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_deleteAccount)       
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+
 
 def setup(client):
     client.add_cog(DelClient(client))

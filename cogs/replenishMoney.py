@@ -18,6 +18,9 @@ class ReplenishMoney(commands.Cog):
         count: int = nxc.SlashOption(name="сумма", description="Сумма взноса", min_value=2, max_value=1000000), 
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
+        
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")        
+
         banker = inter.user
         banker_nick = inter.user.display_name
         banker_id = inter.user.id
@@ -124,6 +127,8 @@ class ReplenishMoney(commands.Cog):
         member_audit = inter.guild.get_channel(bank_audit_channel)
         embed_aud_replenishMoney = emb_aud_replenishMoney(banker_id, card_full_number, banker_card_full_number, commission, salary, total_amount, description)
         await member_audit.send(embed=embed_aud_replenishMoney)
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
 
 
 def setup(client):

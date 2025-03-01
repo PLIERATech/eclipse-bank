@@ -13,7 +13,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         if guild.id not in server_id:
-            print(f"Выход из {guild.name} ({guild.id}) — сервер не в списке разрешённых!")
+            oneLog(f"Выход из {guild.name} ({guild.id}) — сервер не в списке разрешённых!")
             await guild.leave()
 
 
@@ -22,6 +22,7 @@ class Events(commands.Cog):
     # Игрок присоединился на сервер
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        oneLog(f"{member.display_name} присоединился на дискорд сервер")        
         client_info = db_cursor("clients").select("account").eq("dsc_id", member.id).execute()
 
         if client_info.data:
@@ -34,7 +35,7 @@ class Events(commands.Cog):
             try:
                 await channel.edit(name=f"💳ㆍ{prdx_nick}")
             except nxc.HTTPException as e:
-                print(f"Ошибка при переименовании канала: {e}")
+                oneLog(f"Ошибка при переименовании канала: {e}")
 
             db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
 
@@ -42,7 +43,6 @@ class Events(commands.Cog):
             channel_card_id = client_info.data[0]['account']
             channel_card = self.client.get_channel(channel_card_id)
             await channel_card.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False, send_messages_in_threads=False))
-            print(f"Клиент {member.display_name} вернулся на сервер и вернул роль {role.name} с правами на каналы.")
             db_cursor("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
 
             #Аудит действия
@@ -53,28 +53,31 @@ class Events(commands.Cog):
             embed_aud_member_join = emb_auto(title_emb, message_emb, color_emb)
             await member_audit.send(embed=embed_aud_member_join)    
 
+            oneLog(f"Клиент {member.display_name} вернулся на сервер и вернул роль {role.name} с правами на каналы.")           
+
 
 
 
     # Игрок вышел с сервера
     @commands.Cog.listener()
     async def on_member_remove(self, member):
+        oneLog(f"{member.display_name} вышел из дискорд сервера")
         guild = member.guild
         client_info = db_cursor("clients").select("account, nickname, status").eq("dsc_id", member.id).execute()
 
         if client_info.data:
             client_nick = client_info.data[0]['account']
             today_date = datetime.now().strftime("%Y-%m-%d")
-            print(f"Клиент {member.name} вышел из сервера, его ник {client_nick} и его аккаунт заморожен с {today_date}")
             db_cursor("clients").update({"status": "freeze","freeze_date": today_date}).eq("dsc_id", member.id).execute()
 
             #Аудит действия
             member_audit = guild.get_channel(bank_audit_channel)
-
             title_emb, message_emb, color_emb = get_message_with_title(
                 61, (), (member.id))
             embed_aud_member_remove = emb_auto(title_emb, message_emb, color_emb)
-            await member_audit.send(embed=embed_aud_member_remove)    
+            await member_audit.send(embed=embed_aud_member_remove)   
+
+            oneLog(f"Клиент {member.name} вышел из сервера, его ник {client_nick} и его аккаунт заморожен с {today_date}")            
 
 
 
@@ -93,9 +96,10 @@ class Events(commands.Cog):
                 try:
                     await channel.edit(name=f"💳ㆍ{prdx_nick}")
                 except nxc.HTTPException as e:
-                    print(f"Ошибка при переименовании канала: {e}")
+                    oneLog(f"Ошибка при переименовании канала: {e}")
 
                 db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", after.id).execute()
+                oneLog(f"{before.display_name} сменил ник на {after.display_name}")
 
 
 
@@ -103,6 +107,7 @@ class Events(commands.Cog):
     # Было удалено сообщение в категориях игроков
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
+
         channel = self.client.get_channel(payload.channel_id)
         message_id = payload.message_id
         
@@ -118,7 +123,7 @@ class Events(commands.Cog):
         if channel.type in [nxc.ChannelType.public_thread, nxc.ChannelType.private_thread]:
             return
 
-        print(f"Удаление сообщения {message_id} зафиксировано!")
+        oneLog(f"Удаление сообщения {message_id} зафиксировано!")
 
         request_card_member = db_rpc("find_message_in_members", {"msg_id": message_id}).execute()
 
@@ -143,7 +148,7 @@ class Events(commands.Cog):
                     await message_member.delete()
 
                 await del_img_in_channel(self.client, full_number)
-                print("Карта успешно удалена")
+                oneLog("Карта успешно удалена")
 
             elif query_type == 'members':
                 members = request_card_member.data[0]['members']
@@ -177,7 +182,7 @@ class Events(commands.Cog):
                     # Обновляем данные в базе данных
                     db_cursor("cards").update({"members": members}).eq("select_menu_id", messege_owner_id).execute()
 
-                    print("Карта от пользователя успешно удалена")
+                    oneLog("Карта от пользователя успешно удалена")
 
 
 def setup(client):

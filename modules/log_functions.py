@@ -18,3 +18,6 @@ def clientCreateLog(user):
 
 def clientDeleteLog(user):
     logging.info(f"• Банковский счёт {user} был удалён!")
+
+def oneLog(message):
+    logging.info(message)

@@ -18,6 +18,9 @@ class TakeOffMoney(commands.Cog):
         count: int = nxc.SlashOption(name="сумма", description="Сумма обналичивания", min_value=1, max_value=1000000), 
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
+        
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         admin = inter.user
         admin_nick = inter.user.display_name
         admin_id = inter.user.id
@@ -73,6 +76,9 @@ class TakeOffMoney(commands.Cog):
             63, (), (admin_id, card_full_number, count, description))
         embed_aud_takeOffMoney = emb_auto(title_emb, message_emb, color_emb)       
         await member_audit.send(embed=embed_aud_takeOffMoney)
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+
 
 def setup(client):
     client.add_cog(TakeOffMoney(client))

@@ -18,6 +18,9 @@ class WithdrawMoney(commands.Cog):
         count: int = nxc.SlashOption(name="сумма", description="Сумма обналичивания", min_value=1, max_value=1000000), 
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
+        
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         banker = inter.user
         banker_nick = inter.user.display_name
         banker_id = inter.user.id
@@ -70,6 +73,9 @@ class WithdrawMoney(commands.Cog):
             78, (), (banker_id, member_id, count, description))
         embed_aud_withdrawMoney = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_withdrawMoney)
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+
 
 def setup(client):
     client.add_cog(WithdrawMoney(client))

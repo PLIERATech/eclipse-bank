@@ -1,6 +1,7 @@
 import requests
 from const import *
 from db import *
+from .log_functions import *
 
 #@ API для взаимодействия с prdx.so
 
@@ -9,7 +10,7 @@ def invite_team(dsc_id):
     prdx_user_id = get_user_id(dsc_id)
 
     if not cookie:
-        print("❌ Ошибка: не найден MY_COOKIE в .env!")
+        oneLog("❌ Ошибка: не найден MY_COOKIE в .env!")
         exit(1)
 
     headers = {
@@ -22,12 +23,12 @@ def invite_team(dsc_id):
     response2 = requests.post(INVITE_URL, headers=headers, data=data)
     response_text = response2.text.strip()
 
-    print("📥 Ответ сервера:", response_text)
+    oneLog("📥 Ответ сервера:", response_text)
 
     if response2.status_code == 200:
-        print("✅ Успешный запрос!")
+        oneLog("✅ Успешный запрос!")
     else:
-        print(f"❌ Ошибка! Код: {response2.status_code}")
+        oneLog(f"❌ Ошибка! Код: {response2.status_code}")
 
 
 
@@ -36,7 +37,7 @@ def kick_team(dsc_id):
     prdx_user_id = get_user_id(dsc_id)
 
     if not cookie:
-        print("❌ Ошибка: не найден MY_COOKIE в .env!")
+        oneLog("❌ Ошибка: не найден MY_COOKIE в .env!")
         exit(1)
 
     headers = {
@@ -49,12 +50,12 @@ def kick_team(dsc_id):
     response2 = requests.post(KICK_URL, headers=headers, data=data)
     response_text = response2.text.strip()
 
-    print("📥 Ответ сервера:", response_text)
+    oneLog("📥 Ответ сервера:", response_text)
 
     if response2.status_code == 200:
-        print("✅ Успешный запрос!")
+        oneLog("✅ Успешный запрос!")
     else:
-        print(f"❌ Ошибка! Код: {response2.status_code}")
+        oneLog(f"❌ Ошибка! Код: {response2.status_code}")
 
 
 
@@ -64,6 +65,7 @@ def get_user_id(dsc_id):
         response = requests.get(url)
 
         if response.status_code != 200:
+            oneLog(f"Ошибка запроса: {response.status_code}")
             return None
 
         data = response.json()
@@ -85,6 +87,7 @@ def get_prdx_nickname(dsc_id):
         response = requests.get(url)
 
         if response.status_code != 200:
+            oneLog(f"Ошибка запроса: {response.status_code}")            
             return None
 
         data = response.json()

@@ -20,6 +20,9 @@ class AdmCreate(commands.Cog):
         type: str = nxc.SlashOption(name="card_type", description="Choose 1", required=True, choices=admCardTypes), 
         color: str= nxc.SlashOption(name="card_color", description="Choose 1", required=True, choices=choice_color)
     ):
+        
+        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+
         # Вспомогательные параметры
         admin = inter.user
         admin_id = inter.user.id
@@ -76,6 +79,8 @@ class AdmCreate(commands.Cog):
             52, (), (full_number, member_id, admin_id))
         embed_aud_createCustomCard = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_createCustomCard)
+
+        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
 
 
 def setup(client):
