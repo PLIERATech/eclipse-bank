@@ -239,6 +239,19 @@ def emb_replenish_banker(full_number, salary):
 
     return embed
 
+#! Пополнение баланса 
+def emb_banker_chat(banker_id, member_full_number, banker_full_number, commission, salary, total_amount, comment):
+    embed = nxc.Embed(
+        title="Пополнение баланса", 
+        color=emb_color_set, 
+        description=(f"👤 Банкир <@{banker_id}> пополнил баланс карты {member_full_number}."))
+    embed.add_field(name="👨‍💼 Получатель", value=f"{member_full_number} ({total_amount} алм.)", inline=True)
+    embed.add_field(name="📤 Комисия", value=f"CEO-00000 ({commission} алм.)", inline=True)
+    embed.add_field(name="💰 ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
+    embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
 
 #@ select_menu                                                                            
 
