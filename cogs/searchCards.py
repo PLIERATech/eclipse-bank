@@ -17,7 +17,7 @@ class SearchCards(commands.Cog):
         member: nxc.Member
     ):
         
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+        oneLog(f"{inter.user.display_name} написал команду {command}")
 
         admin = inter.user
         admin_nick = inter.user.display_name
@@ -70,7 +70,7 @@ class SearchCards(commands.Cog):
             embed_comp_search_cards = emb_comp_search_cards(member_id, cards)
             await inter.send(embed=embed_comp_search_cards, ephemeral=True)    
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

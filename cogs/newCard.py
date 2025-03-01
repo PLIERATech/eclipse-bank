@@ -19,7 +19,7 @@ class NewCard(commands.Cog):
         color: str= nxc.SlashOption(name="card_color", description="Choose 1", required=True,choices=choice_color)
     ):
         
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+        oneLog(f"{inter.user.display_name} написал команду {command}")
 
         banker_id = inter.user.id
         banker_name = inter.user.display_name
@@ -66,7 +66,7 @@ class NewCard(commands.Cog):
         embed_aud_createCard = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_createCard)
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

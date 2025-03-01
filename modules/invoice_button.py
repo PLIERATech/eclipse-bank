@@ -163,10 +163,10 @@ class MyInvoiceView(View):
                 #Аудит действия
                 member_audit = inter.guild.get_channel(bank_audit_channel)
                 await member_audit.send(embed=embed_aud_invoice_pay)
-                oneLog(f"{inter.user.dispaley_name} успешно подтвердил счёт")                
+                oneLog(f"{inter.user.display_name} успешно подтвердил счёт")                
 
 
-        oneLog(f"{inter.user.dispaley_name} нажал на кнопку 'Подтвержить счёт'")
+        oneLog(f"{inter.user.display_name} нажал на кнопку 'Подтвержить счёт'")
         await inter.response.send_modal(MyModal())
 
 
@@ -177,7 +177,7 @@ class MyInvoiceView(View):
 
     @nxc.ui.button(label="Отказаться", style=nxc.ButtonStyle.red, custom_id="decline_button")
     async def disable_button(self, button: nxc.ui.Button, inter: nxc.Interaction):
-        oneLog(f"{inter.user.dispaley_name} нажал на кнопку 'Отказаться'")
+        oneLog(f"{inter.user.display_name} нажал на кнопку 'Отказаться'")
         await inter.response.defer(ephemeral=True)
         
         message = inter.message
@@ -252,7 +252,7 @@ class MyInvoiceView(View):
         #Аудит действия
         member_audit = inter.guild.get_channel(bank_audit_channel)
         await member_audit.send(embed=embed_aud_invoice_decline)
-        oneLog(f"{inter.user.dispaley_name} успешно отказался от выставленного счёт") 
+        oneLog(f"{inter.user.display_name} успешно отказался от выставленного счёт") 
 
 
 
@@ -273,7 +273,7 @@ class BankerInvoiceView(View):
 
     @nxc.ui.button(label="Отменить", style=nxc.ButtonStyle.red, custom_id="cancel_button")
     async def disable_button(self, button: nxc.ui.Button, inter: nxc.Interaction):
-        oneLog(f"Банкир {inter.user.dispaley_name} нажал на кнопку 'Отменить'")
+        oneLog(f"Банкир {inter.user.display_name} нажал на кнопку 'Отменить'")
         await inter.response.defer(ephemeral=True)
         
         message = inter.message
@@ -326,4 +326,4 @@ class BankerInvoiceView(View):
             66, (), (banker_id, member_id, invoice_count))
         embed_aud_invoice_cancel_banker = emb_auto(title_emb, message_emb, color_emb)    
         await member_audit.send(embed=embed_aud_invoice_cancel_banker)
-        oneLog(f"{inter.user.dispaley_name} успешно отменыл счёт") 
+        oneLog(f"{inter.user.display_name} успешно отменыл счёт") 

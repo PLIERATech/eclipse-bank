@@ -17,7 +17,7 @@ class Admit(commands.Cog):
         member: nxc.Member
     ):
 
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}") 
+        oneLog(f"{inter.user.display_name} написал команду {command}") 
 
         admin = inter.user
         admin_id = inter.user.id
@@ -78,7 +78,7 @@ class Admit(commands.Cog):
         embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_admitBanker)        
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

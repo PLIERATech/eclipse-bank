@@ -17,7 +17,7 @@ class SetClient(commands.Cog):
         member: nxc.Member
     ):
         
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")  
+        oneLog(f"{inter.user.display_name} написал команду {command}")  
 
         banker_id = inter.user.id
         banker_name = inter.user.display_name
@@ -53,7 +53,7 @@ class SetClient(commands.Cog):
         embed_set_account = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed_set_account, ephemeral=True)
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

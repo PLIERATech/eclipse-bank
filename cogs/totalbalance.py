@@ -16,7 +16,7 @@ class TotalBalance(commands.Cog):
         inter: nxc.Interaction
     ):
         
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+        oneLog(f"{inter.user.display_name} написал команду {command}")
 
         admin = inter.user
         admin_nick = inter.user.display_name
@@ -36,7 +36,7 @@ class TotalBalance(commands.Cog):
         embed = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed, ephemeral=True)
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

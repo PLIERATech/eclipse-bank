@@ -13,7 +13,7 @@ class UpdateAllCards(commands.Cog):
     @nxc.slash_command(guild_ids=server_id, name="updateallcards", description="Update information about all created maps", default_member_permissions=nxc.Permissions(administrator=True))
     async def updateAllCards(self, inter: nxc.Interaction):
 
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+        oneLog(f"{inter.user.display_name} написал команду {command}")
 
         admin = inter.user
         if not await verify_staff(inter, admin, command):
@@ -100,7 +100,7 @@ class UpdateAllCards(commands.Cog):
         embed_aud_updateAllCards = emb_auto(title_emb, message_emb, color_emb)   
         await member_audit.send(embed=embed_aud_updateAllCards)
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):

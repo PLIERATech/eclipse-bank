@@ -86,7 +86,7 @@ class CardSelectView(View):
 #@ ---------------------------------------------------------------------------------------------------------------------------------
 
 async def sm_check_balance(inter, user, message, channel):
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Баланс'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Баланс'")
     await inter.response.defer(ephemeral=True)
     response_card = db_rpc("find_balance", {"msg_id": message.id}).execute()
 
@@ -103,7 +103,7 @@ async def sm_check_balance(inter, user, message, channel):
         8, (), (full_number, balance))
     embed = emb_auto(title_emb, message_emb, color_emb)
     await inter.send(embed=embed, ephemeral=True)
-    oneLog(f"{user.dispaley_name} успешно проверил Баланс карты") 
+    oneLog(f"{user.display_name} успешно проверил Баланс карты") 
 
 
 
@@ -228,10 +228,10 @@ async def sm_transfer(inter, user, message, channel):
             member_audit = inter.guild.get_channel(bank_audit_channel)
             embed_aud_transfer = emb_aud_transfer(user.id, sender_full_number, receiver_full_number, amount, self.comment.value)
             await member_audit.send(embed=embed_aud_transfer)
-            oneLog(f"{user.dispaley_name} успешно перевел средства")
+            oneLog(f"{user.display_name} успешно перевел средства")
 
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Перевести'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Перевести'")
     # 🔹 Показываем форму пользователю
     model = TransferModal()
     await inter.response.send_modal(model)
@@ -327,9 +327,9 @@ async def sm_invoice(inter, user, message, channel):
                 68, (), (user.id, nick_dsc_id, amount, self.comment.value))
             embed_aud_invoice = emb_auto(title_emb, message_emb, color_emb)           
             await member_audit.send(embed=embed_aud_invoice)
-            oneLog(f"{user.dispaley_name} успешно выставил счёт")
+            oneLog(f"{user.display_name} успешно выставил счёт")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Выставить счёт'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Выставить счёт'")
     # 🔹 Показываем форму пользователю
     model = InvoiceModal()
     await inter.response.send_modal(model)
@@ -421,9 +421,9 @@ async def sm_change_name(inter, user, message, channel):
                 69, (), (user.id, full_number, bdcardname, cardname))
             embed_aud_change_name = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_change_name)
-            oneLog(f"{user.dispaley_name} успешно поменял название")
+            oneLog(f"{user.display_name} успешно поменял название")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Поменять название'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Поменять название'")
     modal = ChangeNameCardModal()
     await inter.response.send_modal(modal)
 
@@ -531,9 +531,9 @@ async def sm_add_user(inter, user, message, channel):
                 70, (), (user.id, member_id, full_number))
             embed_aud_add_user_card = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_add_user_card)
-            oneLog(f"{user.dispaley_name} успешно добавил пользователя к карте")
+            oneLog(f"{user.display_name} успешно добавил пользователя к карте")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Добавить пользователя'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Добавить пользователя'")
     modal = AddUserModal()
     await inter.response.send_modal(modal)
 
@@ -636,9 +636,9 @@ async def sm_del_user(inter, user, message, channel):
                 71, (), (user.id, member_id, full_number))
             embed_aud_del_user_card = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_del_user_card)
-            oneLog(f"{user.dispaley_name} успешно удалил пользователя к карте")
+            oneLog(f"{user.display_name} успешно удалил пользователя к карте")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Удалить пользователя'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Удалить пользователя'")
     modal = RemoveUserModal()
     await inter.response.send_modal(modal)
 
@@ -770,9 +770,9 @@ async def sm_transfer_owner(inter, user, message, channel):
                 32, (), (user.id, full_number, member_id))
             embed_aud_transfer_owner = emb_auto(title_emb, message_emb, color_emb)            
             await member_audit.send(embed=embed_aud_transfer_owner)
-            oneLog(f"{user.dispaley_name} успешно передал права на карту")
+            oneLog(f"{user.display_name} успешно передал права на карту")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Передать карту'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Передать карту'")
     modal = TransferOwner()
     await inter.response.send_modal(modal)
 
@@ -849,9 +849,9 @@ async def sm_delete_card(inter, user, message, channel):
             embed_aud_delete_card = emb_auto(title_emb, message_emb, color_emb)    
             member_audit = inter.guild.get_channel(bank_audit_channel)
             await member_audit.send(embed=embed_aud_delete_card)        
-            oneLog(f"{user.dispaley_name} успешно удалил карту")
+            oneLog(f"{user.display_name} успешно удалил карту")
 
-    oneLog(f"{user.dispaley_name} нажал на кнопку select menu 'Удалить карту'")
+    oneLog(f"{user.display_name} нажал на кнопку select menu 'Удалить карту'")
     modal = DeleteCardModal()
     await inter.response.send_modal(modal)
 

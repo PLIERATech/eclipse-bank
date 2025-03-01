@@ -19,7 +19,7 @@ class WithdrawMoney(commands.Cog):
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
         
-        oneLog(f"{inter.user.dispaley_name} написал команду {command}")
+        oneLog(f"{inter.user.display_name} написал команду {command}")
 
         banker = inter.user
         banker_nick = inter.user.display_name
@@ -74,7 +74,7 @@ class WithdrawMoney(commands.Cog):
         embed_aud_withdrawMoney = emb_auto(title_emb, message_emb, color_emb)
         await member_audit.send(embed=embed_aud_withdrawMoney)
 
-        oneLog(f"{command} написанная {inter.user.dispaley_name} успешно выполнена")
+        oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
 
 
 def setup(client):
