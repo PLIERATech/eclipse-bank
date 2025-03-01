@@ -84,11 +84,14 @@ class ReplenishMoney(commands.Cog):
             commission = 1
             salary = 1
         elif cr2 < count <= cr3:
-            commission = 2
-            salary = 1
+            commission = 1
+            salary = 2
         else:
             commission = 2
             salary = 2
+
+        if int(number) <= 20:
+            commission = 0
 
         total_amount = count - commission - salary
 
@@ -119,7 +122,9 @@ class ReplenishMoney(commands.Cog):
             await channel_transactions_card.send(embed=embed_replenish_user)
 
         # Обновляем баланс в базе данных
-        db_rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
+        if int(number) > 20:
+            db_rpc("add_balance", {"card_number": "00000", "amount": commission}).execute()
+            
         db_cursor("cards").update({"balance": banker_card_balance + salary}).eq("number", banker_card_number).execute()
         db_cursor("cards").update({"balance": card_balance + total_amount}).eq("number", number).execute()
 
