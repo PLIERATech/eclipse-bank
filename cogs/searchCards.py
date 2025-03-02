@@ -67,7 +67,7 @@ class SearchCards(commands.Cog):
 
             # Сортируем: сначала owner, потом user, баланс по убыванию
             cards.sort(key=lambda x: (x[0] != "owner", -x[1]))
-            embed_comp_search_cards = emb_comp_search_cards(member_id, cards)
+            embed_comp_search_cards = emb_comp_search_cards_admin(member_id, cards)
             await inter.send(embed=embed_comp_search_cards, ephemeral=True)    
 
         oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")

@@ -38,10 +38,9 @@ class SearchCardsAll(commands.Cog):
         search_cards_response = db_rpc("find_all_cards_user", {"user_id": member_id}).execute()
 
         if not search_cards_response.data:
-            title_emb, message_emb, color_emb = get_message_with_title(
-                3, (), (member_id))
+            title_emb, message_emb, color_emb = get_message_with_title(3, (), (member_id))
             embed_no_cards_search = emb_auto(title_emb, message_emb, color_emb)
-            await inter.send(embed=embed_no_cards_search, )
+            await inter.send(embed=embed_no_cards_search)
         else:
             cards = []
 
@@ -51,18 +50,23 @@ class SearchCardsAll(commands.Cog):
                 card_number = search_card["number"]
                 full_number = f"{suffixes.get(card_type, card_type)}{card_number}"
 
-
                 if search_card_type == 'owner':
                     display_type = "Владелец"
                 elif search_card_type == 'user':
                     display_type = "Пользователь"
 
-                # Добавляем в список в виде кортежа (тип карты, баланс, строка для вывода)
-                cards.append((search_card_type, f"{len(cards)}. ({display_type}) {full_number}"))
+                # Добавляем в список в виде кортежа (тип карты, строка для вывода)
+                cards.append((search_card_type, display_type, full_number))
 
-            # Сортируем: сначала owner, потом user, баланс по убыванию
+            # Сортируем сначала владельцев, потом пользователей
             cards.sort(key=lambda x: (x[0] != "owner"))
-            embed_comp_search_cards = emb_comp_search_cards(member_id, cards)
+
+            # Генерируем строку после сортировки
+            formatted_cards = [
+                f"{i + 1}. ({card[1]}) {card[2]}" for i, card in enumerate(cards)
+            ]
+
+            embed_comp_search_cards = emb_comp_search_cards_all(member_id, formatted_cards)
             await inter.send(embed=embed_comp_search_cards, ephemeral=True)    
 
         oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
