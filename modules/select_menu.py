@@ -829,6 +829,7 @@ async def sm_delete_card(inter, user, message, channel):
                 await inter.send(embed=embed, ephemeral=True)
                 return
 
+            oneLog(f"{user.display_name} подтвердил удаление карты")
 
             title_emb, message_emb, color_emb = get_message_with_title(
                 20, (), (full_number))

@@ -239,8 +239,9 @@ def emb_replenish_banker(full_number, salary):
 
     return embed
 
+
 #! Пополнение баланса 
-def emb_banker_chat(banker_id, member_full_number, banker_full_number, commission, salary, total_amount, comment):
+def emb_banker_chat_replenish(banker_id, member_full_number, banker_full_number, commission, salary, total_amount, comment):
     embed = nxc.Embed(
         title="Пополнение баланса", 
         color=emb_color_set, 
@@ -250,6 +251,75 @@ def emb_banker_chat(banker_id, member_full_number, banker_full_number, commissio
     embed.add_field(name="💰 ЗП с комиссии", value=f"{banker_full_number} ({salary} алм.)", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
     embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
+
+
+
+#! Создание карты 
+def emb_banker_chat_new_card(banker_id, member_id, full_number, banker_full_number, commission, salary):
+    embed = nxc.Embed(
+        title="Создание карты", 
+        color=emb_color_set, 
+        description=(f"👤 Банкир <@{banker_id}> создал карту {full_number} для <@{member_id}>."))
+    embed.add_field(name="📤 Стоимость", value=f"({commission + salary} алм.)", inline=True)
+    embed.add_field(name="💰 ЗП со стоимости", value=f"{banker_full_number} ({salary} алм.)", inline=True)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
+
+#! Выполнено пополнение, комиссия CEO 
+def emb_new_card_ceo(full_number, count, commission, banker_id):
+    embed = nxc.Embed(
+        title=f"💳 Создание карты {full_number} для клиента",
+        color=emb_color_set
+    )
+    embed.add_field(name="💰 Стоимость", value=f"**{count} алм**", inline=True)
+    embed.add_field(name="💰 К пополнению CEO-00000", value=f"**{commission} алм**", inline=True)
+    embed.add_field(name="👤 Банкир", value=f"<@{banker_id}>", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+
+    return embed
+
+
+#! Выполнено пополнение, комиссия банкира 
+def emb_new_card_banker(full_number, salary):
+    embed = nxc.Embed(
+        title="💵 Пополнение карты",
+        color=emb_color_set
+    )
+    embed.add_field(name="💳 Карта", value=f"**{full_number}**", inline=False)
+    embed.add_field(name="💰 Сумма", value=f"**{salary} алм**", inline=False)
+    embed.add_field(name="📝 Комментарий", value="Зарплата за создание карты для клиента", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+
+    return embed
+
+
+
+#! Создание клиента 
+def emb_banker_chat_give_client(banker_id, member_id, banker_full_number, salary):
+    embed = nxc.Embed(
+        title="Выдача статуса клиента", 
+        color=emb_color_set, 
+        description=(f"👤 Банкир <@{banker_id}> сделал клиентом <@{member_id}>."))
+    embed.add_field(name="📤 Стоимость", value=f"({salary} алм.)", inline=True)
+    embed.add_field(name="💰 ЗП со стоимости", value=f"{banker_full_number} ({salary} алм.)", inline=True)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
+
+#! Выполнено пополнение, комиссия банкира 
+def emb_give_client_banker(full_number, salary):
+    embed = nxc.Embed(
+        title="💵 Пополнение карты",
+        color=emb_color_set
+    )
+    embed.add_field(name="💳 Карта", value=f"**{full_number}**", inline=False)
+    embed.add_field(name="💰 Сумма", value=f"**{salary} алм**", inline=False)
+    embed.add_field(name="📝 Комментарий", value="Зарплата с создания клиента", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+
     return embed
 
 

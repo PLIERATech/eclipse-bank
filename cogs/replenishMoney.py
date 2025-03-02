@@ -133,7 +133,7 @@ class ReplenishMoney(commands.Cog):
         await member_audit.send(embed=embed_aud_replenishMoney)
 
         banker_audit = inter.guild.get_channel(banker_invoice_channel_id)
-        embed_banker_aud = emb_banker_chat(banker_id, card_full_number, banker_card_full_number, commission, salary, total_amount, description)
+        embed_banker_aud = emb_banker_chat_replenish(banker_id, card_full_number, banker_card_full_number, commission, salary, total_amount, description)
         await banker_audit.send(embed=embed_banker_aud)
 
         oneLog(f"{command} написанная {inter.user.display_name} успешно выполнена")
