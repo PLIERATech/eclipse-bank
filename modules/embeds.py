@@ -169,7 +169,7 @@ def emb_comp_search_cards(member_id, cards):
             title="✅ Результаты поиска", 
         color=emb_color_set, 
         description=(f"Карты клиента <@{member_id}>: \n"
-                    "\n".join(card[2] for card in cards)+"\n\n"
+                    "\n".join(card[1] for card in cards)+"\n\n"
                     f"{bank_sign}")
         )
     return embed
