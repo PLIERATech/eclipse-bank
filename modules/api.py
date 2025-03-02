@@ -23,7 +23,7 @@ def invite_team(dsc_id):
     response2 = requests.post(INVITE_URL, headers=headers, data=data)
     response_text = response2.text.strip()
 
-    oneLog("📥 Ответ сервера:", response_text)
+    oneLog(f"📥 Ответ сервера: {response_text}")
 
     if response2.status_code == 200:
         oneLog("✅ Успешный запрос!")
@@ -50,7 +50,7 @@ def kick_team(dsc_id):
     response2 = requests.post(KICK_URL, headers=headers, data=data)
     response_text = response2.text.strip()
 
-    oneLog("📥 Ответ сервера:", response_text)
+    oneLog(f"📥 Ответ сервера: {response_text}")
 
     if response2.status_code == 200:
         oneLog("✅ Успешный запрос!")
