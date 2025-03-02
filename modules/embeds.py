@@ -166,13 +166,14 @@ def emb_take_off_money(admin_id, full_number, amount, comment):
 #! Успех в поиске клиента и его карт для админа
 def emb_comp_search_cards_admin(member_id, cards):
     embed = nxc.Embed(
-            title="✅ Результаты поиска", 
+        title="✅ Результаты поиска", 
         color=emb_color_set, 
-        description=(f"Карты клиента <@{member_id}>: \n"
-                    "\n".join(card[2] for card in cards)+"\n\n"
-                    f"{bank_sign}")
-        )
+        description=(f"Карты клиента <@{member_id}>:\n\n"  # Добавили дополнительный перенос строки
+                    + "\n".join(card[2] for card in cards) + "\n\n"
+                    + f"{bank_sign}")  # Отделили подпись банка
+    )
     return embed
+
 
 
 #! Успех в поиске клиента и его карт
@@ -180,11 +181,12 @@ def emb_comp_search_cards_all(member_id, cards):
     embed = nxc.Embed(
         title="✅ Результаты поиска", 
         color=emb_color_set, 
-        description=(f"Карты клиента <@{member_id}>: \n"
-                    "\n".join(cards) + "\n\n"
-                    f"{bank_sign}")
+        description=(f"Карты клиента <@{member_id}>:\n\n"  # Добавлен доп. перенос строки
+                    + "\n".join(cards) + "\n\n"  # Убедились, что между строками есть разрыв
+                    + f"{bank_sign}")  # Банк внизу
     )
     return embed
+
 
 
 #= Пополнить (Replenish Money) 
