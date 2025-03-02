@@ -14,7 +14,7 @@ class ReplenishBank(commands.Cog):
     async def replenishBank(
         self, 
         inter: nxc.Interaction, 
-        count: int = nxc.SlashOption(name="сумма", description="Сумма взноса", min_value=2, max_value=1000000), 
+        count: int = nxc.SlashOption(name="сумма", description="Сумма взноса", min_value=1, max_value=1000000), 
         description: str = nxc.SlashOption(name="комментарий", description="комментарий банкира", max_length=50)
     ):
         

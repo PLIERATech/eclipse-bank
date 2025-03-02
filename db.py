@@ -22,6 +22,9 @@ conn = psycopg2.connect(
     user=DB_USER,
     password=DB_PASSWORD
 )
+# Включение автофиксации для транзакций
+conn.autocommit = True
+
 cursor = conn.cursor(cursor_factory=RealDictCursor)
 
 class DBQuery:
