@@ -10,7 +10,7 @@ class Admit(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="принять", description="принять банкира на работу")
+    @nxc.slash_command(guild_ids=server_id, name="принять", description="принять банкира на работу", default_member_permissions=nxc.Permissions(administrator=True))
     async def admit(
         self, 
         inter: nxc.Interaction, 

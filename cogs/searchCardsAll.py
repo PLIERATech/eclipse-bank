@@ -4,14 +4,14 @@ from const import *
 from modules import *
 from db import *
 
-command = "/Поиск-карт-админ"
+command = "/Поиск-карт"
 
-class SearchCards(commands.Cog):
+class SearchCardsAll(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="поиск-карт-админ", description="Поиск всех карт клиента с балансом", default_member_permissions=nxc.Permissions(administrator=True))
-    async def searchCards(
+    @nxc.slash_command(guild_ids=server_id, name="поиск-карт", description="Поиск всех карт клиента", default_member_permissions=nxc.Permissions(administrator=True))
+    async def searchCardsAll(
         self, 
         inter: nxc.Interaction, 
         member: nxc.Member
@@ -24,10 +24,6 @@ class SearchCards(commands.Cog):
         admin_id = inter.user.id
         member_nick = member.display_name
         member_id = member.id
-
-        # Проверка прав staff
-        if not await verify_staff(inter, admin, command):
-            return
 
         # Проверка находится ли человек на сервере
         if not await verify_user_in_server(inter, member):
@@ -51,7 +47,6 @@ class SearchCards(commands.Cog):
 
             for search_card in search_cards_response.data:
                 search_card_type = search_card["user_type"]
-                card_balance = search_card["balance"]
                 card_type = search_card["type"]
                 card_number = search_card["number"]
                 full_number = f"{suffixes.get(card_type, card_type)}{card_number}"
@@ -63,10 +58,10 @@ class SearchCards(commands.Cog):
                     display_type = "Пользователь"
 
                 # Добавляем в список в виде кортежа (тип карты, баланс, строка для вывода)
-                cards.append((search_card_type, card_balance, f"{len(cards)}. ({display_type}) {full_number} - {card_balance} алм"))
+                cards.append((search_card_type, f"{len(cards)}. ({display_type}) {full_number}"))
 
             # Сортируем: сначала owner, потом user, баланс по убыванию
-            cards.sort(key=lambda x: (x[0] != "owner", -x[1]))
+            cards.sort(key=lambda x: (x[0] != "owner"))
             embed_comp_search_cards = emb_comp_search_cards(member_id, cards)
             await inter.send(embed=embed_comp_search_cards, ephemeral=True)    
 
@@ -74,4 +69,4 @@ class SearchCards(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(SearchCards(client))
+    client.add_cog(SearchCardsAll(client))

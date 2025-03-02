@@ -13,7 +13,7 @@ class Demote(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="разжаловать", description="разжаловать банкира")
+    @nxc.slash_command(guild_ids=server_id, name="разжаловать", description="разжаловать банкира", default_member_permissions=nxc.Permissions(administrator=True))
     async def demote(
         self, 
         inter: nxc.Interaction, 
