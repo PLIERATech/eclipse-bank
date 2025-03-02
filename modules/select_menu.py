@@ -273,8 +273,16 @@ async def sm_invoice(inter, user, message, channel):
             # Проверка является ли введеный никнейм клиентом
             if not await verify_select_menu_client(inter, nick_table, nickname):
                 return
-            
+
             nick_dsc_id = nick_table.data[0]["dsc_id"]
+
+            if nick_dsc_id == user.id:
+                title_emb, message_emb, color_emb = get_message_with_title(
+                    84, (), ())
+                embed_no_self = emb_auto(title_emb, message_emb, color_emb)           
+                await inter.send(embed=embed_no_self, ephemeral=True)
+                return
+
             nick_card_channel_id = nick_table.data[0]["account"]
             nick_transaction_channel_id = nick_table.data[0]["transactions"]
 
