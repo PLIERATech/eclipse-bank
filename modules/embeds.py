@@ -189,6 +189,50 @@ def emb_comp_search_cards_all(member_id, cards):
 
 
 
+#= Пополнить казну банка (Replenish Bank) 
+#! Успех в пополнении
+def emb_comp_replenish_bank(full_number, count, description, admin_id):
+    embed = nxc.Embed(
+        title="✅ Карта пополнена",
+        color=emb_color_set
+    )
+    embed.add_field(name="💳 Карта", value=f"**{full_number}**", inline=True)
+    embed.add_field(name="💰 Сумма", value=f"**{count} алм**", inline=True)
+    embed.add_field(name="📝 Комментарий", value=description or "—", inline=False)
+    embed.add_field(name="👤 Администратор", value=f"<@{admin_id}>", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+
+    return embed
+
+
+#! Выполнено пополнение, комиссия CEO 
+def emb_replenish_bank_ceo(full_number, count, description, admin_id):
+    embed = nxc.Embed(
+        title="💵 Пополнение карты банка",
+        color=emb_color_set
+    )
+    embed.add_field(name="💳 Карта", value=f"**{full_number}**", inline=True)
+    embed.add_field(name="💰 Сумма", value=f"**{count} алм**", inline=True)
+    embed.add_field(name="📝 Комментарий", value=description or "—", inline=False)
+    embed.add_field(name="👤 Администратор", value=f"<@{admin_id}>", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+
+    return embed
+
+
+#! Пополнение баланса 
+def emb_banker_chat_replenish_bank(count, description, admin_id):
+    embed = nxc.Embed(
+        title="Пополнение казны банка", 
+        color=emb_color_set, 
+        description=(f"👤 Администратор <@{admin_id}> пополнил баланс казны банка."))
+    embed.add_field(name="💰 Сумма", value=f"**{count} алм**", inline=False)
+    embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
+
+
 #= Пополнить (Replenish Money) 
 #! Успех в пополнении
 def emb_comp_replenish(full_number, count, commission, salary, total_amount, description, banker_id):
@@ -559,5 +603,17 @@ def emb_aud_transfer(member_id, sender_full_number, receiver_full_number, amount
     embed.add_field(name="Начисление в", value=f"{receiver_full_number}", inline=True)
     embed.add_field(name="Сумма", value=f"{amount} алм.", inline=True)
     embed.add_field(name="📝 Комментарий", value=f"{comment or '—'}", inline=False)
+    embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
+    return embed
+
+
+#! Пополнение баланса казны банка 
+def emb_aud_replenishBank(count, description, admin_id):
+    embed = nxc.Embed(
+        title="Пополнение казны банка", 
+        color=emb_color_set, 
+        description=(f"Администратор <@{admin_id}> пополнил баланс казны банка"))
+    embed.add_field(name="Сумма", value=f"**{count} алм**", inline=False)
+    embed.add_field(name="📝 Комментарий", value=f"{description or '—'}", inline=False)
     embed.add_field(name="────────────", value=f"**{bank_sign}**", inline=False)
     return embed
