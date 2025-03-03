@@ -170,7 +170,7 @@ async def createAccount(guild, member, banker_id):
                 break
         else:
             oneLog(f'[ГЛОБАЛЬНАЯ ОШИБКА] ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО ЗАРЕГЕСТРИРОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ')
-            category = nxc.utils.get(guild.categories, id=cards_category_reserv)
+            category = guild.get_channel(cards_category_reserv)
 
         client_role = guild.get_role(client_role_id)
 
@@ -225,18 +225,24 @@ async def deleteAccount(guild, owner):
     full_count = 0
     cards_info = []
     
-    response_dsc_id = db_cursor("clients").select("dsc_id, account").eq("dsc_id", owner_id).execute()
+    response_dsc_id = db_cursor("clients").select("category, dsc_id, account").eq("dsc_id", owner_id).execute()
 
     if not response_dsc_id.data:
         return[False, full_count, "-"]
 
     if response_dsc_id.data:
         clients_channel_id = response_dsc_id.data[0]["account"]
+        category_id = response_dsc_id.data[0]["category"]
 
         # Удаление канала клиента
         channel = guild.get_channel(clients_channel_id)
         if channel:
             await channel.delete()
+
+        # Получаем категорию по ID
+        category = guild.get_channel(category_id)
+        if category:
+            await category.set_permissions(owner, overwrite=None)
 
         delete_account_request = db_rpc("delete_account", {"client_id": owner_id}).execute()
         for del_account in delete_account_request.data:
