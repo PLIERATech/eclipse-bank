@@ -30,7 +30,7 @@ class Events(commands.Cog):
             role = guild.get_role(client_role_id)
             category_id = client_info.data[0]["category"]
             channel_id = client_info.data[0]["account"]
-            category = guild.get_category(category_id)
+            category = guild.get_channel(category_id)
             channel = guild.get_channel(channel_id)
 
             prdx_nick = get_prdx_nickname(member.id)

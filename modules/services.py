@@ -164,8 +164,9 @@ async def createAccount(guild, member, banker_id):
         #! Получаем категорию и роль клиента 
         category = None
         for cat_id in cards_category:
-            category = guild.get_category(cat_id)
+            category = guild.get_channel(cat_id)
             if category and len(category.channels) < 46:
+                oneLog(f'{member_name} добавлен к категорию {category.name}')
                 break
         else:
             oneLog(f'[ГЛОБАЛЬНАЯ ОШИБКА] ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО ЗАРЕГЕСТРИРОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ')
