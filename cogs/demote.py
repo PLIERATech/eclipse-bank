@@ -42,14 +42,12 @@ class Demote(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        if not member_id in ignore_members:
-            db_cursor("clients").update({"count_cards": 3}).eq("dsc_id", member_id).execute()
-
         # Использование:
         get_card_info = get_card_info_demote(member_id)
-        channel_card_id =  get_card_info["account_id"]
+        channel_card_id =  get_card_info['account_id']
         banker_card_number = get_card_info['banker_number']
         banker_card_type = get_card_info['banker_type']
+        count_cards = get_card_info['count_cards']
         banker_card_full_number = f"{suffixes.get(banker_card_type, banker_card_type)}{banker_card_number}"
 
         if get_card_info['banker_balance'] != 0: # если есть баланс
@@ -96,6 +94,10 @@ class Demote(commands.Cog):
                 57, (), (member_id, admin_id))
             embed_aud_admitBanker = emb_auto(title_emb, message_emb, color_emb)
         
+
+        if not member_id in ignore_members:
+            db_cursor("clients").update({"count_cards": count_cards - 1}).eq("dsc_id", member_id).execute()
+
         # Снятие роли
         banker_role_remove = inter.guild.get_role(banker_role_id)
         await member.remove_roles(banker_role_remove)

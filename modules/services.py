@@ -140,7 +140,8 @@ def get_card_info_demote(member_id):
             "non_banker_number": result["non_banker_number"],               # ищет 1 карту не банкирскую и дает ее номер
             "non_banker_type": result["non_banker_type"],                   # ищет 1 карту не банкирскую и дает ее тип
             "account_id": result["account_user"],                           # выдает значение account пользователя
-            "transactions_id": result["transactions_user"]                  # выдает значение transactions пользователя                          
+            "transactions_id": result["transactions_user"],                 # выдает значение transactions пользователя     
+            "count_cards": result["count_cards_user"]                       # выдает значения карт пользователя         
         }
     return None
 

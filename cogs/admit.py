@@ -44,10 +44,14 @@ class Admit(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        # Создается клиент
+        #= Создается клиент
         await createAccount(guild, member, admin_id)
+
         if not member_id in ignore_members:
-            db_cursor("clients").update({"count_cards": 4}).eq("dsc_id", member_id).execute()
+            count_card_req = db_cursor("clients").select("count_cards").eq("dsc_id", member_id).execute()
+            count_cards = count_card_req.data[0]["count_cards"]
+
+            db_cursor("clients").update({"count_cards": count_cards + 1}).eq("dsc_id", member_id).execute()
 
 
         #=Создание карты банкира
