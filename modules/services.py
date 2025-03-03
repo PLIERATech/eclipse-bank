@@ -376,12 +376,34 @@ async def check_and_refresh_threads(bot):
             except nxc.HTTPException as e:
                 oneLog(f"Ошибка при обработке ветки {thread.id}: {e}")
 
+
+#! Сохранение бд!
+async def backup_database():
+    """Создает резервную копию базы данных с указанием даты и времени."""
+    if not os.path.exists(BACKUP_FOLDER):
+        os.makedirs(BACKUP_FOLDER)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    backup_filename = f"{BACKUP_FOLDER}/backup_{timestamp}.sql"
+
+    env = os.environ.copy()
+    env["PGPASSWORD"] = DB_PASSWORD
+
+    try:
+        command = f"pg_dump -h {DB_HOST} -p {DB_PORT} -U {DB_USER} -d {DB_NAME} -F c -f {backup_filename}"
+        os.system(command)
+        oneLog(f"Резервная копия базы данных сохранена: {backup_filename}")
+    except Exception as e:
+        oneLog(f"Ошибка при создании резервной копии БД: {e}")
+
+
 #! Тоже самое что сверху
 async def scheduler(bot):
     """Основной цикл, проверяющий текущее время"""
     while True:
         now = datetime.now()  # Получаем локальное время
         if now.hour in TARGET_HOURS and now.minute == 0:
+            await backup_database()
             await scheduled_task(bot)
             await check_and_refresh_threads(bot)
             await asyncio.sleep(180)

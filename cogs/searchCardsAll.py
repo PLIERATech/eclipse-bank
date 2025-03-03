@@ -10,7 +10,7 @@ class SearchCardsAll(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @nxc.slash_command(guild_ids=server_id, name="поиск-карт", description="Поиск всех карт клиента", default_member_permissions=nxc.Permissions(administrator=True))
+    @nxc.slash_command(guild_ids=server_id, name="поиск-карт", description="Поиск всех карт клиента")
     async def searchCardsAll(
         self, 
         inter: nxc.Interaction, 

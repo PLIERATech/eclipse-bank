@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 import logging
 import nextcord as nxc
-import psycopg2
 
 n = "0123456789"
 
@@ -20,6 +19,15 @@ API_PROFILE_URL = "https://prdx.so/api/v1/user/profile?discord_id={}"
 INVITE_URL = "https://prdx.so/t/eclipse/invite"
 KICK_URL = "https://prdx.so/t/eclipse"
 COMMUNITY_ID = "110"
+
+#! Работа с бд
+BACKUP_FOLDER = "backup-db"
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
 
 #@Работа с когами
 COGS_FOLDER = "cogs"
@@ -114,6 +122,6 @@ commission_replenish = {
 }
 
 
-TARGET_HOURS = {6, 12, 0} # Времена, когда нужно запускать скрипт (по системному времени)
+TARGET_HOURS = {6, 12, 18, 0} # Времена, когда нужно запускать скрипт (по системному времени)
 
 days_freeze_delete = 30 # Сколько дней для удаления аккаунта

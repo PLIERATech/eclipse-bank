@@ -1,4 +1,5 @@
 import os
+from const import *  
 import psycopg2
 import logging
 import json
@@ -11,9 +12,9 @@ logger = logging.getLogger()
 # Подключение к локальной БД PostgreSQL
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "your_database")
-DB_USER = os.getenv("DB_USER", "your_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "your_password")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 conn = psycopg2.connect(
     host=DB_HOST,
