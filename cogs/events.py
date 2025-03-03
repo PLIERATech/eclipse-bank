@@ -23,12 +23,14 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         oneLog(f"{member.display_name} присоединился на дискорд сервер")        
-        client_info = db_cursor("clients").select("account").eq("dsc_id", member.id).execute()
+        client_info = db_cursor("clients").select("category, account").eq("dsc_id", member.id).execute()
 
         if client_info.data:
             guild = member.guild
             role = guild.get_role(client_role_id)
+            category_id = client_info.data[0]["category"]
             channel_id = client_info.data[0]["account"]
+            category = guild.get_category(category_id)
             channel = guild.get_channel(channel_id)
 
             prdx_nick = get_prdx_nickname(member.id)
@@ -40,9 +42,8 @@ class Events(commands.Cog):
             db_cursor("clients").update({"nickname": prdx_nick}).eq("dsc_id", member.id).execute()
 
             await member.add_roles(role)
-            channel_card_id = client_info.data[0]['account']
-            channel_card = self.client.get_channel(channel_card_id)
-            await channel_card.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False, send_messages_in_threads=False))
+            await category.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True))
+            await channel.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True, read_message_history=True, read_messages=True, send_messages=False, send_messages_in_threads=False))
             db_cursor("clients").update({"status": "active","freeze_date": None}).eq("dsc_id", member.id).execute()
 
             #Аудит действия

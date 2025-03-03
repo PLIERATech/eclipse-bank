@@ -162,8 +162,19 @@ async def createAccount(guild, member, banker_id):
     if member_id not in clients_dsc_id_list:
         #? Создание банковского счёта
         #! Получаем категорию и роль клиента 
-        category = nxc.utils.get(guild.categories, id=cleints_category)
+        category = None
+        for cat_id in cards_category:
+            category = guild.get_category(cat_id)
+            if category and len(category.channels) < 46:
+                break
+        else:
+            oneLog(f'[ГЛОБАЛЬНАЯ ОШИБКА] ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО ЗАРЕГЕСТРИРОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ')
+            category = nxc.utils.get(guild.categories, id=cards_category_reserv)
+
         client_role = guild.get_role(client_role_id)
+
+        #! Даём доступ пользователю к нужной категории
+        await category.set_permissions(member, overwrite=nxc.PermissionOverwrite(view_channel=True))
 
         #! Канал "Карты" - только чтение
         cards_channel = await guild.create_text_channel(f"💳ㆍ{member_name}", category=category, overwrites={
@@ -185,6 +196,7 @@ async def createAccount(guild, member, banker_id):
             "nickname": member_name,
             "dsc_id": member_id,
             "prdx_id": prdx_id,
+            "category": category.id,
             "account": cards_channel.id,
             "transactions": thread.id
         }).execute()
