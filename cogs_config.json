@@ -11,5 +11,7 @@
     "withdrawMoney": true,
     "takeOffMoney": true,
     "totalbalance": true,
-    "giveClient": true
+    "giveClient": true,
+    "replenishBank": true,
+    "searchCardsAll": true
 }

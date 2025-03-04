@@ -3,6 +3,7 @@ import random
 import asyncio
 import time
 import datetime
+import subprocess
 from datetime import datetime, timedelta
 from const import *
 from .log_functions import *
@@ -399,6 +400,8 @@ async def check_and_refresh_threads(bot):
 
 #! Сохранение бд!
 async def backup_database():
+    # Удалить старые сохранения
+    delete_old_backups()
     """Создает резервную копию базы данных с указанием даты и времени."""
     if not os.path.exists(BACKUP_FOLDER):
         os.makedirs(BACKUP_FOLDER)
@@ -407,14 +410,39 @@ async def backup_database():
     backup_filename = f"{BACKUP_FOLDER}/backup_{timestamp}.sql"
 
     env = os.environ.copy()
-    env["PGPASSWORD"] = DB_PASSWORD
+    env["PGPASSWORD"] = DB_PASSWORD  # Передаем пароль через переменную окружения
+    
+    command = [
+        "pg_dump",
+        "-h", DB_HOST,
+        "-p", DB_PORT,
+        "-U", DB_USER,
+        "-d", DB_NAME,
+        "-F", "c",
+        "-f", backup_filename
+    ]
 
     try:
-        command = f"pg_dump -h {DB_HOST} -p {DB_PORT} -U {DB_USER} -d {DB_NAME} -F c -f {backup_filename}"
-        os.system(command)
+        result = subprocess.run(command, env=env, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         oneLog(f"Резервная копия базы данных сохранена: {backup_filename}")
-    except Exception as e:
-        oneLog(f"Ошибка при создании резервной копии БД: {e}")
+    except subprocess.CalledProcessError as e:
+        oneLog(f"Ошибка при создании резервной копии БД: {e.stderr}")
+
+def delete_old_backups():
+    """Удаляет файлы, старше 5 дней в папке с бэкапами."""
+    now = time.time()
+    for filename in os.listdir(BACKUP_FOLDER):
+        file_path = os.path.join(BACKUP_FOLDER, filename)
+        if os.path.isfile(file_path):
+            # Получаем время последнего изменения файла
+            file_age = now - os.path.getmtime(file_path)
+            # Если файл старше 5 дней (60*60*24*5 секунд)
+            if file_age > 60 * 60 * 24 * 7:
+                try:
+                    os.remove(file_path)
+                    oneLog(f"Удален файл: {file_path}")
+                except Exception as e:
+                    oneLog(f"Ошибка при удалении файла {file_path}: {e}")
 
 
 #! Тоже самое что сверху
@@ -423,9 +451,9 @@ async def scheduler(bot):
     while True:
         now = datetime.now()  # Получаем локальное время
         if now.hour in TARGET_HOURS and now.minute == 0:
-            await backup_database()
             await scheduled_task(bot)
             await check_and_refresh_threads(bot)
+            await backup_database()
             await asyncio.sleep(180)
                 
-        await asyncio.sleep(40)
+        await asyncio.sleep(30)
