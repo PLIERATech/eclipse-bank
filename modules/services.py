@@ -344,7 +344,7 @@ async def scheduled_task(bot):
         if freeze_date is None:
             return
 
-        freeze_date = datetime.strptime(freeze_date, "%Y-%m-%d") # Преобразуем строку в дату (если в БД хранится строка формата YYYY-MM-DD)
+        # freeze_date = datetime.strptime(freeze_date, "%Y-%m-%d") # Преобразуем строку в дату (если в БД хранится строка формата YYYY-MM-DD)
 
         # Проверяем, прошло ли 30 день
         if datetime.now() - freeze_date >= timedelta(days=days_freeze_delete):
