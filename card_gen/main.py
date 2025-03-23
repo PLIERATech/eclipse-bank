@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from supabase import *
 from .params import *
+from modules.log_functions import *
 
 base_color = (240, 240, 240)
 unique_color = (42, 42, 42)
@@ -20,7 +21,6 @@ async def card_generate(fullNumber, user_nickname, color):
         font_color = unique_color
 
     template = color_templates.get(color)
-
     try:
         template.convert("RGBA")
     except FileNotFoundError:

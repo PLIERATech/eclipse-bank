@@ -712,11 +712,10 @@ async def sm_transfer_owner(inter, user, message, channel):
                 return
             
             # Проверка на исчерпание лимита создания карт
-            oneLog(f"1")
             command = "Попытка передачи карты"
             if not await verify_count_cards(inter, member_id, command):
                 return
-            oneLog(f"2")
+
             # Добавляем прошлого владельца в список пользователей
             members[str(old_owner_id)] = {
                 "id_channel": old_owner_card_channel_id, 
@@ -729,7 +728,6 @@ async def sm_transfer_owner(inter, user, message, channel):
 
             # Удаляем нового владельца из пользователей
             del members[str(member_id)]
-            oneLog(f"3")
             # Обновляем сообщение нового владельца
             # Генерируется новая карта (картинка)
             existing_embeds = message.embeds
@@ -737,12 +735,20 @@ async def sm_transfer_owner(inter, user, message, channel):
             color_name = reverse_embed_colors.get(color, "Unknown")
 
             await card_generate(full_number, nickname, color_name)
+            
+
+            check_message_image = 0
             # Удалить старую картинку
-            channel = inter.client.get_channel(image_saver_channel)
-            async for msg in channel.history(limit=None):
+            channel_images = inter.client.get_channel(image_saver_channel)
+            async for msg in channel_images.history(limit=1550):
                 if full_number in msg.content:
                     await msg.delete()
-            oneLog(f"4")
+                    check_message_image = 1
+                    break
+
+            if check_message_image == 0:
+                oneLog(f"[ОШИБКА] Фотография {full_number} не найдена при удалении")
+
             title_emb, message_emb, color_emb = get_message_with_title(
                 17, (), (member_id, full_number))
             embed_comp_transfer_owner = emb_auto(title_emb, message_emb, color_emb)
@@ -769,7 +775,7 @@ async def sm_transfer_owner(inter, user, message, channel):
                 channel = inter.client.get_channel(channel_id)
                 message_users = await channel.fetch_message(msg_id)
                 await message_users.edit(embeds=[existing_embeds[0], card_embed_image, card_embed_user], attachments=[])
-            oneLog(f"5")
+                
             # Обновляем данные в базе данных
             db_cursor("cards").update({"owner": member_id,"members": members, "select_menu_id": new_owner_message_id}).eq("select_menu_id", message.id).execute()
 
