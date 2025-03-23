@@ -325,10 +325,16 @@ async def deleteAccount(guild, owner):
 
 #! Удалить старую картинку
 async def del_img_in_channel(client, full_number):
+    check_message_image = 0
     channel = client.get_channel(image_saver_channel)
-    async for message in channel.history(limit=None):
+    async for message in channel.history(limit=1500):
         if full_number in message.content:
             await message.delete()
+            check_message_image = 1
+            break
+        
+    if check_message_image == 0:
+        oneLog(f"[ОШИБКА] Фотография {full_number} не найдена при удалении")
     return
 
 
