@@ -37,7 +37,7 @@ class WithdrawMoney(commands.Cog):
 
         await inter.response.defer(ephemeral=True)
 
-        nick_table = db_cursor("clients").select("account, transactions").eq("nickname", member_nick).execute()
+        nick_table = db_cursor("clients").select("account, transactions").eq("dsc_id", member_id).execute()
         
         nick_card_channel_id = nick_table.data[0]["account"]
         nick_transaction_channel_id = nick_table.data[0]["transactions"]

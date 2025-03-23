@@ -83,6 +83,7 @@ async def verify_num_is_claimed(inter, number):
 
 #! Проверка на исчерпание лимита создания карт
 async def verify_count_cards(inter, member_id, command):
+    oneLog(f"1-1")
     response = db_rpc("get_card_info", {"user_id": int(member_id)}).execute()
     if not response.data:
         title_emb, message_emb, color_emb = get_message_with_title(
@@ -90,6 +91,7 @@ async def verify_count_cards(inter, member_id, command):
         embed = emb_auto(title_emb, message_emb, color_emb)
         await inter.send(embed=embed, ephemeral=True)
         return(False)
+    oneLog(f"1-2")
     count_cards_allowed = response.data[0]["count_cards_allowed"]
     card_count = response.data[0]["card_count"]
     result_check = card_count < count_cards_allowed
@@ -102,6 +104,8 @@ async def verify_count_cards(inter, member_id, command):
         await inter.send(embed=embed, ephemeral=True)
         PermsLog(inter.user.display_name, inter.user.id, command, status)
         return(False) 
+    
+    oneLog(f"1-3")
     return(True)
 
 
