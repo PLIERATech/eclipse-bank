@@ -1,7 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 
-TOKEN = "MTA5NTM4OTQ0MjQ4MDU0NTgzMg.GPuXvp.RCjFCn3vhb4JcHEjWFOOX1oP_n4ksNvxA4-Y38"
+TOKEN = ""
 GUILD_ID = 1338868051222859779
 CHANNEL_ID = 1338879396248817795
 
